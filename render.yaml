@@ -1,0 +1,19 @@
+services:
+  - type: web
+    name: c-stm32-learning-api
+    runtime: python
+    plan: free
+    buildCommand: python --version
+    startCommand: python server.py
+    healthCheckPath: /api/health
+    envVars:
+      - key: HOST
+        value: 0.0.0.0
+      - key: AI_PROVIDER
+        value: zhipu
+      - key: ALLOWED_ORIGINS
+        value: https://nb66666708.github.io
+      - key: ZHIPU_API_KEY
+        sync: false
+      - key: SITE_API_TOKEN
+        sync: false
