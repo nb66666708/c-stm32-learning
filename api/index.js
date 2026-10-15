@@ -641,9 +641,8 @@ async function handleRequest(request, env) {
     if (!supplied || !(await timingSafeEqual(supplied, siteToken))) {
       return jsonResponse(401, { error: "后端访问口令无效，请在 AI 连接设置中检查口令。" }, allowedOrigin);
     }
-  } else {
-    return jsonResponse(503, { error: "公网服务未配置 SITE_API_TOKEN，管理员需先在 Worker 环境变量中设置访问口令。" }, allowedOrigin);
   }
+  // 个人自用：未配置 SITE_API_TOKEN 时直接放行。
 
   const contentType = request.headers.get("Content-Type") || "";
   if (contentType.split(";")[0].trim().toLowerCase() !== "application/json") {
