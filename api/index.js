@@ -509,8 +509,8 @@ async function generateQuestions(env, count, courses, variation) {
       if (start >= 0 && end > start) raw = raw.slice(start, end + 1);
       decoded = JSON.parse(raw);
     } catch (_error) {
-      console.error("JSON parse failed, content head:", content.slice(0, 200));
-      throw new RequestError(502, "AI 返回内容不是预期的 JSON 题目格式，请重试。");
+      console.error("JSON parse failed, content head:", content.slice(0, 500));
+      throw new RequestError(502, "AI 返回不是 JSON。返回开头：" + content.slice(0, 200));
     }
     return validateQuestions(decoded, count);
   } catch (error) {
