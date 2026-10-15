@@ -376,7 +376,7 @@ async function generateQuestions(env, count, courses, variation) {
   ].join("");
 
   const controller = new AbortController();
-  const timer = setTimeout(() => controller.abort(), 45_000);
+  const timer = setTimeout(() => controller.abort(), 90_000);
   try {
     const response = await fetch(ZHIPU_URL, {
       method: "POST",
