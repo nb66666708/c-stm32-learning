@@ -1,4 +1,4 @@
-﻿/**
+/**
  * C 起点学习网站 AI 后端 — Deno Deploy 版
  *
  * 等价实现 server.py 的 API，供 GitHub Pages 版学习网站调用：
@@ -670,13 +670,14 @@ async function handleRequest(request, env) {
     const { source, tests } = validateJudgeRequest(payload);
     return jsonResponse(200, await judgeCProgram(source, tests), allowedOrigin);
   } catch (error) {
+    console.error("API error:", error?.message || String(error));
     if (error instanceof RequestError) {
       return jsonResponse(error.status, { error: error.message }, allowedOrigin);
     }
     if (error instanceof SyntaxError) {
       return jsonResponse(400, { error: "请求不是有效的 JSON 数据。" }, allowedOrigin);
     }
-    return jsonResponse(500, { error: "服务器发生意外错误，请查看 Cloudflare Worker 日志。" }, allowedOrigin);
+    return jsonResponse(500, { error: "服务器错误：" + String(error?.message || error) }, allowedOrigin);
   }
 }
 
