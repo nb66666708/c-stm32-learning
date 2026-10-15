@@ -501,8 +501,15 @@ async function generateQuestions(env, count, courses, variation) {
     }
     let decoded;
     try {
-      decoded = JSON.parse(content);
+      let raw = content.trim();
+      const fence = raw.match(/```(?:json)?\s*([\s\S]*?)```/i);
+      if (fence) raw = fence[1].trim();
+      const start = raw.indexOf("[");
+      const end = raw.lastIndexOf("]");
+      if (start >= 0 && end > start) raw = raw.slice(start, end + 1);
+      decoded = JSON.parse(raw);
     } catch (_error) {
+      console.error("JSON parse failed, content head:", content.slice(0, 200));
       throw new RequestError(502, "AI 返回内容不是预期的 JSON 题目格式，请重试。");
     }
     return validateQuestions(decoded, count);
