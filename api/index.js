@@ -81,8 +81,8 @@ function validateRequest(payload) {
   }
 
   const count = payload.count;
-  if (count !== 20 && count !== 30) {
-    throw new RequestError(400, "每次挑战只能生成 20 或 30 道题。");
+  if (count !== 5 && count !== 10 && count !== 20 && count !== 30) {
+    throw new RequestError(400, "每次挑战只能生成 5/10/20/30 道题。");
   }
 
   const courses = payload.courses;
