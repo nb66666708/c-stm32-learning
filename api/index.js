@@ -366,29 +366,17 @@ async function generateQuestions(env, count, courses, variation) {
     "只输出符合要求的 JSON 对象，不要 Markdown 或额外文字。",
   ].join("");
 
-  const outputSchema = [
-    '{"questions":[{"type":"选择题/判断题/填空题/程序题","text":"题干",',
-    '"options":["选项A","选项B"],"answer":0,"accepted":["填空标准答案"],"solution":"完整参考 C 程序",',
-    '"tests":[{"input":"测试输入","output":"期望输出"},{"input":"边界输入","output":"边界输出"}],',
-    '"knowledge":"知识点","explanation":"说明为何答案正确，必要时说明判断过程",',
-    '"pitfall":"具体易错点"}]}',
-  ].join("");
+  const outputSchema = '{"questions":[{"type":"选择题","text":"题干","options":["A","B","C","D"],"answer":0,"knowledge":"知识点","explanation":"解析","pitfall":"易错点"}]}';
 
   const userPrompt = [
-    `请根据以下课程资料生成恰好 ${count} 道互不重复的练习题。`,
-    "题目应在各课程间合理覆盖，零基础课程要从易到难；",
-    "每种题型至少生成总题数的十分之一且不少于 2 道。",
-    "尽量平均安排选择、判断、填空和程序题；填空题使用 ____ 标明空位；",
-    "程序题应短小、适合初学者，是只依赖标准 C 库的完整可运行程序，读取 stdin 并向 stdout 输出结果；",
-    "每题至少给 2 组正确且可核算的测试输入输出。不要出需要 STM32 HAL、硬件、文件或网络的程序题。",
-    "如果课程资料没有提供某个事实，不要据常识猜测。",
-    `本轮变化标识：${cleanText(variation, 80)}。可据此调整主题组合与问法，不要重复套用固定题目模板。`,
-    `返回 JSON 结构必须为：${outputSchema}`,
+    `生成 ${count} 道题，选择、判断、填空混合，不要程序题。`,
+    `格式：${outputSchema}`,
+    `变化标识：${cleanText(variation, 80)}`,
     `课程资料：${JSON.stringify(courses)}`,
   ].join("");
 
   const controller = new AbortController();
-  const timer = setTimeout(() => controller.abort(), 60_000);
+  const timer = setTimeout(() => controller.abort(), 45_000);
   try {
     const response = await fetch(ZHIPU_URL, {
       method: "POST",
@@ -399,7 +387,7 @@ async function generateQuestions(env, count, courses, variation) {
       body: JSON.stringify({
         model,
         temperature: 0.6,
-        max_tokens: 8192,
+        max_tokens: 4096,
         response_format: { type: "json_object" },
         messages: [
           { role: "system", content: systemPrompt },
