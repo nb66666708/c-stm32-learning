@@ -464,6 +464,7 @@ async function generateQuestions(env, count, courses, variation) {
       body: JSON.stringify({
         model,
         temperature: 0.6,
+        max_tokens: 4096,
         response_format: { type: "json_object" },
         messages: [
           { role: "system", content: systemPrompt },
