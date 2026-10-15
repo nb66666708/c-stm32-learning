@@ -115,126 +115,61 @@ function validateRequest(payload) {
 
 // ---------- 题目校验（对应 server.py validate_questions） ----------
 function validateQuestions(content, count) {
-  if (!content || typeof content !== "object" || !Array.isArray(content.questions)) {
-    throw new RequestError(502, "AI 返回的题目格式无效，请重新生成。");
-  }
-
-  const questions = content.questions;
-  if (questions.length !== count) {
-    throw new RequestError(502, `AI 返回了 ${questions.length} 道题，预期 ${count} 道；请重新生成。`);
-  }
+  let raw = [];
+  if (Array.isArray(content)) raw = content;
+  else if (content && Array.isArray(content.questions)) raw = content.questions;
+  else throw new RequestError(502, "AI 返回的题目格式无效，请重新生成。");
 
   const validated = [];
   const seen = new Set();
-  for (let index = 0; index < questions.length; index++) {
-    const question = questions[index];
-    if (!question || typeof question !== "object") {
-      throw new RequestError(502, `第 ${index + 1} 题格式无效，请重新生成。`);
-    }
+  for (let index = 0; index < raw.length; index++) {
+    try {
+      const question = raw[index];
+      if (!question || typeof question !== "object") continue;
 
-    const questionType = question.type;
-    const text = cleanText(question.text, 500);
-    const options = question.options;
-    const answer = question.answer;
-    const knowledge = cleanText(question.knowledge, 160);
-    const explanation = cleanText(question.explanation, 700);
-    const pitfall = cleanText(question.pitfall, 400);
+      const questionType = question.type;
+      const text = cleanText(question.text, 500);
+      if (!["选择题", "判断题", "填空题", "程序题"].includes(questionType)) continue;
+      if (!text) continue;
 
-    if (!["选择题", "判断题", "填空题", "程序题"].includes(questionType)) {
-      throw new RequestError(502, `第 ${index + 1} 题的题型无效，请重新生成。`);
-    }
-    if (!text || !knowledge || !explanation || !pitfall) {
-      throw new RequestError(502, `第 ${index + 1} 题缺少题目、知识点、解析或易错点。`);
-    }
+      const knowledge = cleanText(question.knowledge, 160) || "课程知识点";
+      const explanation = cleanText(question.explanation, 700) || "略";
+      const pitfall = cleanText(question.pitfall, 400) || "无";
 
-    const signature = text.toLowerCase();
-    if (seen.has(signature)) {
-      throw new RequestError(502, "AI 返回了重复题目，请重新生成。");
-    }
-    seen.add(signature);
+      const signature = text.toLowerCase().slice(0, 80);
+      if (seen.has(signature)) continue;
+      seen.add(signature);
 
-    const result = {
-      type: questionType,
-      text,
-      knowledge,
-      explanation,
-      pitfall,
-    };
+      const result = { type: questionType, text, knowledge, explanation, pitfall };
 
-    if (questionType === "选择题" || questionType === "判断题") {
-      if (!Array.isArray(options) || options.length < 2 || options.length > 5) {
-        throw new RequestError(502, `第 ${index + 1} 题的选项数量无效。`);
+      if (questionType === "选择题" || questionType === "判断题") {
+        let opts = Array.isArray(question.options) ? question.options.map((o) => cleanText(o, 220)).filter((o) => o) : [];
+        if (questionType === "判断题" && opts.length < 2) opts = ["正确", "错误"];
+        if (new Set(opts).size !== opts.length) opts = [...new Set(opts)];
+        if (opts.length < 2) continue;
+        let answer = Number.isInteger(question.answer) ? question.answer : 0;
+        if (answer < 0 || answer >= opts.length) answer = 0;
+        result.options = opts;
+        result.answer = answer;
+      } else if (questionType === "填空题") {
+        let accepted = Array.isArray(question.accepted) ? question.accepted.map((a) => cleanText(a, 100)).filter((a) => a) : [];
+        if (!accepted.length) continue;
+        accepted = [...new Set(accepted.map((a) => a.toLowerCase()))];
+        result.accepted = accepted;
+      } else {
+        const solution = typeof question.solution === "string" ? question.solution.trim() : "";
+        if (!solution || solution.length > 3000) continue;
+        result.solution = solution;
+        const tests = Array.isArray(question.tests) ? question.tests.filter((t) => t && typeof t === "object" && typeof t.input === "string" && typeof t.output === "string").slice(0, MAX_TEST_CASES) : [];
+        if (tests.length < 2) continue;
+        result.tests = tests.map((t) => ({ input: t.input, output: t.output }));
       }
-      const cleanedOptions = options.map((option) => cleanText(option, 220));
-      if (cleanedOptions.some((option) => !option) || new Set(cleanedOptions).size !== cleanedOptions.length) {
-        throw new RequestError(502, `第 ${index + 1} 题的选项为空或重复。`);
-      }
-      if (questionType === "判断题" && (cleanedOptions.length !== 2 || cleanedOptions[0] !== "正确" || cleanedOptions[1] !== "错误")) {
-        throw new RequestError(502, `第 ${index + 1} 题的判断选项格式无效。`);
-      }
-      if (!Number.isInteger(answer) || answer < 0 || answer >= cleanedOptions.length) {
-        throw new RequestError(502, `第 ${index + 1} 题的标准答案无效。`);
-      }
-      result.options = cleanedOptions;
-      result.answer = answer;
-    } else if (questionType === "填空题") {
-      const accepted = question.accepted;
-      if (!Array.isArray(accepted) || accepted.length < 1 || accepted.length > 5) {
-        throw new RequestError(502, `第 ${index + 1} 题的填空答案无效。`);
-      }
-      const cleanedAccepted = accepted.map((value) => cleanText(value, 100));
-      if (cleanedAccepted.some((value) => !value)) {
-        throw new RequestError(502, `第 ${index + 1} 题的填空答案为空或重复。`);
-      }
-      const lowerSet = new Set(cleanedAccepted.map((value) => value.toLowerCase()));
-      if (lowerSet.size !== cleanedAccepted.length) {
-        throw new RequestError(502, `第 ${index + 1} 题的填空答案为空或重复。`);
-      }
-      result.accepted = cleanedAccepted;
-    } else {
-      const solution = question.solution;
-      if (typeof solution !== "string" || !solution.trim() || solution.length > 3000) {
-        throw new RequestError(502, `第 ${index + 1} 题缺少合理长度的参考代码。`);
-      }
-      result.solution = solution.trim();
-
-      const tests = question.tests;
-      if (!Array.isArray(tests) || tests.length < 2 || tests.length > MAX_TEST_CASES) {
-        throw new RequestError(502, `第 ${index + 1} 题缺少 2 至 ${MAX_TEST_CASES} 组自动判分测试。`);
-      }
-      const validatedTests = [];
-      for (const test of tests) {
-        if (!test || typeof test !== "object") {
-          throw new RequestError(502, `第 ${index + 1} 题测试用例格式无效。`);
-        }
-        const testInput = test.input ?? "";
-        const expectedOutput = test.output;
-        if (typeof testInput !== "string" || typeof expectedOutput !== "string") {
-          throw new RequestError(502, `第 ${index + 1} 题测试输入和期望输出必须是文本。`);
-        }
-        if (bytesLength(testInput) > MAX_TEST_INPUT_BYTES) {
-          throw new RequestError(502, `第 ${index + 1} 题测试输入过长。`);
-        }
-        if (bytesLength(expectedOutput) > MAX_EXPECTED_OUTPUT_BYTES) {
-          throw new RequestError(502, `第 ${index + 1} 题期望输出过长。`);
-        }
-        validatedTests.push({ input: testInput, output: expectedOutput });
-      }
-      const uniqueTests = new Set(validatedTests.map((test) => `${test.input}\u0000${test.output}`));
-      if (uniqueTests.size !== validatedTests.length) {
-        throw new RequestError(502, `第 ${index + 1} 题包含重复测试数据。`);
-      }
-      result.tests = validatedTests;
-    }
-    validated.push(result);
+      validated.push(result);
+    } catch (_) { /* 跳过坏题 */ }
   }
 
-  const minimumPerType = Math.max(2, Math.floor(count / 10));
-  for (const questionType of ["选择题", "判断题", "填空题", "程序题"]) {
-    const typeCount = validated.filter((question) => question.type === questionType).length;
-    if (typeCount < minimumPerType) {
-      throw new RequestError(502, `AI 生成的${questionType}太少，题型需要更均衡；请重新生成。`);
-    }
+  if (validated.length < 5) {
+    throw new RequestError(502, "AI 返回的有效题目太少（" + validated.length + " 道），请重新生成。");
   }
   return validated;
 }
