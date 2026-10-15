@@ -347,7 +347,7 @@ async function generateQuestions(env, count, courses, variation) {
   if (!apiKey) {
     throw new RequestError(503, "尚未配置智谱 API Key。请在 Worker 环境变量中设置 ZHIPU_API_KEY。");
   }
-  const model = (env.ZHIPU_MODEL || "glm-4-flash").trim();
+  const model = (env.ZHIPU_MODEL || "glm-5.3-flash").trim();
 
   const systemPrompt = [
     "你是严谨的中文 C 语言与 STM32 教学出题老师。",
