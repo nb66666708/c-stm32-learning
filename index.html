@@ -351,7 +351,7 @@
           {type:"选择题", text:"下面哪个函数是一个普通 C 程序的执行入口？", options:["printf","main","start","include"], answer:1, explanation:"C 程序从 main 函数开始执行。printf 是输出函数，不是程序入口；include 是预处理指令的一部分。"},
           {type:"判断题", text:"普通 C 语句通常需要用分号 ; 结束。", options:["正确","错误"], answer:0, explanation:"大多数普通语句（例如 return、赋值和函数调用）需要分号。函数定义的右花括号后面不加分号。"},
           {type:"填空题", text:"补全输出语句：在屏幕上显示 Hi。", placeholder:"填写缺少的函数名，例如 xxx(\"Hi\");", accepted:["printf(\"hi\");","printf(\"Hi\");"], explanation:"应写 printf(\"Hi\");。printf 是标准输出函数；字符串要放在双引号中，语句末尾有分号。"},
-          {type:"程序题", text:"写一个最简单的 C 程序，在屏幕上输出 Hello。", explanation:"一种参考写法如下。先包含 stdio.h，再在 main 函数中调用 printf；\\n 用来换行。", solution:"#include <stdio.h>\n\nint main(void) {\n    printf(\"Hello\\n\");\n    return 0;\n}"}
+          {type:"程序题", text:"写一个最简单的 C 程序，在屏幕上输出 Hello。", explanation:"一种参考写法如下。先包含 stdio.h，再在 main 函数中调用 printf；\\n 用来换行。", solution:"#include <stdio.h>\n\nint main(void) {\n    printf(\"Hello\\n\");\n    return 0;\n}",analysis:{key:"C 程序的基本骨架：预处理指令 #include、main 函数、函数体语句和 return 0。printf 的声明在 stdio.h 里，所以必须先包含它。",why:"先写 #include 把 printf 的“使用说明书”引进来；main 是程序入口，程序从这里开始执行；printf 里的 \\n 是换行符，没有它输出会和下一行提示符连在一起。",extra:"main 返回 0 表示“正常结束”，返回非 0 表示出错；编译和链接是两步，printf 的具体实现代码在标准库里，编译时只检查声明，链接时才找到实现。"}}
         ]
       },
       {
@@ -366,7 +366,7 @@
           {type:"选择题", text:"哪个类型通常用来存储整数？", options:["int","char","double","void"], answer:0, explanation:"int 是常见的整数类型。double 常用于浮点数，char 用于字符，void 表示无具体值或不指定参数。"},
           {type:"判断题", text:"字符 A 通常写作 'A'，字符串 A 通常写作 \"A\"。", options:["正确","错误"], answer:0, explanation:"单引号括起单个字符常量，例如 'A'；双引号括起字符串，例如 \"A\"。"},
           {type:"填空题", text:"补全声明：创建一个名为 score、初值为 90 的整数变量。", placeholder:"填写完整声明", accepted:["int score = 90;","int score=90;"], explanation:"写作 int score = 90;。int 是类型，score 是变量名，等号右侧是初始值。"},
-          {type:"程序题", text:"定义整数变量 a、b，读取两个整数，并输出它们的和。", explanation:"使用两个 %d 对应两个整数，scanf 中对普通变量传入地址。printf 可以用格式占位符显示计算结果。", solution:"int a, b;\nscanf(\"%d %d\", &a, &b);\nprintf(\"%d\\n\", a + b);"}
+          {type:"程序题", text:"定义整数变量 a、b，读取两个整数，并输出它们的和。", explanation:"使用两个 %d 对应两个整数，scanf 中对普通变量传入地址。printf 可以用格式占位符显示计算结果。", solution:"int a, b;\nscanf(\"%d %d\", &a, &b);\nprintf(\"%d\\n\", a + b);",analysis:{key:"scanf 往变量里写值必须传地址（&amp;a），printf 只需要变量的值；格式串 %d 对应 int。",why:"scanf(\"%d %d\", &amp;a, &amp;b) 用两个 %d 依次读两个整数，&amp; 表示“把这个数写到 a 所在的内存格子”；printf 直接传 a + b 的值即可。",extra:"scanf 的返回值是成功读入的个数，可以判断输入是否有效；%d 只对应 int，读 long 用 %ld，读 double 用 %lf，格式串和变量类型不匹配是未定义行为。"}}
         ]
       },
       {
@@ -381,7 +381,7 @@
           {type:"选择题", text:"表达式 7 / 2 的结果是什么？", options:["3","3.5","4","1"], answer:0, explanation:"7 和 2 都是整数，因此进行整数除法，舍弃小数部分，结果为 3。若希望得到小数，可以使用浮点数参与运算，例如 7.0 / 2。"},
           {type:"判断题", text:"在 C 语言中，== 用来比较两个值是否相等。", options:["正确","错误"], answer:0, explanation:"== 是相等比较运算符；= 是赋值运算符。初学时要特别留意它们的区别。"},
           {type:"填空题", text:"表达式 17 % 5 的结果是几？", placeholder:"填写整数结果", accepted:["2"], explanation:"17 除以 5 商为 3、余数为 2，所以 17 % 5 的值是 2。"},
-          {type:"程序题", text:"读入一个整数 n，输出它除以 2 的余数。", explanation:"取余运算符是 %。读取整数使用 %d，并把变量地址传给 scanf。", solution:"#include <stdio.h>\nint main(void) {\n    int n;\n    scanf(\"%d\", &n);\n    printf(\"%d\\n\", n % 2);\n    return 0;\n}"}
+          {type:"程序题", text:"读入一个整数 n，输出它除以 2 的余数。", explanation:"取余运算符是 %。读取整数使用 %d，并把变量地址传给 scanf。", solution:"#include <stdio.h>\nint main(void) {\n    int n;\n    scanf(\"%d\", &n);\n    printf(\"%d\\n\", n % 2);\n    return 0;\n}",analysis:{key:"取余运算符 % 求余数；判断奇偶最常用 n % 2，偶数为 0、奇数为 1。",why:"17 除以 2 得 8 余 1，所以 n % 2 直接得到余数；读入整数用 scanf(\"%d\", &amp;n)。",extra:"% 两边必须是整数，浮点数取余要用 fmod 函数；C99 起负数取余结果的符号与左操作数相同，不同语言规则不一样，跨语言时要注意。"}}
         ]
       },
       {
@@ -396,7 +396,7 @@
           {type:"选择题", text:"变量 score 的值是 75，条件 score >= 60 的结果是什么？", options:["真","假","编译错误","没有结果"], answer:0, explanation:"75 大于等于 60，因此条件为真，if 分支会执行。"},
           {type:"判断题", text:"if (x = 3) 是检查 x 是否等于 3 的常见写法。", options:["正确","错误"], answer:1, explanation:"这是错误的检查写法：单个 = 是赋值，比较应该写 x == 3。赋值表达式也可能产生真值，导致难以发现的逻辑错误。"},
           {type:"填空题", text:"补上“并且”运算符：年龄 age 大于等于 18 且小于 60。", placeholder:"填写 C 语言的逻辑运算符", accepted:["&&"], explanation:"C 语言用 && 表示逻辑“并且”。完整条件是 age >= 18 && age < 60。"},
-          {type:"程序题", text:"读入整数 n，如果 n 是正数就输出 Positive，否则输出 Not positive。", explanation:"先读取整数，再用 n > 0 作为 if 条件。注意字符串要用双引号，语句末尾加分号。", solution:"#include <stdio.h>\nint main(void) {\n    int n;\n    scanf(\"%d\", &n);\n    if (n > 0) {\n        printf(\"Positive\\n\");\n    } else {\n        printf(\"Not positive\\n\");\n    }\n    return 0;\n}"}
+          {type:"程序题", text:"读入整数 n，如果 n 是正数就输出 Positive，否则输出 Not positive。", explanation:"先读取整数，再用 n > 0 作为 if 条件。注意字符串要用双引号，语句末尾加分号。", solution:"#include <stdio.h>\nint main(void) {\n    int n;\n    scanf(\"%d\", &n);\n    if (n > 0) {\n        printf(\"Positive\\n\");\n    } else {\n        printf(\"Not positive\\n\");\n    }\n    return 0;\n}",analysis:{key:"if/else 二分支结构；条件表达式 n &gt; 0；字符串字面量用双引号。",why:"正数与非正数是两个互斥结果，用 if/else 各写一个分支最清晰；注意“否则”既包含 0 也包含负数。",extra:"三个及以上互斥分支可以用 else if 链或 switch；比较表达式结果是 1 或 0，可以直接当条件用。"}}
         ]
       },
       {
@@ -411,7 +411,7 @@
           {type:"选择题", text:"下面循环中，printf 会执行几次？for (int i = 0; i < 4; i++)", options:["3 次","4 次","5 次","无限次"], answer:1, explanation:"i 依次为 0、1、2、3 时条件成立，共执行 4 次；更新到 4 后，i < 4 不成立，循环结束。"},
           {type:"判断题", text:"在 for (int i = 0; i < 3; i++) 中，i 的取值会是 0、1、2。", options:["正确","错误"], answer:0, explanation:"i 从 0 开始，每次加 1；当 i 变成 3 时，i < 3 为假，因此循环体不再执行。"},
           {type:"填空题", text:"循环每轮让 i 增加 1，常用的更新表达式是什么？", placeholder:"填写一个 C 表达式", accepted:["i++","++i","i += 1"], explanation:"i++、++i 和 i += 1 都会让 i 增加 1。for 循环常见写法是 i++。"},
-          {type:"程序题", text:"使用 for 循环计算 1 到 10 的总和，并输出结果。", explanation:"sum 初值设为 0。循环让 i 从 1 到 10，每轮执行 sum += i；结束时 sum 是 55。", solution:"int sum = 0;\nfor (int i = 1; i <= 10; i++) {\n    sum += i;\n}\nprintf(\"%d\\n\", sum);"}
+          {type:"程序题", text:"使用 for 循环计算 1 到 10 的总和，并输出结果。", explanation:"sum 初值设为 0。循环让 i 从 1 到 10，每轮执行 sum += i；结束时 sum 是 55。", solution:"int sum = 0;\nfor (int i = 1; i <= 10; i++) {\n    sum += i;\n}\nprintf(\"%d\\n\", sum);",analysis:{key:"for 循环三要素：初始化（i = 1）、条件（i &lt;= 10）、更新（i++）；累加器模式 sum += i。",why:"sum 必须先初始化为 0，否则它装着内存里的垃圾值；i &lt;= 10 保证把 10 也算进去；每轮把 i 累进 sum。",extra:"求和结果 55 可以用等差数列公式 (首项+末项)×项数/2 验证；累加器的初值由语义决定，求积就要从 1 开始。"}}
         ]
       },
       {
@@ -426,7 +426,7 @@
           {type:"选择题", text:"int a[5] = {0}; 中，最后一个合法下标是几？", options:["5","4","1","0"], answer:1, explanation:"数组长度是 5，下标从 0 开始，因此合法下标为 0 到 4，最后一个是 4。"},
           {type:"判断题", text:"字符串 \"code\" 的 strlen 结果是 5，因为末尾还有 \\0。", options:["正确","错误"], answer:1, explanation:"strlen 不计算末尾的 \\0，所以 strlen(\"code\") 是 4。数组实际占用的字符空间通常是 5 个字符位置。"},
           {type:"填空题", text:"字符数组中用于标记 C 字符串结束的字符写作什么？", placeholder:"填写转义字符形式", accepted:["\\0","'\\0'"], explanation:"结束符写作 '\\0'，它的值为零，用来标记字符串的结尾。注意它与字符 '0' 不同。"},
-          {type:"程序题", text:"遍历整数数组 a = {2, 4, 6}，把所有元素相加并输出总和。", explanation:"用下标 i 从 0 遍历到小于 3，每轮将 a[i] 加入 sum。最终总和为 12。", solution:"int a[3] = {2, 4, 6};\nint sum = 0;\nfor (int i = 0; i < 3; i++) {\n    sum += a[i];\n}\nprintf(\"%d\\n\", sum);"}
+          {type:"程序题", text:"遍历整数数组 a = {2, 4, 6}，把所有元素相加并输出总和。", explanation:"用下标 i 从 0 遍历到小于 3，每轮将 a[i] 加入 sum。最终总和为 12。", solution:"int a[3] = {2, 4, 6};\nint sum = 0;\nfor (int i = 0; i < 3; i++) {\n    sum += a[i];\n}\nprintf(\"%d\\n\", sum);",analysis:{key:"数组下标从 0 开始，长度为 3 的数组下标范围是 0 到 2；遍历惯例是 i &lt; 长度。",why:"用 i 从 0 遍历到 2，每轮把 a[i] 加入 sum，三个元素全加到；总和 12。",extra:"数组越界在 C 里不报错而是未定义行为，可能悄悄破坏其他内存；数组名在表达式中会退化成首元素地址（sizeof 例外）。"}}
         ]
       },
       {
@@ -441,7 +441,7 @@
           {type:"选择题", text:"函数 int add(int a, int b) 的返回类型是什么？", options:["int","void","char","由参数决定"], answer:0, explanation:"函数名之前的 int 是返回类型，表示函数返回一个整数。return a + b; 返回的结果应符合 int 类型。"},
           {type:"判断题", text:"在 int *p = &x; 中，&x 表示变量 x 的地址。", options:["正确","错误"], answer:0, explanation:"一元运算符 & 用于取得对象的地址，因此 &x 是 x 的地址，可以初始化指向 int 的指针 p。"},
           {type:"填空题", text:"补全函数定义，使它返回整数 a 与 b 的和：int add(int a, int b) { ____; }", placeholder:"填写 return 语句", accepted:["return a + b;","return (a+b);"], explanation:"return a + b; 把相加结果作为函数返回值交给调用者。"},
-          {type:"程序题", text:"编写一个函数 square，接收一个 int 数字并返回它的平方。", explanation:"函数返回类型和参数类型都是 int。返回 n * n；调用者可以把返回结果保存在 int 变量中。", solution:"int square(int n) {\n    return n * n;\n}\n\n/* 调用示例 */\nint value = square(4);  // value 是 16"}
+          {type:"程序题", text:"编写一个函数 square，接收一个 int 数字并返回它的平方。", explanation:"函数返回类型和参数类型都是 int。返回 n * n；调用者可以把返回结果保存在 int 变量中。", solution:"int square(int n) {\n    return n * n;\n}\n\n/* 调用示例 */\nint value = square(4);  // value 是 16",analysis:{key:"函数定义四要素：返回类型、函数名、形参列表、函数体；return 返回结果。",why:"square 接收 int 返回 int，函数体写 return n * n；调用方把返回值存进变量。",extra:"C 的形参是“副本”（传值调用），函数内改形参不影响调用者；函数原型（声明）要先于调用出现，否则编译器会报错或隐式假设。"}}
         ]
       },
       {
@@ -456,7 +456,7 @@
           {type:"选择题", text:"调用 set_zero(&n) 后，函数内应通过什么表达式修改 n？", options:["p = 0","*p = 0","&p = 0","n = 0"], answer:1, explanation:"p 保存 n 的地址，*p 表示该地址上的值，所以 *p = 0 会修改调用者的 n。"},
           {type:"判断题", text:"函数参数写成 int a[] 时，函数总能自动知道实参数组有多少个元素。", options:["正确","错误"], answer:1, explanation:"数组参数会调整为指针参数，长度信息不会自动传入。通常需要额外传入 length。"},
           {type:"填空题", text:"若 p 指向一个 int 变量，通过 p 修改该变量的值时，需要写哪个一元运算符？", placeholder:"填写一个运算符，例如 *", accepted:["*"], explanation:"解引用运算符 * 访问指针指向的对象。表达式 *p = 10 会把所指向的 int 改为 10。"},
-          {type:"程序题", text:"写一个函数，通过指针把整数变量的值增加 1。函数原型可自行设计。", explanation:"函数接收 int *p，使用 *p += 1 修改调用者的整数。调用时传入变量地址，例如 increment(&n)。", solution:"void increment(int *p) {\n    *p += 1;\n}\n\nint n = 4;\nincrement(&n);  // n 变为 5"}
+          {type:"程序题", text:"写一个函数，通过指针把整数变量的值增加 1。函数原型可自行设计。", explanation:"函数接收 int *p，使用 *p += 1 修改调用者的整数。调用时传入变量地址，例如 increment(&n)。", solution:"void increment(int *p) {\n    *p += 1;\n}\n\nint n = 4;\nincrement(&n);  // n 变为 5",analysis:{key:"指针参数实现“修改调用者的变量”：形参 int *p，函数内 *p 解引用读写原变量；调用时传 &amp;n。",why:"传值只能改副本，改不了调用者的 n；传 &amp;n 后 *p += 1 直接操作 n 所在的内存，所以 n 变成 5。",extra:"这是 C 里实现“输出参数”的标准模式；若只读不写，形参可写成 const int *p 表达“我不会改你的数据”。"}}
         ]
       },
       {
@@ -471,7 +471,7 @@
           {type:"选择题", text:"判断两个 C 字符串内容相同，常用哪个函数？", options:["strcmp","strlen","strcpy","sizeof"], answer:0, explanation:"strcmp 比较字符串内容，相同则返回 0。== 比较的是地址，不是字符串内容。"},
           {type:"判断题", text:"char name[4] 可以安全保存 4 个可见字符组成的字符串。", options:["正确","错误"], answer:1, explanation:"还需要一个位置存放结尾的 '\\0'，所以 char name[4] 最多保存 3 个可见字符的字符串。"},
           {type:"填空题", text:"字符串比较时，strcmp(a, b) 返回 0 表示什么？", placeholder:"简短填写", accepted:["相等","相同","字符串相等","内容相等"], explanation:"strcmp 返回 0 表示两个字符串内容相同；小于或大于 0 表示按字典序不同。"},
-          {type:"程序题", text:"写代码读取一个不含空格、最多 19 个字符的单词，并输出它的长度。", explanation:"数组要留出结束符空间，所以用 char word[20]；scanf 的宽度限制为 19，strlen 计算长度。", solution:"#include <stdio.h>\n#include <string.h>\n\nint main(void) {\n    char word[20];\n    scanf(\"%19s\", word);\n    printf(\"%zu\\n\", strlen(word));\n    return 0;\n}"}
+          {type:"程序题", text:"写代码读取一个不含空格、最多 19 个字符的单词，并输出它的长度。", explanation:"数组要留出结束符空间，所以用 char word[20]；scanf 的宽度限制为 19，strlen 计算长度。", solution:"#include <stdio.h>\n#include <string.h>\n\nint main(void) {\n    char word[20];\n    scanf(\"%19s\", word);\n    printf(\"%zu\\n\", strlen(word));\n    return 0;\n}",analysis:{key:"字符数组存字符串必须为结尾的 \\0 留位置；scanf 用 %19s 限制读取宽度；strlen 返回不含 \\0 的字符数。",why:"最多 19 个字符，数组就要开 char word[20]，否则 \\0 没地方放会越界；%19s 保证 scanf 最多写 19 个字符再补 \\0；strlen 数出实际长度。",extra:"无宽度限制的 %s 是经典缓冲区溢出漏洞来源；strlen 返回类型是 size_t，打印用 %zu；%s 读到空格或换行就停。"}}
         ]
       },
       {
@@ -486,7 +486,7 @@
           {type:"选择题", text:"int a[3][4] 有多少行、多少列？", options:["3 行 4 列","4 行 3 列","3 行 3 列","12 行 1 列"], answer:0, explanation:"声明中的第一个维度是行数，第二个维度是列数，因此是 3 行 4 列，共 12 个 int。"},
           {type:"判断题", text:"二维数组 a[2][3] 的最后一个元素可以用 a[2][3] 访问。", options:["正确","错误"], answer:1, explanation:"下标从 0 开始，合法范围是行 0..1、列 0..2，最后一个元素是 a[1][2]。"},
           {type:"填空题", text:"int a[2][3] 的右下角元素使用哪个表达式访问？", placeholder:"填写数组表达式", accepted:["a[1][2]"], explanation:"2 行的最后一行下标为 1，3 列的最后一列下标为 2，因此是 a[1][2]。"},
-          {type:"程序题", text:"用嵌套循环计算 int a[2][2] = {{1,2},{3,4}} 所有元素的总和。", explanation:"两层循环分别遍历行与列，把 a[r][c] 加入总和。结果是 10。", solution:"int a[2][2] = {{1, 2}, {3, 4}};\nint sum = 0;\nfor (int r = 0; r < 2; r++) {\n    for (int c = 0; c < 2; c++) {\n        sum += a[r][c];\n    }\n}\nprintf(\"%d\\n\", sum);"}
+          {type:"程序题", text:"用嵌套循环计算 int a[2][2] = {{1,2},{3,4}} 所有元素的总和。", explanation:"两层循环分别遍历行与列，把 a[r][c] 加入总和。结果是 10。", solution:"int a[2][2] = {{1, 2}, {3, 4}};\nint sum = 0;\nfor (int r = 0; r < 2; r++) {\n    for (int c = 0; c < 2; c++) {\n        sum += a[r][c];\n    }\n}\nprintf(\"%d\\n\", sum);",analysis:{key:"二维数组按“行-列”访问 a[r][c]；外层循环管行、内层循环管列。",why:"a[2][2] 有 2 行 2 列，r 从 0 到 1、c 从 0 到 1，把所有元素累加，结果 1+2+3+4 = 10。",extra:"二维数组在内存里按行连续存放；把二维数组传给函数时，第二维必须写出来（如 int a[][2]），因为编译器要算行偏移。"}}
         ]
       },
       {
@@ -501,7 +501,7 @@
           {type:"选择题", text:"递归函数最重要的组成部分之一是什么？", options:["终止条件","全局变量","文件操作","宏定义"], answer:0, explanation:"终止条件（基例）让递归最终停下来；同时递归步骤应朝基例推进。"},
           {type:"判断题", text:"如果递归函数永远无法到达基例，程序可能因调用栈耗尽而失败。", options:["正确","错误"], answer:0, explanation:"每层调用都占用调用栈资源，递归不终止会不断消耗栈空间。"},
           {type:"填空题", text:"按 factorial 的定义，factorial(4) 的值是多少？", placeholder:"填写整数", accepted:["24"], explanation:"4! = 4 × 3 × 2 × 1 = 24。"},
-          {type:"程序题", text:"写一个递归函数 sum_to(n)，返回 1 + 2 + ... + n，假设 n >= 0。", explanation:"基例 sum_to(0) = 0；递归步骤为 n + sum_to(n - 1)，每次向 0 靠近。", solution:"int sum_to(int n) {\n    if (n == 0) return 0;\n    return n + sum_to(n - 1);\n}"}
+          {type:"程序题", text:"写一个递归函数 sum_to(n)，返回 1 + 2 + ... + n，假设 n >= 0。", explanation:"基例 sum_to(0) = 0；递归步骤为 n + sum_to(n - 1)，每次向 0 靠近。", solution:"int sum_to(int n) {\n    if (n == 0) return 0;\n    return n + sum_to(n - 1);\n}",analysis:{key:"递归两大要素：基例（n == 0 直接返回 0）和递推关系（n + sum_to(n - 1)）。",why:"每次调用把问题缩小 1，一路走到基例停止；返回值逐层累加，sum_to(3) = 3 + 2 + 1 + 0 = 6。",extra:"递归每层调用都要占一块栈空间，n 很大时可能栈溢出；能写循环时优先循环，递归更擅长表达树、分治这类结构。"}}
         ]
       },
       {
@@ -516,7 +516,7 @@
           {type:"选择题", text:"结构体变量 p 访问成员 x 时，通常使用哪个运算符？", options:[".","->","::","&"], answer:0, explanation:"普通结构体变量使用点号，例如 p.x。结构体指针使用箭头，例如 ptr->x。"},
           {type:"判断题", text:"结构体指针 ptr 可以用 ptr->x 访问其指向结构体的 x 成员。", options:["正确","错误"], answer:0, explanation:"ptr->x 等价于 (*ptr).x，是通过结构体指针访问成员的常用写法。"},
           {type:"填空题", text:"访问普通结构体变量 person 的 age 成员，应写作 person____age。", placeholder:"填写成员访问运算符", accepted:["."] , explanation:"普通结构体变量使用点号，所以写作 person.age。"},
-          {type:"程序题", text:"定义一个包含 int x、y 的 Point 结构体，创建点 p=(2,5)，并输出 x 与 y。", explanation:"用 struct 声明类型，再用初始化列表创建变量，最后通过点号访问成员。", solution:"#include <stdio.h>\nstruct Point { int x; int y; };\nint main(void) {\n    struct Point p = {2, 5};\n    printf(\"%d %d\\n\", p.x, p.y);\n    return 0;\n}"}
+          {type:"程序题", text:"定义一个包含 int x、y 的 Point 结构体，创建点 p=(2,5)，并输出 x 与 y。", explanation:"用 struct 声明类型，再用初始化列表创建变量，最后通过点号访问成员。", solution:"#include <stdio.h>\nstruct Point { int x; int y; };\nint main(void) {\n    struct Point p = {2, 5};\n    printf(\"%d %d\\n\", p.x, p.y);\n    return 0;\n}",analysis:{key:"struct 定义一个“打包”的新类型；创建变量后用点号 . 访问成员；初始化列表按顺序赋值。",why:"struct Point p = {2, 5} 把 2 给 x、5 给 y；printf 里 p.x、p.y 取出成员打印。",extra:"结构体整体是“值”，可以整体赋值、按值传参（拷贝开销大）；指向结构体的指针用 -&gt; 访问成员；typedef 可以给结构体类型起短名字。"}}
         ]
       },
       {
@@ -531,7 +531,7 @@
           {type:"选择题", text:"malloc 申请内存失败时会返回什么？", options:["NULL","0 字节但有效地址","-1","自动退出"], answer:0, explanation:"malloc 失败返回空指针 NULL，因此使用申请结果前要检查是否成功。"},
           {type:"判断题", text:"对同一个已释放的指针再次 free 是安全的。", options:["正确","错误"], answer:1, explanation:"重复释放同一块内存属于未定义行为。释放后可将指针设为 NULL，并避免再次释放同一资源。"},
           {type:"填空题", text:"与 malloc 配对、释放动态申请内存的标准库函数是？", placeholder:"填写函数名", accepted:["free","free()"], explanation:"使用 free(ptr) 释放由 malloc/calloc/realloc 等分配且尚未释放的内存。"},
-          {type:"程序题", text:"动态申请 n 个 int 的数组，检查失败，使用后释放。写出核心代码。", explanation:"用 n * sizeof *values 计算所需字节数。检查 NULL 后再访问，所有正常使用路径结束时调用 free。", solution:"int *values = malloc(n * sizeof *values);\nif (values == NULL) {\n    return 1;\n}\n/* 使用 values[0] 到 values[n - 1] */\nfree(values);\nvalues = NULL;"}
+          {type:"程序题", text:"动态申请 n 个 int 的数组，检查失败，使用后释放。写出核心代码。", explanation:"用 n * sizeof *values 计算所需字节数。检查 NULL 后再访问，所有正常使用路径结束时调用 free。", solution:"int *values = malloc(n * sizeof *values);\nif (values == NULL) {\n    return 1;\n}\n/* 使用 values[0] 到 values[n - 1] */\nfree(values);\nvalues = NULL;",analysis:{key:"malloc 的单位是字节，要乘 sizeof；返回值可能是 NULL；free 归还内存；free 后置 NULL 防悬垂。",why:"n * sizeof *values 才是 n 个 int 的字节数（int 常见 4 字节）；不检查 NULL 就解引用会在内存不足时崩溃；用完 free 否则内存泄漏。",extra:"malloc 返回 void*，在 C 里无需强转（C++ 需要）；realloc 可扩容但可能搬地址，要用新指针接住；内存泄漏在长跑程序里会越占越多。"}}
         ]
       },
       {
@@ -546,7 +546,7 @@
           {type:"选择题", text:"单链表最后一个节点的 next 通常是什么？", options:["NULL","head","自身地址","0 个字节"], answer:0, explanation:"NULL 表示没有后继节点，是单链表结束的标记。"},
           {type:"判断题", text:"释放当前链表节点后，还可以安全地通过该节点读取 next。", options:["正确","错误"], answer:1, explanation:"节点释放后再访问属于 use-after-free。应先保存 next，再释放当前节点。"},
           {type:"填空题", text:"遍历单链表直到结束时，循环通常判断当前指针不等于什么？", placeholder:"填写空指针常量", accepted:["NULL","null"], explanation:"最后一个节点之后是 NULL，因此遍历条件通常是 cur != NULL。"},
-          {type:"程序题", text:"写出遍历链表并打印每个节点 value 的循环。", explanation:"从 head 开始，每轮打印当前值，然后将指针推进到 next；遇到 NULL 停止。", solution:"struct Node *cur = head;\nwhile (cur != NULL) {\n    printf(\"%d\\n\", cur->value);\n    cur = cur->next;\n}"}
+          {type:"程序题", text:"写出遍历链表并打印每个节点 value 的循环。", explanation:"从 head 开始，每轮打印当前值，然后将指针推进到 next；遇到 NULL 停止。", solution:"struct Node *cur = head;\nwhile (cur != NULL) {\n    printf(\"%d\\n\", cur->value);\n    cur = cur->next;\n}",analysis:{key:"链表遍历靠指针推进：cur = cur-&gt;next；终止条件是 cur == NULL。",why:"从 head 出发，每轮打印当前节点值，再用 next 跳到下一个，直到 NULL 表示链表结束。",extra:"遍历时不要把 cur 往前改（丢了前向指针链表就断了）；复杂度 O(n)；只读遍历可把参数写成 const 结构体指针。"}}
         ]
       },
       {
@@ -561,7 +561,7 @@
           {type:"选择题", text:"fopen 打开文件失败时，通常返回什么？", options:["NULL","EOF 字符串","文件大小","自动创建的有效流"], answer:0, explanation:"fopen 失败时返回 NULL，代码应检查后再使用 FILE 指针。"},
           {type:"判断题", text:"文件用完后应调用 fclose 关闭。", options:["正确","错误"], answer:0, explanation:"关闭文件可以释放系统资源，并确保缓冲输出得到处理。"},
           {type:"填空题", text:"以追加模式打开文件时，fopen 的模式字符串通常写作什么？", placeholder:"填写带双引号的模式", accepted:["\"a\"","a"], explanation:"模式 \"a\" 表示追加写入；写入内容通常放在文件末尾。"},
-          {type:"程序题", text:"打开 output.txt 写入一行 Hello，检查打开是否成功并关闭文件。", explanation:"fopen 使用 \"w\" 写入模式，先检查 NULL，再调用 fprintf 写内容，最后 fclose。", solution:"#include <stdio.h>\nint main(void) {\n    FILE *fp = fopen(\"output.txt\", \"w\");\n    if (fp == NULL) return 1;\n    fprintf(fp, \"Hello\\n\");\n    fclose(fp);\n    return 0;\n}"}
+          {type:"程序题", text:"打开 output.txt 写入一行 Hello，检查打开是否成功并关闭文件。", explanation:"fopen 使用 \"w\" 写入模式，先检查 NULL，再调用 fprintf 写内容，最后 fclose。", solution:"#include <stdio.h>\nint main(void) {\n    FILE *fp = fopen(\"output.txt\", \"w\");\n    if (fp == NULL) return 1;\n    fprintf(fp, \"Hello\\n\");\n    fclose(fp);\n    return 0;\n}",analysis:{key:"fopen 返回 FILE*，失败返回 NULL 必须先检查；模式 \"w\" 表示写（会创建或清空）；fclose 释放资源。",why:"fopen 成功后 fprintf 写内容；最后 fclose 把缓冲数据真正落盘并释放句柄，不关会泄漏文件描述符。",extra:"模式 \"r\"/\"a\"/\"rb\" 含义不同；写文件后还应检查 fclose 的返回值，磁盘满时写失败只能在这里察觉。"}}
         ]
       },
       {
@@ -576,7 +576,7 @@
           {type:"选择题", text:"函数声明通常适合放在哪里，供多个源文件使用？", options:["头文件 .h","程序输出文件","栈内存","注释里"], answer:0, explanation:"头文件常放接口声明，源文件包含该头文件后即可调用对应函数。函数实现通常放在 .c 源文件中。"},
           {type:"判断题", text:"链接阶段可以把多个目标文件组合起来，并解析它们之间的外部符号引用。", options:["正确","错误"], answer:0, explanation:"链接器负责把目标文件和库组合，并解决跨文件的函数、变量引用。"},
           {type:"填空题", text:"gcc 中常用来指定生成的可执行文件名的选项是 -____ app。", placeholder:"填写选项字母", accepted:["o"], explanation:"-o 用于指定输出文件名，例如 gcc main.c -o app。"},
-          {type:"程序题", text:"写一组头文件保护宏，保护名为 UTIL_H 的头文件内容。", explanation:"用 #ifndef 检查宏是否尚未定义，再 #define；文件末尾用 #endif 结束条件编译。", solution:"#ifndef UTIL_H\n#define UTIL_H\n\n/* 头文件声明放在这里 */\n\n#endif"}
+          {type:"程序题", text:"写一组头文件保护宏，保护名为 UTIL_H 的头文件内容。", explanation:"用 #ifndef 检查宏是否尚未定义，再 #define；文件末尾用 #endif 结束条件编译。", solution:"#ifndef UTIL_H\n#define UTIL_H\n\n/* 头文件声明放在这里 */\n\n#endif",analysis:{key:"头文件守卫（include guard）：#ifndef → #define → 内容 → #endif。",why:"第一次包含时 UTIL_H 未定义，进入并定义它；之后再包含同一文件时 #ifndef 为假，内容被跳过，防止重复声明。",extra:"现代编译器也支持 #pragma once；宏名惯例是大写下划线；守卫宏名要起得足够独特，避免和系统头文件冲突。"}}
         ]
       },
       {
@@ -591,7 +591,7 @@
           {type:"选择题", text:"编译选项 -g 的主要用途是什么？", options:["生成调试信息","隐藏所有警告","自动修复错误","启用文件写入"], answer:0, explanation:"-g 会包含调试信息，方便调试器把机器指令对应到源代码和变量。"},
           {type:"判断题", text:"assert 适合替代对所有用户输入的检查。", options:["正确","错误"], answer:1, explanation:"assert 主要检查程序内部不变量，不能代替对外部输入的验证；发布构建还可能禁用断言。"},
           {type:"填空题", text:"gcc 中常用于开启额外警告的选项之一是 -W____。", placeholder:"填写 extra", accepted:["extra"], explanation:"-Wall 与 -Wextra 常一起使用来启用常见警告。"},
-          {type:"程序题", text:"写一个函数安全地计算 a 除以 b：若 b 为 0 返回失败标志，否则输出商并返回成功标志。", explanation:"不要在除数为 0 时执行除法。通过返回状态报告是否成功，并通过输出参数提供商。", solution:"int divide_int(int a, int b, int *result) {\n    if (b == 0) return 0;\n    *result = a / b;\n    return 1;\n}"}
+          {type:"程序题", text:"写一个函数安全地计算 a 除以 b：若 b 为 0 返回失败标志，否则输出商并返回成功标志。", explanation:"不要在除数为 0 时执行除法。通过返回状态报告是否成功，并通过输出参数提供商。", solution:"int divide_int(int a, int b, int *result) {\n    if (b == 0) return 0;\n    *result = a / b;\n    return 1;\n}",analysis:{key:"除零是未定义行为，必须先检查；用返回值做状态标志、用输出参数传结果，是 C 的错误处理模式。",why:"b == 0 时直接 return 0 表示失败，不执行除法；正常时把商写进 *result 并 return 1，调用方先看返回值再决定是否用结果。",extra:"类似的还有 errno + 错误码模式；整数除法结果向零截断（7/2 得 3，-7/2 得 -3）；除法和取余常配合使用。"}}
         ]
       },
       {
@@ -606,7 +606,7 @@
           {type:"选择题", text:"要检测 flags 的第 2 位是否为 1，使用哪种核心运算？", options:["flags & (1u << 2)","flags | (1u << 2)","flags ^ (1u << 2)","flags = (1u << 2)"], answer:0, explanation:"按位与掩码可保留目标位；结果非零表示该位已设置。"},
           {type:"判断题", text:"| 是按位或，|| 是逻辑或，它们可以在所有情况下互换。", options:["正确","错误"], answer:1, explanation:"| 按位处理整数的每一位；|| 进行逻辑判断并具有短路行为，语义不同。"},
           {type:"填空题", text:"把 x 的第 3 位（从 0 开始计数）设为 1，常用的复合赋值运算符是 x ____ (1u << 3)。", placeholder:"填写运算符", accepted:["|="], explanation:"按位或赋值 |= 可将掩码中为 1 的位设置到 x 中。"},
-          {type:"程序题", text:"写出检测无符号整数 x 的第 0 位是否为 1 的 if 条件。", explanation:"第 0 位掩码是 1u << 0，也就是 1。将 x 与掩码按位与，结果非零则该位为 1。", solution:"if ((x & 1u) != 0) {\n    puts(\"odd\");\n}"}
+          {type:"程序题", text:"写出检测无符号整数 x 的第 0 位是否为 1 的 if 条件。", explanation:"第 0 位掩码是 1u << 0，也就是 1。将 x 与掩码按位与，结果非零则该位为 1。", solution:"if ((x & 1u) != 0) {\n    puts(\"odd\");\n}",analysis:{key:"位掩码技巧：x &amp; 1u 只保留第 0 位；结果非零说明该位是 1。",why:"1u 的二进制只有最低位是 1，按位与后其他位全部清零，只看第 0 位；!= 0 判断结果。",extra:"想取第 k 位就写 x &amp; (1u &lt;&lt; k)；右移 &gt;&gt; 取高位段；有符号数右移是算术移位（补符号位），无符号是逻辑移位，行为不同。"}}
         ]
       },
       {
@@ -621,7 +621,7 @@
           {type:"选择题", text:"对已排序数组使用二分查找，典型时间复杂度是什么？", options:["O(log n)","O(n)","O(n²)","O(1)"], answer:0, explanation:"二分查找每一步将候选区间缩小约一半，因此比较次数随 log₂ n 增长。"},
           {type:"判断题", text:"二分查找可以不考虑排序，直接正确地用于任意无序数组。", options:["正确","错误"], answer:1, explanation:"二分查找根据中间元素与目标的大小决定舍弃一半区间，前提是数据有序。"},
           {type:"填空题", text:"单层循环从 0 遍历到 n-1，通常时间复杂度写作 O(____)。", placeholder:"填写 n 或 n²", accepted:["n"], explanation:"循环体执行约 n 次，因此复杂度为 O(n)。"},
-          {type:"程序题", text:"给定升序整数数组，写出二分查找的循环框架，找不到时返回 -1。", explanation:"维持闭区间 [low, high]。命中时返回 mid；否则缩小一半搜索区间，区间为空后返回 -1。", solution:"int binary_search(const int a[], int n, int target) {\n    int low = 0, high = n - 1;\n    while (low <= high) {\n        int mid = low + (high - low) / 2;\n        if (a[mid] == target) return mid;\n        if (a[mid] < target) low = mid + 1;\n        else high = mid - 1;\n    }\n    return -1;\n}"}
+          {type:"程序题", text:"给定升序整数数组，写出二分查找的循环框架，找不到时返回 -1。", explanation:"维持闭区间 [low, high]。命中时返回 mid；否则缩小一半搜索区间，区间为空后返回 -1。", solution:"int binary_search(const int a[], int n, int target) {\n    int low = 0, high = n - 1;\n    while (low <= high) {\n        int mid = low + (high - low) / 2;\n        if (a[mid] == target) return mid;\n        if (a[mid] < target) low = mid + 1;\n        else high = mid - 1;\n    }\n    return -1;\n}",analysis:{key:"二分查找要求数组已排序；维持闭区间 [low, high]；while (low &lt;= high) 表示区间非空。",why:"每次取中点 mid，命中返回；比目标小就去右半边（low = mid + 1），大则去左半边（high = mid - 1）；区间空（low &amp;gt; high）返回 -1。",extra:"mid 写 low + (high - low) / 2 而不是 (low + high) / 2，是为了防止两个大数相加溢出；复杂度 O(log n)，10 亿数据约 30 次比较。"}}
         ]
       },
       {
@@ -636,7 +636,7 @@
           {type:"选择题", text:"队列通常遵循哪种规则？", options:["先进先出","后进先出","随机访问","按值自动排序"], answer:0, explanation:"队列 FIFO（先进先出），最早进入的元素最先离开；栈则是 LIFO。"},
           {type:"判断题", text:"二叉搜索树的中序遍历通常按从小到大的顺序访问键值。", options:["正确","错误"], answer:0, explanation:"二叉搜索树左子树键较小、右子树键较大，中序遍历先左后根再右，因此按非递减顺序访问。"},
           {type:"填空题", text:"栈遵循“后进____出”的规则。", placeholder:"填写两个字", accepted:["先出"], explanation:"栈是 LIFO：Last In, First Out，即后进先出。"},
-          {type:"程序题", text:"写出二叉树前序遍历的递归顺序（根节点 root 不为空时）。", explanation:"前序遍历的顺序是先访问根，再递归遍历左子树，最后递归遍历右子树；空指针时返回。", solution:"void preorder(struct Node *root) {\n    if (root == NULL) return;\n    visit(root->value);\n    preorder(root->left);\n    preorder(root->right);\n}"}
+          {type:"程序题", text:"写出二叉树前序遍历的递归顺序（根节点 root 不为空时）。", explanation:"前序遍历的顺序是先访问根，再递归遍历左子树，最后递归遍历右子树；空指针时返回。", solution:"void preorder(struct Node *root) {\n    if (root == NULL) return;\n    visit(root->value);\n    preorder(root->left);\n    preorder(root->right);\n}",analysis:{key:"前序遍历顺序：根 → 左子树 → 右子树；递归出口是 root == NULL。",why:"先 visit 当前根，再递归左子树、右子树；空指针直接返回保证递归必然终止。",extra:"中序是 左→根→右，后序是 左→右→根；递归遍历代码最短，迭代版要显式用栈；三种遍历复杂度都是 O(n)。"}}
         ]
       },
       {
@@ -651,7 +651,7 @@
           {type:"选择题", text:"把编译后的程序下载到 STM32 板上，常用哪种工具？", options:["ST-LINK 调试器","文本编辑器","串口终端单独使用","面包板"], answer:0, knowledge:"STM32 烧录与调试工具链", pitfall:"编译器负责生成程序，ST-LINK 一类调试器负责与芯片连接、下载和调试，二者不是同一个环节。", explanation:"ST-LINK 可通过 SWD 等接口连接 STM32，常用于下载程序和调试。"},
           {type:"判断题", text:"所有 STM32 芯片的外设、引脚和时钟配置都完全相同。", options:["正确","错误"], answer:1, knowledge:"芯片型号与数据手册", pitfall:"即使都叫 STM32，不同系列和封装的外设资源、引脚复用与时钟配置也会不同。", explanation:"STM32 有多个系列与型号。写程序和接线前要核对具体型号的数据手册、参考手册和开发板原理图。"},
           {type:"填空题", text:"STM32CubeIDE 常用 ST-LINK 的 ____ 接口连接芯片进行下载与调试。", placeholder:"填写三字母接口名", accepted:["SWD"], knowledge:"片上调试接口", pitfall:"SWD 是调试/下载接口，不是给开发板供电的接口；接线还要确认 SWDIO、SWCLK 和 GND。", explanation:"SWD（Serial Wire Debug）是 STM32 常用的调试接口。"},
-          {type:"程序题", text:"写出一个 HAL 工程 main 函数中的基本初始化顺序，并留出主循环。", explanation:"先初始化 HAL，再配置系统时钟和外设，最后进入 while(1)。不同 Cube 工程的具体函数名可能不同。", solution:"int main(void) {\n    HAL_Init();\n    SystemClock_Config();\n    MX_GPIO_Init();\n    while (1) {\n        /* 应用逻辑 */\n    }\n}", knowledge:"STM32 程序入口与初始化顺序", pitfall:"外设时钟、GPIO 等依赖初始化不能漏；不要在主循环外只执行一次而误以为会周期运行。"}
+          {type:"程序题", text:"写出一个 HAL 工程 main 函数中的基本初始化顺序，并留出主循环。", explanation:"先初始化 HAL，再配置系统时钟和外设，最后进入 while(1)。不同 Cube 工程的具体函数名可能不同。", solution:"int main(void) {\n    HAL_Init();\n    SystemClock_Config();\n    MX_GPIO_Init();\n    while (1) {\n        /* 应用逻辑 */\n    }\n}", knowledge:"STM32 程序入口与初始化顺序", pitfall:"外设时钟、GPIO 等依赖初始化不能漏；不要在主循环外只执行一次而误以为会周期运行。",analysis:{key:"HAL 工程初始化顺序：HAL_Init（库自身）→ SystemClock_Config（时钟树）→ 各外设 MX_XXX_Init → 进入 while(1) 主循环。",why:"库先初始化自己，再配系统时钟（外设的时钟都从这里分出来），然后初始化 GPIO/UART 等外设，最后主循环里放应用逻辑——顺序颠倒外设可能起不来。",extra:"芯片复位后先跑启动文件（配置堆栈、拷贝数据段）才会调用 main；外设没开时钟时读写其寄存器是无效的，这是新手最常见的“没反应”原因。"}}
         ]
       },
       {
@@ -666,7 +666,7 @@
           {type:"选择题", text:"要让 STM32 控制 LED 的亮灭，LED 引脚通常应配置为哪类 GPIO？", options:["数字输出","模拟输入","浮空输入","复用输入"], answer:0, knowledge:"GPIO 输出模式", pitfall:"控制 LED 需要输出电平；读取按钮才通常使用输入模式。引脚名字相同不代表配置用途相同。", explanation:"MCU 要主动改变 LED 引脚电平，因此通常配置为数字输出，并选择合适的输出类型。"},
           {type:"判断题", text:"任意 STM32 板子上的板载 LED 都接在同一个固定引脚，而且高电平一定点亮。", options:["正确","错误"], answer:1, knowledge:"开发板原理图与有效电平", pitfall:"不要照抄别的板子的引脚定义；LED 可能高电平有效，也可能低电平有效。", explanation:"LED 引脚和有效电平由开发板电路决定，应查看本板原理图、示例工程或板卡说明。"},
           {type:"填空题", text:"HAL 中每次把 GPIO 输出状态反过来的函数名是 HAL_GPIO____Pin。", placeholder:"填写函数中的动词", accepted:["Toggle","toggle"], knowledge:"HAL GPIO 翻转 API", pitfall:"Toggle 是翻转当前状态，不是指定点亮或熄灭；需要确定电平时使用 HAL_GPIO_WritePin。", explanation:"HAL_GPIO_TogglePin 会把指定 GPIO 输出状态翻转。"},
-          {type:"程序题", text:"用 HAL 写出一个每 500 ms 翻转一次 LED 的主循环。", explanation:"在循环中翻转板载 LED，然后延时 500 ms。实际项目须把 LED_Pin 和端口替换成开发板对应配置。", solution:"while (1) {\n    HAL_GPIO_TogglePin(LED_GPIO_Port, LED_Pin);\n    HAL_Delay(500);\n}", knowledge:"GPIO 周期控制与主循环", pitfall:"确认 LED 宏来自正确的 CubeMX 工程；阻塞延时期间 CPU 不处理主循环里的其他任务。"}
+          {type:"程序题", text:"用 HAL 写出一个每 500 ms 翻转一次 LED 的主循环。", explanation:"在循环中翻转板载 LED，然后延时 500 ms。实际项目须把 LED_Pin 和端口替换成开发板对应配置。", solution:"while (1) {\n    HAL_GPIO_TogglePin(LED_GPIO_Port, LED_Pin);\n    HAL_Delay(500);\n}", knowledge:"GPIO 周期控制与主循环", pitfall:"确认 LED 宏来自正确的 CubeMX 工程；阻塞延时期间 CPU 不处理主循环里的其他任务。",analysis:{key:"HAL_GPIO_TogglePin 翻转引脚电平；HAL_Delay(500) 阻塞延时 500 毫秒。",why:"Toggle 每次把电平取反，亮→灭→亮循环；延时 500ms 后再次翻转，形成周期闪烁。",extra:"HAL_Delay 基于 SysTick 阻塞延时，期间中断仍会响应，但主循环暂停；想让主循环“不卡”，要用定时器中断置标志的方式。"}}
         ]
       },
       {
@@ -681,7 +681,7 @@
           {type:"选择题", text:"按钮输入脚悬空时，最可能遇到什么问题？", options:["读值不稳定","自动变成 PWM","程序自动下载","只会读到固定 0"], answer:0, knowledge:"GPIO 输入电路与上拉下拉", pitfall:"悬空输入会受噪声影响，不保证固定读 0 或 1；应通过内部或外部上拉/下拉确定空闲电平。", explanation:"输入脚悬空时电平不确定，可能受周围干扰而跳变。"},
           {type:"判断题", text:"按钮按下后出现的机械抖动可能让 MCU 在短时间内检测到多次变化。", options:["正确","错误"], answer:0, knowledge:"机械按键消抖", pitfall:"一次物理按压不一定对应一次干净的电平边沿，需要软件或硬件消抖。", explanation:"机械触点会短暂反复接通/断开，若直接计数或翻转 LED，可能出现重复触发。"},
           {type:"填空题", text:"按钮接地并使用上拉输入时，按下通常读到低电平，也就是 GPIO_PIN____。", placeholder:"填写 SET 或 RESET", accepted:["RESET","reset"], knowledge:"上拉输入与低电平有效", pitfall:"按下电平取决于实际接线；本题的前提是按钮按下时把引脚连接到 GND。", explanation:"上拉让松开时为高电平，按下接地时变为低电平，对应 GPIO_PIN_RESET。"},
-          {type:"程序题", text:"写一个简单的软件消抖片段：检测低电平按下，等待 20 ms，再确认仍为低电平。", explanation:"先读一次，延时后再次确认。此写法适合演示原理；多任务程序应改用非阻塞消抖。", solution:"if (HAL_GPIO_ReadPin(BTN_GPIO_Port, BTN_Pin) == GPIO_PIN_RESET) {\n    HAL_Delay(20);\n    if (HAL_GPIO_ReadPin(BTN_GPIO_Port, BTN_Pin) == GPIO_PIN_RESET) {\n        /* 确认按键按下 */\n    }\n}", knowledge:"双重采样的软件消抖", pitfall:"延时后必须再读一次确认；单次低电平可能只是抖动。较复杂程序不要用长时间阻塞延时。"}
+          {type:"程序题", text:"写一个简单的软件消抖片段：检测低电平按下，等待 20 ms，再确认仍为低电平。", explanation:"先读一次，延时后再次确认。此写法适合演示原理；多任务程序应改用非阻塞消抖。", solution:"if (HAL_GPIO_ReadPin(BTN_GPIO_Port, BTN_Pin) == GPIO_PIN_RESET) {\n    HAL_Delay(20);\n    if (HAL_GPIO_ReadPin(BTN_GPIO_Port, BTN_Pin) == GPIO_PIN_RESET) {\n        /* 确认按键按下 */\n    }\n}", knowledge:"双重采样的软件消抖", pitfall:"延时后必须再读一次确认；单次低电平可能只是抖动。较复杂程序不要用长时间阻塞延时。",analysis:{key:"双重采样消抖：第一次读到按下 → 延时 20ms → 再读一次确认，两次都低电平才算有效。",why:"机械按键按下瞬间触点会抖动几次，只读一次可能把抖动当按下；延时后再确认能滤掉抖动。",extra:"阻塞式 HAL_Delay 在复杂程序里会卡住其他任务，工程上更常用“定时器轮询 + 状态机”的非阻塞消抖；低电平有效还是高电平有效取决于板子电路。"}}
         ]
       },
       {
@@ -696,7 +696,7 @@
           {type:"选择题", text:"定时器预分频器 PSC=7 时，计数时钟大约变成原来的多少？", options:["1/8","1/7","8 倍","不变"], answer:0, knowledge:"定时器预分频计算", pitfall:"常见分频关系使用 PSC+1，而不是 PSC；要结合芯片参考手册核对具体定时器公式。", explanation:"很多 STM32 定时器的计数频率为定时器时钟除以 PSC+1，所以 PSC=7 时为 1/8。"},
           {type:"判断题", text:"中断回调里适合调用 HAL_Delay 等待几百毫秒，再继续处理。", options:["正确","错误"], answer:1, knowledge:"中断服务程序设计原则", pitfall:"阻塞 ISR 会延迟其他中断和任务；回调尽量只记录事件或设置标志。", explanation:"ISR 应尽可能短。长延时会影响实时响应，且 HAL_Delay 常依赖系统节拍，可能在中断中造成死锁或异常延迟。"},
           {type:"填空题", text:"定时器更新中断的常见 HAL 启动函数是 HAL_TIM_Base_Start____。", placeholder:"填写 IT 或 DMA", accepted:["IT","it"], knowledge:"HAL 定时器中断启动 API", pitfall:"Start_IT 表示中断方式；Start_DMA、Start 的用途不同，不要混淆。", explanation:"HAL_TIM_Base_Start_IT 用于以中断方式启动基本定时器。"},
-          {type:"程序题", text:"写出一个定时器周期回调：当 htim 是 TIM2 时只设置 tick_flag，不在中断里翻转 LED。", explanation:"用实例句柄判断回调来源，再置位标志；主循环读取标志后执行较慢的业务。", solution:"volatile uint8_t tick_flag = 0;\n\nvoid HAL_TIM_PeriodElapsedCallback(TIM_HandleTypeDef *htim) {\n    if (htim->Instance == TIM2) {\n        tick_flag = 1;\n    }\n}", knowledge:"定时器 ISR 与主循环分工", pitfall:"中断变量要考虑异步访问；不要把耗时工作或阻塞调用放进回调。"}
+          {type:"程序题", text:"写出一个定时器周期回调：当 htim 是 TIM2 时只设置 tick_flag，不在中断里翻转 LED。", explanation:"用实例句柄判断回调来源，再置位标志；主循环读取标志后执行较慢的业务。", solution:"volatile uint8_t tick_flag = 0;\n\nvoid HAL_TIM_PeriodElapsedCallback(TIM_HandleTypeDef *htim) {\n    if (htim->Instance == TIM2) {\n        tick_flag = 1;\n    }\n}", knowledge:"定时器 ISR 与主循环分工", pitfall:"中断变量要考虑异步访问；不要把耗时工作或阻塞调用放进回调。",analysis:{key:"中断回调只做“标记”，不干耗时活；用 htim-&amp;gt;Instance 判断是哪个定时器触发的。",why:"中断上下文里做翻转和延时会阻塞其他中断、拖慢系统；先置 tick_flag = 1，主循环看到标志再处理。",extra:"中断和主循环共享的变量要加 volatile，防止编译器缓存读取；HAL 的回调函数名是固定的，由 HAL 在中断里自动调用。"}}
         ]
       },
       {
@@ -711,7 +711,7 @@
           {type:"选择题", text:"PWM 占空比从 20% 提高到 80%，LED 通常会怎样？", options:["看起来更亮","一定熄灭","闪烁频率必定降低","变成模拟输入"], answer:0, knowledge:"PWM 占空比与平均亮度", pitfall:"占空比改变平均输出效果，不等同于直接生成连续可调模拟电压；实际亮度还受 LED 和驱动影响。", explanation:"在合适频率和电路下，占空比提高通常会提升 LED 的平均亮度。"},
           {type:"判断题", text:"STM32 普通 GPIO 引脚可以直接给任何直流电机供电。", options:["正确","错误"], answer:1, knowledge:"MCU 引脚电流限制与电机驱动", pitfall:"电机启动电流和感性反冲可能超过 MCU 引脚能力，需使用驱动器、合适电源和保护设计。", explanation:"GPIO 电流能力有限，不能直接驱动普通电机；应使用符合电机电压/电流要求的驱动电路。"},
           {type:"填空题", text:"PWM 一个周期中高电平时间所占的比例叫作 ____。", placeholder:"填写三个字", accepted:["占空比"], knowledge:"PWM 基本参数", pitfall:"频率表示单位时间周期数，占空比才表示高电平所占比例。", explanation:"占空比描述一个 PWM 周期内有效电平持续时间的比例。"},
-          {type:"程序题", text:"写出使用 HAL 启动 TIM2 通道 1 的 PWM，并把比较值设置为 compare 的代码。", explanation:"先确保 CubeMX 已配置并初始化该定时器通道，然后启动 PWM，再设置比较寄存器。", solution:"HAL_TIM_PWM_Start(&htim2, TIM_CHANNEL_1);\n__HAL_TIM_SET_COMPARE(&htim2, TIM_CHANNEL_1, compare);", knowledge:"HAL 定时器 PWM API", pitfall:"定时器通道和 GPIO 复用引脚必须在 CubeMX 中匹配；compare 值应在配置允许范围内。"}
+          {type:"程序题", text:"写出使用 HAL 启动 TIM2 通道 1 的 PWM，并把比较值设置为 compare 的代码。", explanation:"先确保 CubeMX 已配置并初始化该定时器通道，然后启动 PWM，再设置比较寄存器。", solution:"HAL_TIM_PWM_Start(&htim2, TIM_CHANNEL_1);\n__HAL_TIM_SET_COMPARE(&htim2, TIM_CHANNEL_1, compare);", knowledge:"HAL 定时器 PWM API", pitfall:"定时器通道和 GPIO 复用引脚必须在 CubeMX 中匹配；compare 值应在配置允许范围内。",analysis:{key:"PWM 两步：HAL_TIM_PWM_Start 启动通道；__HAL_TIM_SET_COMPARE 设置比较值控制占空比。",why:"先启动 PWM 输出，再设置比较寄存器；比较值占周期值的比例就是占空比，控制亮度/速度。",extra:"PWM 频率由定时器周期（ARR）决定，占空比由比较值（CCR）决定；CubeMX 里必须把对应 GPIO 配置为定时器复用功能，引脚和通道要匹配。"}}
         ]
       },
       {
@@ -726,7 +726,7 @@
           {type:"选择题", text:"STM32 向 USB-UART 模块发送数据时，通常应将 STM32 的 TX 接到模块的哪个引脚？", options:["RX","TX","GND","3.3V"], answer:0, knowledge:"UART 交叉连接", pitfall:"发送端接接收端（TX→RX），接收端接发送端（RX→TX），并共享地线。", explanation:"一端 TX 发出的数据要进入另一端 RX 接收。"},
           {type:"判断题", text:"只要 TX 和 RX 接对，即使两边波特率不一致也一定能正确通信。", options:["正确","错误"], answer:1, knowledge:"UART 通信参数匹配", pitfall:"双方波特率、数据位、校验和停止位都需要匹配，否则接收端会错误采样。", explanation:"UART 两端必须使用兼容的串口格式和波特率。"},
           {type:"填空题", text:"UART 接两块独立设备时，通常还需要把双方的 ____ 连接在一起作为共同参考。", placeholder:"填写信号名", accepted:["GND","地","地线"], knowledge:"串口共地", pitfall:"信号电平是相对于地测量的；不要把 TTL UART 和正负电压的传统 RS-232 直接混接。", explanation:"共地可提供共同的电平参考。还要确认电压电平兼容。"},
-          {type:"程序题", text:"用 HAL_UART_Transmit 通过 huart1 发送字符串 msg，不发送结尾的 \\0，超时 100 ms。", explanation:"发送字节数使用字符串可见部分的长度；固定数组可用 sizeof(msg)-1 排除结尾符。", solution:"const uint8_t msg[] = \"Hello\\r\\n\";\nHAL_UART_Transmit(&huart1, (uint8_t *)msg,\n                 sizeof msg - 1, 100);", knowledge:"HAL 阻塞式 UART 发送", pitfall:"确认 UART 已初始化且引脚复用正确；长度不能误把结尾 \\0 当作要发的字符。"}
+          {type:"程序题", text:"用 HAL_UART_Transmit 通过 huart1 发送字符串 msg，不发送结尾的 \\0，超时 100 ms。", explanation:"发送字节数使用字符串可见部分的长度；固定数组可用 sizeof(msg)-1 排除结尾符。", solution:"const uint8_t msg[] = \"Hello\\r\\n\";\nHAL_UART_Transmit(&huart1, (uint8_t *)msg,\n                 sizeof msg - 1, 100);", knowledge:"HAL 阻塞式 UART 发送", pitfall:"确认 UART 已初始化且引脚复用正确；长度不能误把结尾 \\0 当作要发的字符。",analysis:{key:"HAL_UART_Transmit 的参数：句柄、数据指针、发送长度、超时；发送长度要排除结尾的 \\0。",why:"\\0 是字符串结束标记，不是要发送的数据；sizeof msg - 1 算出可见字符数，避免把 0 字节发出去。",extra:"UART 发送有三种方式：阻塞（本函数）、中断、DMA；串口惯例用 \\r\\n 换行；超时 100 表示等待 100ms，超时返回 HAL_BUSY。"}}
         ]
       },
       {
@@ -741,7 +741,7 @@
           {type:"选择题", text:"把模拟电压转换成数字量，通常使用 STM32 的哪个外设？", options:["ADC","UART","GPIO 输出","看门狗"], answer:0, knowledge:"模数转换器 ADC", pitfall:"ADC 读取模拟输入；DAC 才是数字转模拟，UART 是串行通信。并非所有 STM32 都有相同数量/规格的 ADC。", explanation:"ADC（Analog-to-Digital Converter）将模拟输入电压量化为数字结果。"},
           {type:"判断题", text:"任何高于 STM32 电源电压的传感器输出都可以直接接入 ADC 引脚。", options:["正确","错误"], answer:1, knowledge:"ADC 输入绝对最大额定值", pitfall:"输入超过引脚额定范围可能损坏芯片；先查数据手册，必要时用分压与保护电路。", explanation:"ADC 输入必须在该型号允许的电压范围内，不能仅因程序里配置了 ADC 就安全。"},
           {type:"填空题", text:"ADC 把连续模拟电压转换成离散数字值，这个过程称为电压 ____。", placeholder:"填写两个字", accepted:["量化"], knowledge:"ADC 量化原理", pitfall:"ADC 结果是有限精度的离散值，不是无限精度的真实电压。", explanation:"量化把输入范围映射到有限个数字级别。"},
-          {type:"程序题", text:"写出 HAL 轮询读取 hadc1 转换结果的核心流程：启动、等待、读取。", explanation:"先启动 ADC 转换，再等待转换完成，只有成功后读取结果；还应按项目需要停止或重新配置 ADC。", solution:"uint32_t raw = 0;\nHAL_ADC_Start(&hadc1);\nif (HAL_ADC_PollForConversion(&hadc1, 10) == HAL_OK) {\n    raw = HAL_ADC_GetValue(&hadc1);\n}\nHAL_ADC_Stop(&hadc1);", knowledge:"HAL ADC 轮询转换", pitfall:"没有等待转换完成就读取可能得到旧数据；确认 ADC 通道、引脚模拟模式和输入电压正确。"}
+          {type:"程序题", text:"写出 HAL 轮询读取 hadc1 转换结果的核心流程：启动、等待、读取。", explanation:"先启动 ADC 转换，再等待转换完成，只有成功后读取结果；还应按项目需要停止或重新配置 ADC。", solution:"uint32_t raw = 0;\nHAL_ADC_Start(&hadc1);\nif (HAL_ADC_PollForConversion(&hadc1, 10) == HAL_OK) {\n    raw = HAL_ADC_GetValue(&hadc1);\n}\nHAL_ADC_Stop(&hadc1);", knowledge:"HAL ADC 轮询转换", pitfall:"没有等待转换完成就读取可能得到旧数据；确认 ADC 通道、引脚模拟模式和输入电压正确。",analysis:{key:"ADC 轮询流程：HAL_ADC_Start 启动 → HAL_ADC_PollForConversion 等待转换完成 → HAL_ADC_GetValue 读结果 → HAL_ADC_Stop。",why:"启动后芯片需要一段时间采样转换，必须等转换完成标志（PollForConversion 返回 HAL_OK）再读，否则读到的是上一次的旧值。",extra:"ADC 结果是无符号整数，要换算实际电压：电压 = 原始值 × 参考电压 / (2^分辨率)；分辨率 12 位时满量程 4095；还有中断和 DMA 两种读取方式。"}}
         ]
       },
       {
@@ -756,7 +756,7 @@
           {type:"选择题", text:"I²C 的两条主要信号线通常是什么？", options:["SCL 和 SDA","TX 和 RX","MOSI 和 MISO","CS 和 GND"], answer:0, knowledge:"I²C 总线信号", pitfall:"SCL 是时钟、SDA 是数据；常见 I²C 总线还需要共地和合适上拉。", explanation:"I²C 使用 SCL 时钟线与 SDA 数据线进行同步串行通信。"},
           {type:"判断题", text:"SPI 总线上多个从设备通常需要各自可控的片选信号。", options:["正确","错误"], answer:0, knowledge:"SPI 片选与多从机连接", pitfall:"共用同一片选会使多个器件同时响应；具体布线可依据器件支持的菊链等模式变化。", explanation:"常见 SPI 连接为每个从设备分配一个 CS/NSS，让主机选择当前通信对象。"},
           {type:"填空题", text:"I²C 的时钟信号通常缩写为 ____。", placeholder:"填写三个大写字母", accepted:["SCL"], knowledge:"I²C 时钟线", pitfall:"SCL 是时钟，SDA 是数据，两个缩写不要记反。", explanation:"SCL（Serial Clock）是 I²C 的串行时钟线。"},
-          {type:"程序题", text:"写出 SPI 发送前拉低 CS、发送后拉高 CS 的 HAL GPIO 控制骨架。", explanation:"通常先选中设备（拉低 CS），完成通信后取消选中（拉高 CS）；极性需按具体外设确认。", solution:"HAL_GPIO_WritePin(CS_GPIO_Port, CS_Pin, GPIO_PIN_RESET);\nHAL_SPI_Transmit(&hspi1, data, length, timeout);\nHAL_GPIO_WritePin(CS_GPIO_Port, CS_Pin, GPIO_PIN_SET);", knowledge:"SPI 片选控制", pitfall:"确认 CS 有效电平以及 SPI mode（CPOL/CPHA）符合外设数据手册。"}
+          {type:"程序题", text:"写出 SPI 发送前拉低 CS、发送后拉高 CS 的 HAL GPIO 控制骨架。", explanation:"通常先选中设备（拉低 CS），完成通信后取消选中（拉高 CS）；极性需按具体外设确认。", solution:"HAL_GPIO_WritePin(CS_GPIO_Port, CS_Pin, GPIO_PIN_RESET);\nHAL_SPI_Transmit(&hspi1, data, length, timeout);\nHAL_GPIO_WritePin(CS_GPIO_Port, CS_Pin, GPIO_PIN_SET);", knowledge:"SPI 片选控制", pitfall:"确认 CS 有效电平以及 SPI mode（CPOL/CPHA）符合外设数据手册。",analysis:{key:"SPI 片选（CS）控制：通信前拉低选中设备，通信结束拉高释放；用 HAL_GPIO_WritePin。",why:"SPI 总线上可以挂多个设备，靠 CS 引脚选通目标；低电平表示选中（多数芯片约定）。",extra:"片选极性因外设而异，有的芯片高电平有效，务必查数据手册；SPI 的 CPOL/CPHA 模式也必须和从设备匹配，否则数据全错。"}}
         ]
       },
       {
@@ -771,7 +771,7 @@
           {type:"选择题", text:"DMA 的主要作用是什么？", options:["让数据传输可由硬件搬运，减少 CPU 参与","自动修复 C 语法错误","替代所有外设时钟","给芯片增加 Flash"], answer:0, knowledge:"DMA 与外设数据搬运", pitfall:"DMA 不会自动理解数据协议或修复程序；通道/请求映射和缓冲区配置仍需正确。", explanation:"DMA 可在外设与内存之间搬运数据，降低 CPU 持续轮询每个字节的负担。"},
           {type:"判断题", text:"启动 UART DMA 发送后，可以立刻释放或改写发送缓冲区。", options:["正确","错误"], answer:1, knowledge:"异步 DMA 缓冲区生命周期", pitfall:"传输尚未完成时改写或释放缓冲区，会发送错误内容或造成非法内存访问。", explanation:"DMA 异步读取缓冲区，必须确保缓冲区在完成回调前持续有效且内容稳定。"},
           {type:"填空题", text:"HAL UART DMA 发送完成后，常用的回调名称以 HAL_UART_ 开头并以 ____ 结尾。", placeholder:"填写回调后缀", accepted:["TxCpltCallback"], knowledge:"HAL UART DMA 完成回调", pitfall:"发送完成和接收完成是不同回调；注意回调参数句柄，并判断对应 UART 实例。", explanation:"发送完成回调是 HAL_UART_TxCpltCallback。"},
-          {type:"程序题", text:"写一个 UART 发送完成回调：当 huart 属于 USART1 时设置 tx_done 标志。", explanation:"在回调中检查 UART 实例，只设置标志；稍后由主循环处理后续任务。", solution:"volatile uint8_t tx_done = 0;\nvoid HAL_UART_TxCpltCallback(UART_HandleTypeDef *huart) {\n    if (huart->Instance == USART1) {\n        tx_done = 1;\n    }\n}", knowledge:"非阻塞 UART 状态管理", pitfall:"不要在回调里进行长时间阻塞操作；共享标志要考虑中断与主循环并发访问。"}
+          {type:"程序题", text:"写一个 UART 发送完成回调：当 huart 属于 USART1 时设置 tx_done 标志。", explanation:"在回调中检查 UART 实例，只设置标志；稍后由主循环处理后续任务。", solution:"volatile uint8_t tx_done = 0;\nvoid HAL_UART_TxCpltCallback(UART_HandleTypeDef *huart) {\n    if (huart->Instance == USART1) {\n        tx_done = 1;\n    }\n}", knowledge:"非阻塞 UART 状态管理", pitfall:"不要在回调里进行长时间阻塞操作；共享标志要考虑中断与主循环并发访问。",analysis:{key:"发送完成回调在中断上下文执行；用 huart-&amp;gt;Instance == USART1 判断是哪个串口；只置标志。",why:"回调里只做“记录完成”这一件小事，把后续处理留给主循环，符合中断服务要短的原则。",extra:"使用中断/DMA 发送前要先启动接收或发送（如 HAL_UART_Transmit_IT）；共享标志用 volatile；回调函数名由 HAL 约定，不要自己乱起。"}}
         ]
       },
       {
@@ -786,7 +786,7 @@
           {type:"选择题", text:"综合项目遇到故障时，最稳妥的集成策略是什么？", options:["每次加入一个模块并单独验证","一次接完所有外设再猜问题","跳过供电检查","把所有逻辑写进一个中断"], answer:0, knowledge:"嵌入式项目分模块验证", pitfall:"一次引入多个变化会让故障来源难以定位；先验证电源、时钟和单一外设。", explanation:"逐个模块测试并记录结果，可以快速判断问题是在接线、配置还是应用逻辑。"},
           {type:"判断题", text:"采样、按键、显示和通信逻辑越多，就越应该全部放进中断服务函数里。", options:["正确","错误"], answer:1, knowledge:"实时系统主循环与 ISR 分工", pitfall:"ISR 过长会增加中断延迟；中断回调宜只捕获事件，再由主循环或任务处理业务。", explanation:"中断服务程序应短小。复杂逻辑适合通过标志或队列交给主循环处理。"},
           {type:"填空题", text:"在模块逐步接入、逐个验证的开发方式中，每次只增加一个新 ____，更容易定位问题。", placeholder:"填写两个字", accepted:["模块","功能"], knowledge:"增量式集成测试", pitfall:"不要同时改动供电、接线、时钟和多项代码，否则故障定位会变难。", explanation:"逐步增加并验证一个模块或功能，有助于缩小问题范围。"},
-          {type:"程序题", text:"写出一个主循环框架：处理按键；采样标志置位时采样一次并清除标志；最后更新显示。", explanation:"主循环按步骤调度非阻塞任务；采样标志由定时器回调置位，处理完成后清零。", solution:"while (1) {\n    ReadButtons();\n    if (sample_due) {\n        SampleSensor();\n        sample_due = 0;\n    }\n    UpdateDisplayIfNeeded();\n}", knowledge:"事件标志驱动的主循环", pitfall:"清除标志和更新显示要放在合理位置；不要用长时间 HAL_Delay 阻塞整个应用。"}
+          {type:"程序题", text:"写出一个主循环框架：处理按键；采样标志置位时采样一次并清除标志；最后更新显示。", explanation:"主循环按步骤调度非阻塞任务；采样标志由定时器回调置位，处理完成后清零。", solution:"while (1) {\n    ReadButtons();\n    if (sample_due) {\n        SampleSensor();\n        sample_due = 0;\n    }\n    UpdateDisplayIfNeeded();\n}", knowledge:"事件标志驱动的主循环", pitfall:"清除标志和更新显示要放在合理位置；不要用长时间 HAL_Delay 阻塞整个应用。",analysis:{key:"事件标志驱动的超级循环：读输入 → 按标志处理任务 → 清标志 → 更新输出；任务非阻塞。",why:"采样标志由定时器中断置位，主循环检测到就采样并马上清零，避免重复采样；所有任务轮流执行，系统不会卡在某一处。",extra:"这是裸机最经典的“前后台系统”：中断是前台（快速响应），主循环是后台（慢慢处理）；实时性取决于循环周期，耗时任务要拆成小块。"}}
         ]
       }
     ];
@@ -1486,7 +1486,7 @@
           {type:"选择题", text:"一段程序最常见的基本工作过程是什么？", options:["输入、处理、输出","输出、关机、输入","编译、打印、删除","键盘、鼠标、桌面"], answer:0, knowledge:"程序的输入—处理—输出模型", explanation:"程序从输入取得数据，按指令处理数据，再把结果输出；不是每个程序都必须有外部输入。", pitfall:"不要把程序只理解为屏幕上的文字；它也可以读取传感器、控制引脚。"},
           {type:"判断题", text:"自己编写的 .c 文件通常叫源代码，编译器负责把它翻译成目标平台可用的程序。", options:["正确","错误"], answer:0, knowledge:"源代码与编译器", explanation:"C 源代码面向开发者；编译器检查并翻译代码，之后还要链接等步骤生成可运行结果。", pitfall:"源文件不是芯片已经能直接执行的机器指令。"},
           {type:"填空题", text:"按照“输入 → 处理 → 输出”的模型，程序把两个数字相加属于 ____ 阶段。", placeholder:"填写两个字", accepted:["处理"], knowledge:"程序的基本工作过程", explanation:"接收数字是输入，执行加法是处理，显示答案是输出。", pitfall:"计算动作属于处理，不要和输入或显示结果混为一谈。"},
-          {type:"程序题", text:"用生活语言写出一个“测量并显示房间温度”的程序步骤。", explanation:"先取得传感器读数，再把原始读数换算为温度，最后显示温度；此题关注拆分步骤，不要求 C 语法。", solution:"读取温度传感器\n把读数换算成温度\n在屏幕或串口显示温度", knowledge:"把需求拆成输入、处理和输出", pitfall:"不能只写“显示温度”；要说明数据从哪里来以及是否需要换算。"},
+          {type:"程序题", text:"用生活语言写出一个“测量并显示房间温度”的程序步骤。", explanation:"先取得传感器读数，再把原始读数换算为温度，最后显示温度；此题关注拆分步骤，不要求 C 语法。", solution:"读取温度传感器\n把读数换算成温度\n在屏幕或串口显示温度", knowledge:"把需求拆成输入、处理和输出", pitfall:"不能只写“显示温度”；要说明数据从哪里来以及是否需要换算。",analysis:{key:"把需求拆成输入、处理、输出三段：读传感器 → 换算温度 → 显示。",why:"先想清楚“数据从哪来、怎么变、显示到哪”，而不是急着写代码；此题考察的是拆解思路，不要求 C 语法。",extra:"嵌入式里传感器给的是原始值（如 ADC 数字），要先按公式换算成物理量再显示，这类“原始值→物理量”换算非常常见。"}},
           {type:"选择题", text:"如果程序编译成功但显示结果不对，最适合先做什么？", options:["检查输入、计算步骤和实际输出","马上重装操作系统","同时重写所有代码","认定电脑坏了"], answer:0, knowledge:"分阶段定位错误", explanation:"编译成功说明代码通过了编译阶段，但逻辑和运行时行为仍可能有问题；应逐步检查输入、处理和输出。", pitfall:"编译器不负责证明程序逻辑符合你的需求。"}
         ]
       },
@@ -1504,7 +1504,7 @@
           {type:"选择题", text:"哪个工具主要负责编辑和保存 C 源代码？", options:["代码编辑器","编译器","开发板电源","串口线"], answer:0, knowledge:"编辑器的职责", explanation:"编辑器用于编写和修改文本；编译器负责翻译；开发板和线缆属于硬件。", pitfall:"安装了编辑器不一定就安装了 C 编译器。"},
           {type:"判断题", text:"只要文件名以 .c 结尾，电脑就一定已经把它编译成可执行程序。", options:["正确","错误"], answer:1, knowledge:"源文件需要经过编译", explanation:".c 是源代码文件的常见后缀；还要运行编译器并成功生成可执行文件。", pitfall:"文件后缀不能替代编译步骤。"},
           {type:"填空题", text:"GCC 是一种 C 语言 ____，可检查并翻译源代码。", placeholder:"填写三个字", accepted:["编译器"], knowledge:"编译工具", explanation:"GCC 是编译器工具集合，可将 C 源代码编译、汇编并参与链接。", pitfall:"编辑器和编译器是不同角色，虽然有些 IDE 会把它们集成在一起。"},
-          {type:"程序题", text:"请按正确顺序写出：运行、保存、编译、修改代码。", explanation:"先修改并保存，再编译；若编译出错要修改代码并重新保存、编译，成功后才能运行。", solution:"修改代码 → 保存 → 编译 →（成功后）运行", knowledge:"编译运行工作流", pitfall:"未保存时编译的可能仍是旧内容；编译失败时通常不能运行新程序。"},
+          {type:"程序题", text:"请按正确顺序写出：运行、保存、编译、修改代码。", explanation:"先修改并保存，再编译；若编译出错要修改代码并重新保存、编译，成功后才能运行。", solution:"修改代码 → 保存 → 编译 →（成功后）运行", knowledge:"编译运行工作流", pitfall:"未保存时编译的可能仍是旧内容；编译失败时通常不能运行新程序。",analysis:{key:"开发工作流：修改代码 → 保存 → 编译 →（成功后才）运行。",why:"编译读的是磁盘上已保存的文件，不保存就编译等于编译旧内容；编译失败说明代码还没通过检查，不能运行。",extra:"编译错误（语法）、运行错误（崩溃）、逻辑错误（结果不对）是三类不同的问题，排查方法不一样；调试要靠打印或断点观察中间值。"}},
           {type:"选择题", text:"编译器报错时，最有用的下一步通常是什么？", options:["阅读错误信息和行号，先检查附近代码","删除整个项目","忽略所有报错继续运行","给文件换颜色"], answer:0, knowledge:"阅读编译诊断", explanation:"错误文本、文件名和行号提供定位线索；先检查第一处错误及附近的括号、分号和拼写。", pitfall:"错误行号附近的上一行也可能漏了分号或右括号。"}
         ]
       },
@@ -1522,7 +1522,7 @@
           {type:"选择题", text:"下面哪一部分是 C 程序的常见入口函数？", options:["int main(void)","#include","printf","return 0"], answer:0, knowledge:"main 函数", explanation:"普通 hosted C 程序通常从 main 函数开始执行。", pitfall:"printf 是函数调用，不是程序入口。"},
           {type:"判断题", text:"#include <stdio.h> 是一条普通 C 语句，所以末尾必须加分号。", options:["正确","错误"], answer:1, knowledge:"预处理指令", explanation:"#include 是预处理指令，通常单独一行且不加分号。", pitfall:"不要把预处理指令和函数体里的普通语句混淆。"},
           {type:"填空题", text:"C 语言中的函数体通常由一对 ____ 括起来。", placeholder:"填写符号名称", accepted:["花括号","{}"], knowledge:"代码块边界", explanation:"左花括号开始代码块，右花括号结束代码块。", pitfall:"括号不匹配会让编译器无法正确识别代码块范围。"},
-          {type:"程序题", text:"写一个包含标准输入输出头文件、main 函数并输出 Hi 的完整程序。", explanation:"包含 stdio.h 后，在 main 中调用 printf，再返回 0。", solution:"#include <stdio.h>\n\nint main(void) {\n    printf(\"Hi\\n\");\n    return 0;\n}", knowledge:"C 程序基本骨架", pitfall:"检查双引号、括号、分号和花括号是否成对。"},
+          {type:"程序题", text:"写一个包含标准输入输出头文件、main 函数并输出 Hi 的完整程序。", explanation:"包含 stdio.h 后，在 main 中调用 printf，再返回 0。", solution:"#include <stdio.h>\n\nint main(void) {\n    printf(\"Hi\\n\");\n    return 0;\n}", knowledge:"C 程序基本骨架", pitfall:"检查双引号、括号、分号和花括号是否成对。",analysis:{key:"C 程序骨架：头文件、main 入口、语句、return 0。",why:"#include &amp;lt;stdio.h&amp;gt; 引入 printf 声明；main 是入口，printf 输出；return 0 表示正常结束。",extra:"头文件放的是“声明”，真正实现（printf 的代码）在链接时从标准库拿；少了 main 或 return 类型不对，链接阶段会报错。"}},
           {type:"选择题", text:"return 0; 放在 main 函数中通常表示什么？", options:["程序正常结束并返回状态码 0","打印字符 0","创建变量 0","启动另一个程序"], answer:0, knowledge:"main 的返回值", explanation:"return 0 结束 main 并向运行环境返回状态码 0，常表示正常结束。", pitfall:"返回状态码和 printf 输出到屏幕的内容不是一回事。"}
         ]
       },
@@ -1540,7 +1540,7 @@
           {type:"选择题", text:"在 printf 字符串中，\\n 通常表示什么？", options:["换行","删除程序","结束函数","读取整数"], answer:0, knowledge:"换行转义字符", explanation:"\\n 是换行字符，输出后通常从下一行继续显示。", pitfall:"反斜杠 n 是两个源码字符组成的转义写法，不是字母 n 本身。"},
           {type:"判断题", text:"把一段代码缩进四格会改变 C 语言花括号定义的代码块范围。", options:["正确","错误"], answer:1, knowledge:"缩进与语法结构", explanation:"C 的代码块由花括号确定；缩进不规范会让人难读，但通常不会改变语法结构。", pitfall:"不要因此忽略缩进；好的缩进能帮助发现括号层级错误。"},
           {type:"填空题", text:"C 的单行注释通常以两个斜杠 ____ 开始。", placeholder:"填写符号", accepted:["//"], knowledge:"单行注释", explanation:"// 后直到行尾的文字是注释，不作为 C 语句执行。", pitfall:"不要把注释写在字符串引号内部并误以为它仍是注释。"},
-          {type:"程序题", text:"写一个 printf 调用，输出两行：第一行 A，第二行 B。", explanation:"在字符串的 A 后放换行转义符，再写 B。", solution:"printf(\"A\\nB\\n\");", knowledge:"printf 与换行字符", pitfall:"需要在 C 源码字符串中写反斜杠和 n，而不是直接把字符串拆成两行。"},
+          {type:"程序题", text:"写一个 printf 调用，输出两行：第一行 A，第二行 B。", explanation:"在字符串的 A 后放换行转义符，再写 B。", solution:"printf(\"A\\nB\\n\");", knowledge:"printf 与换行字符", pitfall:"需要在 C 源码字符串中写反斜杠和 n，而不是直接把字符串拆成两行。",analysis:{key:"转义字符 \\n 表示换行；一个字符串里可以有多个换行。",why:"printf(\"A\\nB\\n\")：A 后换行输出 B，B 后再换行，一次调用完成两行输出。",extra:"\\n 是一个字符（换行符），不是两个；其他常用转义有 \\t 制表、\\\\ 反斜杠、\\\" 双引号。"}},
           {type:"选择题", text:"下面哪种写法是在字符串中输出双引号字符的常见方式？", options:["\\\"","//","{}",";"], answer:0, knowledge:"字符串转义", explanation:"在字符串中用反斜杠转义双引号，避免它提前结束字符串。", pitfall:"源码里的引号需要转义，但屏幕输出的是一个普通双引号。"}
         ]
       },
@@ -1558,7 +1558,7 @@
           {type:"选择题", text:"声明一个名为 count、初值为 0 的整数变量，正确写法是什么？", options:["int count = 0;","count int == 0","0 = int count;","integer count(0)"], answer:0, knowledge:"变量声明与初始化", explanation:"C 的常见声明形式是类型、变量名和可选初始值，语句以分号结束。", pitfall:"赋值号是单个 =；声明时不要把类型和名字顺序颠倒。"},
           {type:"判断题", text:"局部变量声明后如果没有初始化，就可以放心读取，系统会自动把它设为 0。", options:["正确","错误"], answer:1, knowledge:"未初始化的局部变量", explanation:"自动存储期局部变量未初始化时值不确定；使用前先赋值。", pitfall:"不要依赖调试器偶然显示的值或某台电脑上的表现。"},
           {type:"填空题", text:"执行 int n = 4; n = n + 1; 后，n 的值是 ____。", placeholder:"填写数字", accepted:["5"], knowledge:"赋值表达式执行顺序", explanation:"先读取原值 4，加 1 得到 5，再将 5 存入 n。", pitfall:"等号在赋值语句中不是判断左右是否相等。"},
-          {type:"程序题", text:"声明整数变量 age 并初始化为 0，然后把它加一。", explanation:"声明时初始化，之后通过 age = age + 1 更新变量。", solution:"int age = 0;\nage = age + 1;", knowledge:"声明、初始化与更新", pitfall:"不能在读取未初始化变量的基础上做加法。"},
+          {type:"程序题", text:"声明整数变量 age 并初始化为 0，然后把它加一。", explanation:"声明时初始化，之后通过 age = age + 1 更新变量。", solution:"int age = 0;\nage = age + 1;", knowledge:"声明、初始化与更新", pitfall:"不能在读取未初始化变量的基础上做加法。",analysis:{key:"声明时初始化是好习惯；age = age + 1 把新值写回变量。",why:"先 int age = 0 再 age = age + 1；如果声明后不初始化就使用，读到的是一块垃圾值（未定义行为）。",extra:"age++ 与 ++age 的区别：前者先取值后自增，后者先自增后取值；age += 1 是等价简写。"}},
           {type:"选择题", text:"下面哪个变量名符合常见 C 标识符规则？", options:["room_temp","2score","float","room-temp"], answer:0, knowledge:"C 标识符规则", explanation:"room_temp 由字母和下划线组成且不是关键字，符合规则。", pitfall:"关键字不能作为变量名；连字符 - 会被解释为减法运算符。"}
         ]
       },
@@ -1577,7 +1577,7 @@
           {type:"选择题", text:"通常用哪种常见类型保存带小数的测量值？", options:["double","char","void","FILE"], answer:0, knowledge:"浮点类型", explanation:"double 是常见的双精度浮点类型，常用于带小数的数值。", pitfall:"浮点数表示通常有精度误差，不要默认所有十进制小数都能精确表示。"},
           {type:"判断题", text:"字符常量 'A' 与字符串 \"A\" 在 C 中是完全相同的类型和值。", options:["正确","错误"], answer:1, knowledge:"字符常量和字符串", explanation:"单引号字符常量与双引号字符串不同；字符串还包含结尾空字符。", pitfall:"单引号与双引号不是装饰符号，含义不同。"},
           {type:"填空题", text:"把 3.9 转换为 int 后，小数部分会被 ____。", placeholder:"填写两个字", accepted:["舍弃","截去","截断"], knowledge:"浮点转整数", explanation:"转换到整数会向零截断，小数部分被舍弃；这不是四舍五入。", pitfall:"3.9 转 int 得到 3，不能当作得到 4。"},
-          {type:"程序题", text:"声明一个整数型学生人数变量 students，初始值为 30；再声明 double 型电压 voltage，初始值为 3.3。", explanation:"分别选择 int 与 double 类型，并按 C 的小数常量写法初始化。", solution:"int students = 30;\ndouble voltage = 3.3;", knowledge:"按数据含义选择类型", pitfall:"浮点数写小数点；整数计数不必使用浮点类型。"},
+          {type:"程序题", text:"声明一个整数型学生人数变量 students，初始值为 30；再声明 double 型电压 voltage，初始值为 3.3。", explanation:"分别选择 int 与 double 类型，并按 C 的小数常量写法初始化。", solution:"int students = 30;\ndouble voltage = 3.3;", knowledge:"按数据含义选择类型", pitfall:"浮点数写小数点；整数计数不必使用浮点类型。",analysis:{key:"类型选择看数据的含义：人数是整数用 int，电压带小数用 double。",why:"30 是整数字面量给 int；3.3 是浮点字面量给 double，类型和值匹配才存得准。",extra:"3.3 默认就是 double 而不是 float；float 只有约 7 位有效数字，精度不够时优先 double；字面量加 f/L 后缀可指定类型。"}},
           {type:"选择题", text:"要查询 int 在当前编译器中占用的字节数，哪种写法正确？", options:["sizeof(int)","length(int)","bytes(int)","int.size"], answer:0, knowledge:"sizeof 运算符", explanation:"sizeof 是 C 运算符，可取得类型或对象的字节大小，结果类型为 size_t。", pitfall:"字节大小受平台与实现影响，不能不加验证地假设所有目标都一样。"}
         ]
       },
@@ -1595,7 +1595,7 @@
           {type:"选择题", text:"用 printf 输出 int 变量 count，最常用的格式占位符是什么？", options:["%d","%s","%p","%lf"], answer:0, knowledge:"printf 整数格式", explanation:"对 int 参数，printf 常用 %d 输出十进制整数。", pitfall:"格式说明符要与实参类型匹配。"},
           {type:"判断题", text:"printf(\"%.2f\", value) 通常会把浮点数显示为两位小数。", options:["正确","错误"], answer:0, knowledge:"printf 小数格式", explanation:"%.2f 指定小数点后显示两位；不改变 value 本身的存储精度。", pitfall:"显示位数与变量内部精度不是一回事。"},
           {type:"填空题", text:"printf 输出一个 char 字符时常用的格式占位符是 ____。", placeholder:"填写 % 开头的格式", accepted:["%c"], knowledge:"printf 字符格式", explanation:"%c 用于输出单个字符。", pitfall:"%s 用于字符串指针，不是单个字符。"},
-          {type:"程序题", text:"写出 printf 语句，让整数变量 score 的值显示为 Score: 后面并换行。", explanation:"格式字符串包含 %d，后面传入变量 score，并使用换行符。", solution:"printf(\"Score: %d\\n\", score);", knowledge:"格式字符串与变量实参", pitfall:"别忘了在逗号后传入变量，且格式占位符个数要匹配。"},
+          {type:"程序题", text:"写出 printf 语句，让整数变量 score 的值显示为 Score: 后面并换行。", explanation:"格式字符串包含 %d，后面传入变量 score，并使用换行符。", solution:"printf(\"Score: %d\\n\", score);", knowledge:"格式字符串与变量实参", pitfall:"别忘了在逗号后传入变量，且格式占位符个数要匹配。",analysis:{key:"printf 格式串里 %d 是占位符，会被逗号后的变量值替换；\\n 换行。",why:"printf(\"Score: %d\\n\", score)：%d 对应 score 的值，输出如 Score: 85 后换行。",extra:"格式占位符要和参数一一对应：%d 整数、%f 浮点、%c 字符、%s 字符串、%zu size_t；个数或类型不匹配是未定义行为。"}},
           {type:"选择题", text:"代码 printf(\"%d\", temperature); 中 temperature 是 double，最需要修正什么？", options:["让格式说明符与 double 参数匹配","把 printf 改成 main","删除分号","把变量名改成大写"], answer:0, knowledge:"格式和参数类型匹配", explanation:"printf 的格式必须匹配实参类型；double 常用 %f，不能把 %d 用于 double。", pitfall:"格式错误不只是显示得不好，可能导致未定义行为。"}
         ]
       },
@@ -1614,7 +1614,7 @@
           {type:"选择题", text:"scanf(\"%d\", ...) 读取普通 int 变量 age 时，参数通常写什么？", options:["&age","age*","%age","int(age)"], answer:0, knowledge:"scanf 需要可写入的地址", explanation:"scanf 需要变量地址，才能把读取到的整数写进 age。", pitfall:"printf 通常传值；scanf 普通变量通常传地址，不要混淆。"},
           {type:"判断题", text:"scanf(\"%d\", &age) 的返回值可以用来判断是否成功读入一个整数。", options:["正确","错误"], answer:0, knowledge:"scanf 返回值检查", explanation:"成功匹配并赋值一个项目时通常返回 1；应检查返回值再使用 age。", pitfall:"不检查返回值时，失败后 age 可能仍未得到有效值。"},
           {type:"填空题", text:"scanf 读取 double 变量时常用格式说明符 ____。", placeholder:"填写格式", accepted:["%lf"], knowledge:"scanf 浮点输入格式", explanation:"scanf 中 %lf 对应 double*；printf 输出 double 时常用 %f。", pitfall:"不要把 scanf 与 printf 对浮点格式的规则简单混为一谈。"},
-          {type:"程序题", text:"写一个程序片段：读取整数 age，只有成功读入时才输出 age。", explanation:"检查 scanf 返回值是否为 1，只有成功后才读取变量。", solution:"int age;\nif (scanf(\"%d\", &age) == 1) {\n    printf(\"%d\\n\", age);\n}", knowledge:"输入校验和安全使用变量", pitfall:"读取失败时不要使用未初始化或旧的 age 值。"},
+          {type:"程序题", text:"写一个程序片段：读取整数 age，只有成功读入时才输出 age。", explanation:"检查 scanf 返回值是否为 1，只有成功后才读取变量。", solution:"int age;\nif (scanf(\"%d\", &age) == 1) {\n    printf(\"%d\\n\", age);\n}", knowledge:"输入校验和安全使用变量", pitfall:"读取失败时不要使用未初始化或旧的 age 值。",analysis:{key:"scanf 返回成功读入的项数，== 1 表示读到了；输入校验是健壮代码的基础。",why:"用户可能输入非数字，此时 age 没被赋值，直接使用是未定义行为；先检查 scanf 返回值再使用变量。",extra:"输入非法后缓冲区会残留字符，可能影响下一次读取，必要时清空输入缓冲；生产级代码会对所有外部输入做校验。"}},
           {type:"选择题", text:"char name[20] 用 scanf(\"%s\", name) 读取任意长单词，主要风险是什么？", options:["输入过长可能写出数组边界","程序会自动变成 double","字符串不能放在数组里","scanf 会关闭屏幕"], answer:0, knowledge:"字符数组边界", explanation:"超过数组容量的输入会导致缓冲区溢出；应限制宽度并优先考虑更可靠的行读取处理。", pitfall:"数组大小为 20 时还要给字符串结束符留空间，安全宽度最多 19。"}
         ]
       },
@@ -1632,7 +1632,7 @@
           {type:"选择题", text:"表达式 7 / 2 中两个操作数都是 int，结果是多少？", options:["3","3.5","4","无法编译"], answer:0, knowledge:"整数除法", explanation:"整数除法会向零截断，因此 7/2 得 3。", pitfall:"结果不会自动变成 3.5；至少一个操作数要在除法前是浮点数。"},
           {type:"判断题", text:"在 C 中，17 % 5 的结果是 2。", options:["正确","错误"], answer:0, knowledge:"整数取余", explanation:"17 除以 5 的商是 3、余数是 2。", pitfall:"% 是整数取余运算符，不是百分比符号。"},
           {type:"填空题", text:"若想让 7 除以 2 得到浮点结果，可把其中一个操作数写成 7.0，结果为 ____。", placeholder:"填写结果", accepted:["3.5"], knowledge:"浮点除法", explanation:"浮点操作数参与运算会使除法按浮点规则进行，得到 3.5。", pitfall:"将整数结果事后赋给 double 不会恢复已经舍弃的小数。"},
-          {type:"程序题", text:"声明整数变量 remainder，保存 17 除以 5 的余数。", explanation:"使用整数取余运算符 %。", solution:"int remainder = 17 % 5;", knowledge:"取余运算", pitfall:"取余使用 %，而除法使用 /；两者作用不同。"},
+          {type:"程序题", text:"声明整数变量 remainder，保存 17 除以 5 的余数。", explanation:"使用整数取余运算符 %。", solution:"int remainder = 17 % 5;", knowledge:"取余运算", pitfall:"取余使用 %，而除法使用 /；两者作用不同。",analysis:{key:"取余运算符 %：17 % 5 得 2，因为 17 = 3×5 + 2。",why:"题目要求“余数”，对应 C 的 % 运算符，直接 int remainder = 17 % 5。",extra:"/ 是整除（17/5 得 3），% 是取余（得 2），两者配合可做很多事：判断奇偶、循环下标、分页等。"}},
           {type:"选择题", text:"在进行整数除法之前，哪种做法能让 5/2 得到浮点结果？", options:["写成 5.0 / 2","先把结果放进 double 变量","把分号删掉","把变量名改成 decimal"], answer:0, knowledge:"运算前的类型决定表达式", explanation:"5.0 是浮点操作数，除法执行时就会按浮点规则计算。", pitfall:"若先做 5/2 得到 2，再赋给 double，结果仍是 2.0。"}
         ]
       },
@@ -1650,7 +1650,7 @@
           {type:"选择题", text:"变量 x 等于 5，表达式 x == 5 表示什么？", options:["比较 x 是否等于 5","把 5 加到 x","声明一个函数","输出 x"], answer:0, knowledge:"相等比较运算符", explanation:"双等号 == 比较左右两边是否相等，结果用于条件判断。", pitfall:"单等号 = 用于赋值，不能替代比较。"},
           {type:"判断题", text:"if (score >= 60) 可用于判断分数是否达到 60 分及以上。", options:["正确","错误"], answer:0, knowledge:"关系比较与边界", explanation:">= 包含等于，因此 60 也满足条件。", pitfall:"使用 > 会排除恰好等于 60 的情况。"},
           {type:"填空题", text:"在 C 中，表示逻辑“并且”的运算符是 ____。", placeholder:"填写符号", accepted:["&&"], knowledge:"逻辑运算符", explanation:"&& 表示逻辑与，两边条件都为真时整个表达式才为真。", pitfall:"单个 & 是按位与，和 && 的逻辑用途不同。"},
-          {type:"程序题", text:"写一个 if/else：当整数 score 大于等于 60 输出 Pass，否则输出 Try again。", explanation:"条件用 >=，真分支输出 Pass，else 分支处理未达标情况。", solution:"if (score >= 60) {\n    printf(\"Pass\\n\");\n} else {\n    printf(\"Try again\\n\");\n}", knowledge:"分支结构", pitfall:"检查花括号、字符串双引号和语句分号。"},
+          {type:"程序题", text:"写一个 if/else：当整数 score 大于等于 60 输出 Pass，否则输出 Try again。", explanation:"条件用 >=，真分支输出 Pass，else 分支处理未达标情况。", solution:"if (score >= 60) {\n    printf(\"Pass\\n\");\n} else {\n    printf(\"Try again\\n\");\n}", knowledge:"分支结构", pitfall:"检查花括号、字符串双引号和语句分号。",analysis:{key:"比较运算符 &gt;=；if/else 处理两个互斥分支。",why:"score &amp;gt;= 60 成立走真分支输出 Pass，否则走 else 输出 Try again。",extra:"字符串比较不能直接用 ==（比较的是地址），要用 strcmp；注意 &gt;= 和 = 的区别，写错一个等号是经典笔误。"}},
           {type:"选择题", text:"想判断 x 是否等于 3，应该写哪个条件？", options:["x == 3","x = 3","x => 3","x equals 3"], answer:0, knowledge:"赋值与比较", explanation:"x == 3 是比较；x = 3 会给 x 赋值。", pitfall:"把比较误写成赋值可能导致逻辑错误，编译器未必总能发现。"}
         ]
       },
@@ -1668,7 +1668,7 @@
           {type:"选择题", text:"for (int i = 0; i < 3; i++) 循环体通常执行几次？", options:["3 次","2 次","4 次","无限次"], answer:0, knowledge:"for 循环次数", explanation:"i 依次为 0、1、2，共三次；当 i 变为 3 时条件不成立。", pitfall:"起点是 0，终止条件是 < 3，不包括 3。"},
           {type:"判断题", text:"while 循环体中如果永远不改变条件相关状态，可能形成无限循环。", options:["正确","错误"], answer:0, knowledge:"循环终止条件", explanation:"若条件一直为真且无 break，循环会持续运行。", pitfall:"检查循环体是否会推进变量或收到退出事件。"},
           {type:"填空题", text:"for 循环每轮更新变量 i 加一，常见写法是 i____。", placeholder:"填写两个符号", accepted:["++"], knowledge:"自增运算符", explanation:"i++ 会把 i 的值加一。", pitfall:"更新部分漏写时，条件可能永远成立。"},
-          {type:"程序题", text:"写一个 for 循环，把整数 i 从 1 到 5（包含 5）逐个输出。", explanation:"从 1 开始，条件使用 i <= 5，每轮 i 加一。", solution:"for (int i = 1; i <= 5; i++) {\n    printf(\"%d\\n\", i);\n}", knowledge:"循环起点、条件和更新", pitfall:"需要包含 5，因此这里是 <= 5；数组遍历则通常使用 < 长度。"},
+          {type:"程序题", text:"写一个 for 循环，把整数 i 从 1 到 5（包含 5）逐个输出。", explanation:"从 1 开始，条件使用 i <= 5，每轮 i 加一。", solution:"for (int i = 1; i <= 5; i++) {\n    printf(\"%d\\n\", i);\n}", knowledge:"循环起点、条件和更新", pitfall:"需要包含 5，因此这里是 <= 5；数组遍历则通常使用 < 长度。",analysis:{key:"for(初始化; 条件; 更新) 三部分；条件 i &lt;= 5 决定循环范围。",why:"要包含 5，条件必须写 i &lt;= 5；每轮 i++ 递增，输出 1 2 3 4 5。",extra:"遍历数组的惯例是 i &amp;lt; 长度（因为下标 0 开始）；C99 起循环变量可以直接声明在 for 里，作用域只在循环内。"}},
           {type:"选择题", text:"数组长度为 n、合法下标是 0 到 n-1，循环条件通常应写什么？", options:["i < n","i <= n","i == n + 1","i > n"], answer:0, knowledge:"循环边界与数组下标", explanation:"i 从 0 开始且小于 n，最后一个访问下标为 n-1。", pitfall:"i <= n 会尝试访问不存在的下标 n。"}
         ]
       },
@@ -1687,7 +1687,7 @@
           {type:"选择题", text:"函数 int add(int a, int b) 中，int 表示什么？", options:["函数返回值类型","函数名称","函数调用次数","头文件名"], answer:0, knowledge:"函数返回类型", explanation:"函数定义开头的 int 表示函数返回一个 int 值。", pitfall:"参数类型写在括号里，函数返回类型写在函数名前。"},
           {type:"判断题", text:"在 C 中，普通整数参数按值传递，函数里修改形参通常不会直接修改调用者的原变量。", options:["正确","错误"], answer:0, knowledge:"按值传递", explanation:"形参得到实参值的副本；通过普通形参赋值只改变副本。", pitfall:"要修改调用者数据通常需要传递地址并使用指针。"},
           {type:"填空题", text:"让函数结束并把一个结果返回给调用者，常使用关键字 ____。", placeholder:"填写关键字", accepted:["return"], knowledge:"函数返回语句", explanation:"return 可结束函数，并在非 void 函数中返回与类型匹配的值。", pitfall:"void 函数不返回普通结果值；不要漏掉非 void 函数应有的返回路径。"},
-          {type:"程序题", text:"写一个 int 函数 square，接收 int x 并返回 x 的平方。", explanation:"函数返回类型为 int，形参为 int x，函数体计算并返回 x*x。", solution:"int square(int x) {\n    return x * x;\n}", knowledge:"定义带参数和返回值的函数", pitfall:"函数体需要花括号；返回的表达式要符合返回类型。"},
+          {type:"程序题", text:"写一个 int 函数 square，接收 int x 并返回 x 的平方。", explanation:"函数返回类型为 int，形参为 int x，函数体计算并返回 x*x。", solution:"int square(int x) {\n    return x * x;\n}", knowledge:"定义带参数和返回值的函数", pitfall:"函数体需要花括号；返回的表达式要符合返回类型。",analysis:{key:"函数定义结构：返回类型 + 函数名 + 形参 + 函数体 + return。",why:"int square(int x) 声明返回 int、参数 int；函数体 return x * x；调用方用返回值。",extra:"形参 x 是调用时的副本，函数内改 x 不影响外面；void 表示不返回；函数原型最好先声明，避免隐式声明警告。"}},
           {type:"选择题", text:"函数内部声明的普通局部变量通常在哪里能直接使用？", options:["它所在的函数或代码块范围内","整个电脑上的所有程序","所有 C 项目文件都自动可见","只能在头文件里"], answer:0, knowledge:"局部变量作用域", explanation:"局部变量的名字只在其作用域内有效，离开相应代码块就不能按该名字访问。", pitfall:"作用域是语言规则，不等于变量值是否仍留在内存中。"}
         ]
       }
@@ -1711,7 +1711,7 @@
           {type:"选择题", text:"一个字节（byte）包含几个二进制位？", options:["4 位","8 位","16 位","32 位"], answer:1, explanation:"一个字节固定是 8 位（8 个 0 或 1）。int 通常占 4 个字节，也就是 32 位。"},
           {type:"判断题", text:"浮点数 0.1 在内存中可以被精确表示。", options:["正确","错误"], answer:1, explanation:"浮点数用符号+指数+尾数存储，很多十进制小数只能存储为近似值，0.1 就是其中之一。因此不要用 == 直接比较浮点计算结果。"},
           {type:"填空题", text:"字符 'A' 在 ASCII 编码中对应的整数值是几？", placeholder:"填写数字", accepted:["65"], explanation:"大写 A 的 ASCII 值是 65，小写 a 是 97，'0' 是 48。字符本质上是整数，只是按编码表解释。"},
-          {type:"程序题", text:"写一段代码：定义 int x = 5 和 int y = -5，分别用 %d 输出，再输出 x + y 的结果。", explanation:"直接 printf 即可。x + y 在内部用补码相加，结果是 0。这段代码演示“负数也能正常相加”的原理。", solution:"#include <stdio.h>\nint main(void) {\n    int x = 5, y = -5;\n    printf(\"%d %d\\n\", x, y);\n    printf(\"%d\\n\", x + y);\n    return 0;\n}"}
+          {type:"程序题", text:"写一段代码：定义 int x = 5 和 int y = -5，分别用 %d 输出，再输出 x + y 的结果。", explanation:"直接 printf 即可。x + y 在内部用补码相加，结果是 0。这段代码演示“负数也能正常相加”的原理。", solution:"#include <stdio.h>\nint main(void) {\n    int x = 5, y = -5;\n    printf(\"%d %d\\n\", x, y);\n    printf(\"%d\\n\", x + y);\n    return 0;\n}",analysis:{key:"负数在内存里用补码存储；补码让加减法在硬件上统一为二进制加法。",why:"直接三个 printf 即可：x、y 分别打印 5 和 -5；x + y 在硬件上就是二进制相加，补码保证结果正好是 0。",extra:"补码求法：取反加一。-1 的补码是全 1（32 位下 0xFFFFFFFF）；溢出时结果会绕回，比如最大 int 加 1 变最小 int。"}}
         ]
       },
       {
@@ -1727,7 +1727,7 @@
           {type:"选择题", text:"int 类型的最大值再加 1，会发生什么？", options:["报编译错误","变成最小值（溢出）","变成 0","变成浮点数"], answer:1, explanation:"整数溢出会像钟表一样绕回：最大值加 1 变成最小值。这是未定义行为，代码中应避免依赖它。"},
           {type:"判断题", text:"int 和 double 混合运算时，int 会先被自动转成 double。", options:["正确","错误"], answer:0, explanation:"这就是隐式转换的“提升”规则：小类型向大类型看齐，int 会先变成 double 再参与运算。"},
           {type:"填空题", text:"把 double 强制转成 int 时，小数部分会被___掉。", placeholder:"填写两个字", accepted:["截断","丢弃","截掉"], explanation:"强制转换直接截断小数部分：3.99 变成 3，而不是四舍五入成 4。"},
-          {type:"程序题", text:"写代码验证：int a = -1 和 unsigned int b = 1，比较 a < b 并输出结果，解释现象。", explanation:"把 -1 与无符号数 1 比较时，-1 会先被转成无符号数（变成很大的数），所以 a < b 为假。输出 0。", solution:"#include <stdio.h>\nint main(void) {\n    int a = -1;\n    unsigned int b = 1;\n    printf(\"%d\\n\", a < b);   // 输出 0\n    return 0;\n}"}
+          {type:"程序题", text:"写代码验证：int a = -1 和 unsigned int b = 1，比较 a < b 并输出结果，解释现象。", explanation:"把 -1 与无符号数 1 比较时，-1 会先被转成无符号数（变成很大的数），所以 a < b 为假。输出 0。", solution:"#include <stdio.h>\nint main(void) {\n    int a = -1;\n    unsigned int b = 1;\n    printf(\"%d\\n\", a < b);   // 输出 0\n    return 0;\n}",analysis:{key:"有符号与无符号混算时，有符号数隐式转成无符号数；-1 转成 0xFFFFFFFF（约 42 亿），所以 a &amp;lt; b 为假。",why:"printf(\"%d\\n\", a &amp;lt; b) 输出 0；用 %u 打印 a 可以看到 -1 变成了 4294967295，直观展示转换结果。",extra:"这叫“寻常算术转换”（usual arithmetic conversions）；编译器加 -Wsign-compare 会警告这类比较；工程上避免有符号/无符号混用。"}}
         ]
       },
       {
@@ -1743,7 +1743,7 @@
           {type:"选择题", text:"const int *p 中，const 限制的是什么？", options:["p 指向的值不能改","p 本身不能改指向","两者都不能改","没有任何限制"], answer:0, explanation:"const 在 * 左边锁的是值：不能通过 p 修改它指向的内容，但可以让 p 指向别处。"},
           {type:"判断题", text:"int *const p 表示不能再让 p 指向其他变量。", options:["正确","错误"], answer:0, explanation:"const 在 * 右边锁的是指针本身：p 的指向固定，不能改，但 p 指向的值可以改。"},
           {type:"填空题", text:"写出“指向的 int 和指针本身都不能改”的声明。", placeholder:"填写完整声明，例如 const int *const p", accepted:["const int *const p","int const *const p"], explanation:"两个 const 一个在 * 左边一个在 * 右边：const int *const p 即可。"},
-          {type:"程序题", text:"定义一个 int 变量 x，再定义一个 const int *p 指向它，尝试通过 p 修改 x 的值并观察编译结果。", explanation:"用 const int *p = &x; 后写 *p = 10; 会编译报错，因为 const 锁定了值。这正说明 const 的保护作用。", solution:"#include <stdio.h>\nint main(void) {\n    int x = 5;\n    const int *p = &x;\n    // *p = 10;   // 编译报错：不能通过 p 修改\n    printf(\"%d\\n\", *p);  // 5\n    return 0;\n}"}
+          {type:"程序题", text:"定义一个 int 变量 x，再定义一个 const int *p 指向它，尝试通过 p 修改 x 的值并观察编译结果。", explanation:"用 const int *p = &x; 后写 *p = 10; 会编译报错，因为 const 锁定了值。这正说明 const 的保护作用。", solution:"#include <stdio.h>\nint main(void) {\n    int x = 5;\n    const int *p = &x;\n    // *p = 10;   // 编译报错：不能通过 p 修改\n    printf(\"%d\\n\", *p);  // 5\n    return 0;\n}",analysis:{key:"const 在 * 左边锁住“指向的值”：不能通过 p 修改 *p，但 p 可以换指向。",why:"写 *p = 10 会触发编译报错，这正好证明 const 的保护生效——编译器在编译期拦住误改。",extra:"四种组合：const int *p（锁值）、int *const p（锁指向）、const int *const p（都锁）、int *p（都不锁）；口诀：const 在 * 左边锁值，右边锁指针。"}}
         ]
       },
       {
@@ -1759,7 +1759,7 @@
           {type:"选择题", text:"函数 int f(int x) 对应的函数指针类型是？", options:["int (*p)(int)","int *p(int)","int p(int*)","*int p(int)"], answer:0, explanation:"把函数声明抄一遍，函数名换成 (*p) 即可：int (*p)(int)。括号必须有，否则就成了返回指针的函数。"},
           {type:"判断题", text:"qsort 的第四个参数是一个“比较函数”，由你来提供。", options:["正确","错误"], answer:0, explanation:"qsort 不知道你的数据怎么算大小，所以需要你传入比较函数（回调），它排序时调用你的函数决定顺序。"},
           {type:"填空题", text:"qsort 排序时，比较函数返回正数表示第一个参数应该排在______面。", placeholder:"填写一个字", accepted:["后","后面"], explanation:"返回正数表示 a 比 b 大，应该排在 b 的后面（升序时）。返回负数表示 a 在前。"},
-          {type:"程序题", text:"用 qsort 把数组 {5, 3, 8, 1} 按升序排序并输出。", explanation:"写比较函数（升序返回 x - y），调用 qsort，然后循环 printf 输出。注意比较函数参数是 const void *，要先转回 int * 再取值。", solution:"#include <stdio.h>\n#include <stdlib.h>\nint cmp(const void *a, const void *b) {\n    int x = *(const int *)a, y = *(const int *)b;\n    return x - y;\n}\nint main(void) {\n    int arr[] = {5, 3, 8, 1};\n    qsort(arr, 4, sizeof(int), cmp);\n    for (int i = 0; i < 4; i++) printf(\"%d \", arr[i]);\n    return 0;\n}"}
+          {type:"程序题", text:"用 qsort 把数组 {5, 3, 8, 1} 按升序排序并输出。", explanation:"写比较函数（升序返回 x - y），调用 qsort，然后循环 printf 输出。注意比较函数参数是 const void *，要先转回 int * 再取值。", solution:"#include <stdio.h>\n#include <stdlib.h>\nint cmp(const void *a, const void *b) {\n    int x = *(const int *)a, y = *(const int *)b;\n    return x - y;\n}\nint main(void) {\n    int arr[] = {5, 3, 8, 1};\n    qsort(arr, 4, sizeof(int), cmp);\n    for (int i = 0; i < 4; i++) printf(\"%d \", arr[i]);\n    return 0;\n}",analysis:{key:"qsort 的第四个参数是函数指针（比较函数）；比较函数接收 const void*，要转回具体类型再取值。",why:"cmp 返回 x - y：负数表示 a 在前（升序）；qsort 排序时反复调用 cmp 决定顺序；转回 const int* 是因为 void* 不能直接解引用。",extra:"比较函数返回负/零/正分别表示 a 在 b 前/相等/在 b 后；void* 是“万能指针”，体现 C 的泛型思想；qsort 复杂度 O(n log n)。"}}
         ]
       },
       {
@@ -1775,7 +1775,7 @@
           {type:"选择题", text:"union 的所有成员在内存中是什么关系？", options:["各自独立存储","共用同一块内存","按顺序连续存储","大小相加"], answer:1, explanation:"union 成员共用一块内存，大小取最大成员的大小。同一时刻只能按其中一个成员解释这块内存。"},
           {type:"判断题", text:"结构体的大小一定等于所有成员大小之和。", options:["正确","错误"], answer:1, explanation:"因为有内存对齐，成员之间可能产生“空洞”。char 后面放 int 时，int 可能被对齐到 4 字节边界，结构体大小会大于成员之和。"},
           {type:"填空题", text:"位域语法中，成员后面写冒号和数字表示它占用几个______。", placeholder:"填写两个字", accepted:["位","比特"], explanation:"位域通过“: 数字”指定占用位数，适合把多个小开关塞进一个字节，常见于硬件寄存器描述。"},
-          {type:"程序题", text:"定义一个联合体，包含 int 和 float 两个成员，分别给 int 赋 1 再读 float，观察输出（思考为什么值奇怪）。", explanation:"union 成员共用内存，按 int 写入 1 后按 float 解释会得到一个奇怪的小数。这说明 union 同一时刻只有一种解释有效。", solution:"#include <stdio.h>\nunion U { int i; float f; };\nint main(void) {\n    union U u;\n    u.i = 1;\n    printf(\"%f\\n\", u.f);  // 一个很小的数，不是 1.0\n    return 0;\n}"}
+          {type:"程序题", text:"定义一个联合体，包含 int 和 float 两个成员，分别给 int 赋 1 再读 float，观察输出（思考为什么值奇怪）。", explanation:"union 成员共用内存，按 int 写入 1 后按 float 解释会得到一个奇怪的小数。这说明 union 同一时刻只有一种解释有效。", solution:"#include <stdio.h>\nunion U { int i; float f; };\nint main(void) {\n    union U u;\n    u.i = 1;\n    printf(\"%f\\n\", u.f);  // 一个很小的数，不是 1.0\n    return 0;\n}",analysis:{key:"union 的所有成员共用同一块内存，大小等于最大成员；同一时刻只能按一种成员解释。",why:"u.i = 1 往这块 4 字节内存写入 int 的 1；再按 float 读取时，同一串二进制被按浮点格式解释，得到一个极小的小数——不是 1.0。",extra:"int 的 1 的位模式（0x00000001）按 float 解释是约 1.4e-45；union 常用于协议解析（同一段字节当不同字段看）和类型双关；大小端会影响位解释结果。"}}
         ]
       },
       {
@@ -1791,7 +1791,7 @@
           {type:"选择题", text:"宏 SQUARE(x) 定义成 #define SQUARE(x) x*x 时，SQUARE(2+3) 的结果是？", options:["25","11","13","报错"], answer:1, explanation:"宏是纯文本替换：SQUARE(2+3) 变成 2+3*2+3，按优先级算 2+6+3=11。所以参数必须加括号：(x)*(x)。"},
           {type:"判断题", text:"头文件里的 #ifndef ... #endif 可以防止头文件被重复包含。", options:["正确","错误"], answer:0, explanation:"这是头文件守卫（include guard）的经典写法：第一次包含时定义宏，之后再包含时 #ifndef 不成立，内容跳过。"},
           {type:"填空题", text:"让下面宏对任意表达式都安全，应给参数加上什么符号？#define ABS(x) ((x) < 0 ? -(x) : (x)) 中的______。", placeholder:"填写标点符号", accepted:["括号","()"], explanation:"宏参数要整体加括号，防止优先级问题。ABS(2+3) 应展开成 ((2+3)<0 ? -(2+3) : (2+3))。"},
-          {type:"程序题", text:"用宏定义一个“取较大值”的 MAX，并输出 MAX(3, 5) 和 MAX(7, 2)。", explanation:"宏必须给参数加括号：((a)>(b)?(a):(b))。注意宏没有类型检查，这里只用于整数演示。", solution:"#include <stdio.h>\n#define MAX(a, b) ((a) > (b) ? (a) : (b))\nint main(void) {\n    printf(\"%d\\n\", MAX(3, 5));  // 5\n    printf(\"%d\\n\", MAX(7, 2));  // 7\n    return 0;\n}"}
+          {type:"程序题", text:"用宏定义一个“取较大值”的 MAX，并输出 MAX(3, 5) 和 MAX(7, 2)。", explanation:"宏必须给参数加括号：((a)>(b)?(a):(b))。注意宏没有类型检查，这里只用于整数演示。", solution:"#include <stdio.h>\n#define MAX(a, b) ((a) > (b) ? (a) : (b))\nint main(void) {\n    printf(\"%d\\n\", MAX(3, 5));  // 5\n    printf(\"%d\\n\", MAX(7, 2));  // 7\n    return 0;\n}",analysis:{key:"宏是编译前的纯文本替换；参数必须整体加括号，否则优先级会出错。",why:"MAX(a, b) 定义成 ((a) &amp;gt; (b) ? (a) : (b))：加括号后 MAX(3, 5) 展开为 ((3) &amp;gt; (5) ? (3) : (5))，结果 5。",extra:"若不加括号，MAX(2+3, 5) 会展开成 2+3 &amp;gt; 5 ? ... 出错；宏参数会被多次求值（MAX(i++, j) 里 i++ 可能执行两次），这是宏的副作用陷阱。"}}
         ]
       },
       {
@@ -1807,7 +1807,7 @@
           {type:"选择题", text:"局部变量（函数内声明的变量）通常存放在哪个区域？", options:["栈","堆","数据段","代码段"], answer:0, explanation:"局部变量存在栈上，函数调用时创建、返回时销毁。全局变量和静态变量才存在数据段。"},
           {type:"判断题", text:"malloc 申请的内存不需要手动释放，系统会自动回收。", options:["正确","错误"], answer:1, explanation:"堆内存不自动回收，忘记 free 会造成内存泄漏。C 语言没有自动垃圾回收，必须自己管理。"},
           {type:"填空题", text:"用 malloc 申请的内存用完要用哪个函数归还？", placeholder:"填写函数名", accepted:["free","free()"], explanation:"free(p) 把堆内存还给系统。释放后最好把指针置 NULL，避免悬垂指针。"},
-          {type:"程序题", text:"写代码：用 static 局部变量写一个计数器函数，每次调用返回 1,2,3...，主函数调用三次并输出。", explanation:"static 局部变量存在数据段，函数返回后不销毁，下次调用还保留值。count 从 1 开始每次加 1。", solution:"#include <stdio.h>\nint next(void) {\n    static int n = 0;\n    n++;\n    return n;\n}\nint main(void) {\n    printf(\"%d %d %d\\n\", next(), next(), next());  // 1 2 3\n    return 0;\n}"}
+          {type:"程序题", text:"写代码：用 static 局部变量写一个计数器函数，每次调用返回 1,2,3...，主函数调用三次并输出。", explanation:"static 局部变量存在数据段，函数返回后不销毁，下次调用还保留值。count 从 1 开始每次加 1。", solution:"#include <stdio.h>\nint next(void) {\n    static int n = 0;\n    n++;\n    return n;\n}\nint main(void) {\n    printf(\"%d %d %d\\n\", next(), next(), next());  // 1 2 3\n    return 0;\n}",analysis:{key:"static 局部变量存在数据段，生命周期是整个程序，函数返回后不销毁，保留上次的值。",why:"static int n = 0 只在首次调用时初始化一次；之后 n++ 每次递增，三次调用依次返回 1 2 3。",extra:"static 有两个含义：修饰局部变量是“延长生命周期”，修饰全局变量/函数是“限制为文件内部链接”；多线程共享 static 变量要加锁。"}}
         ]
       },
       {
@@ -1823,7 +1823,7 @@
           {type:"选择题", text:"malloc 分配失败时会返回什么？", options:["0","NULL","-1","随机地址"], answer:1, explanation:"分配失败返回 NULL（空指针）。使用前必须检查，否则对 NULL 解引用会崩溃。"},
           {type:"判断题", text:"free 之后把指针置为 NULL 是好习惯，可以避免悬垂指针。", options:["正确","错误"], answer:0, explanation:"free 后指针仍保存着旧地址，不置 NULL 的话一旦误用就是悬垂指针。置 NULL 后误用会立刻暴露（对 NULL 解引用容易发现）。"},
           {type:"填空题", text:"申请了内存但忘记释放，长期运行后内存不断增长，这种现象叫内存______。", placeholder:"填写两个字", accepted:["泄漏"], explanation:"内存泄漏：堆内存被申请后没有释放，程序占用的内存只增不减，长时间运行可能耗尽内存。"},
-          {type:"程序题", text:"用 malloc 申请 5 个 int，填入 1~5，求和并输出，最后正确释放。", explanation:"申请后检查 NULL，用完后 free 并置 NULL。这是内存管理的标准三步。", solution:"#include <stdio.h>\n#include <stdlib.h>\nint main(void) {\n    int *arr = malloc(5 * sizeof(int));\n    if (!arr) return 1;\n    int sum = 0;\n    for (int i = 0; i < 5; i++) { arr[i] = i + 1; sum += arr[i]; }\n    printf(\"%d\\n\", sum);\n    free(arr);\n    return 0;\n}"}
+          {type:"程序题", text:"用 malloc 申请 5 个 int，填入 1~5，求和并输出，最后正确释放。", explanation:"申请后检查 NULL，用完后 free 并置 NULL。这是内存管理的标准三步。", solution:"#include <stdio.h>\n#include <stdlib.h>\nint main(void) {\n    int *arr = malloc(5 * sizeof(int));\n    if (!arr) return 1;\n    int sum = 0;\n    for (int i = 0; i < 5; i++) { arr[i] = i + 1; sum += arr[i]; }\n    printf(\"%d\\n\", sum);\n    free(arr);\n    return 0;\n}",analysis:{key:"内存管理三步：malloc 申请（大小 × sizeof）→ 使用前检查 NULL → 用完 free 并置 NULL。",why:"malloc(5 * sizeof(int)) 申请 5 个 int 的字节数；if (!arr) return 1 处理申请失败；循环填 1~5 求和；free(arr) 归还，arr = NULL 防悬垂。",extra:"sizeof(int) 因平台而异（通常 4）；忘记 free 是内存泄漏，长跑程序会越占越多；realloc 可扩容，但失败时原块仍有效，要保存旧指针。"}}
         ]
       },
       {
@@ -1839,7 +1839,7 @@
           {type:"选择题", text:"双向链表节点相比单向链表多了一个什么指针？", options:["data 指针","prev 指针","head 指针","size 指针"], answer:1, explanation:"双向链表每个节点多一个 prev 指向前驱，所以删除节点时可以直接通过 prev 找到前一个节点。"},
           {type:"判断题", text:"双向链表删除节点时，不需要遍历找前驱，因为有 prev 指针。", options:["正确","错误"], answer:0, explanation:"这正是双向链表的核心优势：通过当前节点的 prev 就能拿到前驱，删除是 O(1) 操作。"},
           {type:"填空题", text:"双向链表中，头节点的 prev 指针指向____。", placeholder:"填写英文单词或中文", accepted:["NULL","null","空"], explanation:"头节点没有前驱，prev 为 NULL；尾节点的 next 为 NULL，表示链表结束。"},
-          {type:"程序题", text:"定义双向链表节点结构体，写一个函数在 head 后面插入一个新节点（假设 head 非空）。", explanation:"按四步走：新节点接 next 和 prev，再改原节点的 next。注意保存原 next 防止丢失。", solution:"struct Node { int data; struct Node *prev, *next; };\nvoid insertAfter(struct Node *head, int value) {\n    struct Node *n = malloc(sizeof(struct Node));\n    n->data = value;\n    n->prev = head;\n    n->next = head->next;\n    if (head->next) head->next->prev = n;\n    head->next = n;\n}"}
+          {type:"程序题", text:"定义双向链表节点结构体，写一个函数在 head 后面插入一个新节点（假设 head 非空）。", explanation:"按四步走：新节点接 next 和 prev，再改原节点的 next。注意保存原 next 防止丢失。", solution:"struct Node { int data; struct Node *prev, *next; };\nvoid insertAfter(struct Node *head, int value) {\n    struct Node *n = malloc(sizeof(struct Node));\n    n->data = value;\n    n->prev = head;\n    n->next = head->next;\n    if (head->next) head->next->prev = n;\n    head->next = n;\n}",analysis:{key:"双向链表插入四步：新节点先接上两端的指针，再断开并重连原链表的两处指针。",why:"n-&amp;gt;prev = head、n-&amp;gt;next = head-&amp;gt;next 先让新节点“挂上”；若原 next 存在，其 prev 改为 n；最后 head-&amp;gt;next = n，完成插入。",extra:"顺序不能乱：先接新节点再断旧链，否则会丢失原 next；要处理“head 后面没有节点”（head-&amp;gt;next 为 NULL）的边界；单链表插入少一步，但删除要遍历找前驱。"}}
         ]
       },
       {
@@ -1855,7 +1855,7 @@
           {type:"选择题", text:"栈的特点是？", options:["先进先出（FIFO）","后进先出（LIFO）","随机存取","按大小排序"], answer:1, explanation:"栈像叠盘子，只能从顶上拿，后进去的先出来，即 LIFO。"},
           {type:"判断题", text:"队列适合做串口接收的数据缓冲，因为先收到的数据先被处理。", options:["正确","错误"], answer:0, explanation:"队列是 FIFO，先入队的数据先出队，正好符合“先收到的先处理”的缓冲需求。"},
           {type:"填空题", text:"用数组实现循环队列时，下标绕圈需要用哪个运算符？", placeholder:"填写运算符", accepted:["%","取模"], explanation:"(rear + 1) % SIZE 让下标到末尾后回到开头，实现环形复用空间。"},
-          {type:"程序题", text:"用数组实现一个容量 10 的栈，支持 push 和 pop，主函数压入 3 个数再弹出并输出。", explanation:"top 记录下一个空位，push 时先判断满，pop 时判断空。弹出顺序是后进先出。", solution:"#include <stdio.h>\n#define SIZE 10\nint stack[SIZE], top = 0;\nint main(void) {\n    stack[top++] = 1;\n    stack[top++] = 2;\n    stack[top++] = 3;\n    while (top > 0) printf(\"%d \", stack[--top]);  // 3 2 1\n    return 0;\n}"}
+          {type:"程序题", text:"用数组实现一个容量 10 的栈，支持 push 和 pop，主函数压入 3 个数再弹出并输出。", explanation:"top 记录下一个空位，push 时先判断满，pop 时判断空。弹出顺序是后进先出。", solution:"#include <stdio.h>\n#define SIZE 10\nint stack[SIZE], top = 0;\nint main(void) {\n    stack[top++] = 1;\n    stack[top++] = 2;\n    stack[top++] = 3;\n    while (top > 0) printf(\"%d \", stack[--top]);  // 3 2 1\n    return 0;\n}",analysis:{key:"数组栈用 top 记录栈顶位置；push 写 stack[top++]（先写再移），pop 读 stack[--top]（先移再读）；LIFO。",why:"压入 1,2,3 后 top=3；while (top &amp;gt; 0) 循环用 --top 从栈顶弹出，输出顺序是 3 2 1，正好体现后进先出。",extra:"真实栈要检查满/空（top 越界会溢出或下溢）；函数调用、表达式求值、撤销操作都是栈的应用；top 语义是“下一个空位”还是“栈顶元素”要约定清楚。"}}
         ]
       },
       {
@@ -1871,7 +1871,7 @@
           {type:"选择题", text:"冒泡排序每一轮结束后，最大的元素会到哪里？", options:["最前面","中间","最后面","随机位置"], answer:2, explanation:"冒泡排序让大的元素逐轮往后“冒”，所以每轮结束最大的会到本轮范围的最后。"},
           {type:"判断题", text:"二分查找要求数组必须先排好序。", options:["正确","错误"], answer:0, explanation:"二分查找依赖“中间值能判断去左还是去右”，无序数组无法这样缩小范围，所以必须先排序。"},
           {type:"填空题", text:"二分查找每比较一次，搜索范围大约缩小到原来的______。", placeholder:"填写分数，如 1/2", accepted:["一半","1/2","二分之一"], explanation:"每次比较都能排除一半：要么去左半边要么去右半边，所以范围减半。"},
-          {type:"程序题", text:"在已排序数组 {1, 3, 5, 7, 9, 11} 中用二分查找找 7，输出它的下标。", explanation:"lo=0, hi=5，mid 依次为 2, 4, 3，最后在 a[3]=7 找到，返回 3。", solution:"#include <stdio.h>\nint main(void) {\n    int a[] = {1, 3, 5, 7, 9, 11};\n    int key = 7, lo = 0, hi = 5, ans = -1;\n    while (lo <= hi) {\n        int mid = lo + (hi - lo) / 2;\n        if (a[mid] == key) { ans = mid; break; }\n        if (a[mid] < key) lo = mid + 1; else hi = mid - 1;\n    }\n    printf(\"%d\\n\", ans);  // 3\n    return 0;\n}"}
+          {type:"程序题", text:"在已排序数组 {1, 3, 5, 7, 9, 11} 中用二分查找找 7，输出它的下标。", explanation:"lo=0, hi=5，mid 依次为 2, 4, 3，最后在 a[3]=7 找到，返回 3。", solution:"#include <stdio.h>\nint main(void) {\n    int a[] = {1, 3, 5, 7, 9, 11};\n    int key = 7, lo = 0, hi = 5, ans = -1;\n    while (lo <= hi) {\n        int mid = lo + (hi - lo) / 2;\n        if (a[mid] == key) { ans = mid; break; }\n        if (a[mid] < key) lo = mid + 1; else hi = mid - 1;\n    }\n    printf(\"%d\\n\", ans);  // 3\n    return 0;\n}",analysis:{key:"二分查找每轮把搜索区间砍一半：比较中点，命中返回，否则去左或右半边。",why:"lo=0, hi=5：mid=2（a[2]=5 &amp;lt; 7 → lo=3）；mid=4（a[4]=9 &amp;gt; 7 → hi=3）；mid=3（a[3]=7 命中）返回 3。",extra:"while (lo &amp;lt;= hi) 表示闭区间还有元素；mid = lo + (hi-lo)/2 防溢出；查找不到时返回 -1 是约定俗成；复杂度 O(log n)。"}}
         ]
       },
       {
@@ -1887,7 +1887,7 @@
           {type:"选择题", text:"递归函数必须包含什么才能保证终止？", options:["循环语句","递归出口（基线条件）","全局变量","随机数"], answer:1, explanation:"没有递归出口，函数会无限调用自己，最终栈溢出崩溃。出口给最小问题直接答案。"},
           {type:"判断题", text:"fact(n) = n * fact(n-1)，只要相信 fact(n-1) 正确，这一层乘 n 就是答案。", options:["正确","错误"], answer:0, explanation:"这就是递归信任：不必展开所有层，子问题正确则本层正确，配合出口就能证明整体正确。"},
           {type:"填空题", text:"分治思想的三步是：分、治、______。", placeholder:"填写一个字", accepted:["合","合并"], explanation:"分治三步：分（拆解）、治（递归解决子问题）、合（合并结果）。归并排序是典型例子。"},
-          {type:"程序题", text:"用递归写一个函数，计算 1 到 n 的和，主函数输出 sum(5)。", explanation:"出口：n<=1 返回 1；递推：n + sum(n-1)。sum(5)=5+4+3+2+1=15。", solution:"#include <stdio.h>\nint sum(int n) {\n    if (n <= 1) return 1;\n    return n + sum(n - 1);\n}\nint main(void) {\n    printf(\"%d\\n\", sum(5));  // 15\n    return 0;\n}"}
+          {type:"程序题", text:"用递归写一个函数，计算 1 到 n 的和，主函数输出 sum(5)。", explanation:"出口：n<=1 返回 1；递推：n + sum(n-1)。sum(5)=5+4+3+2+1=15。", solution:"#include <stdio.h>\nint sum(int n) {\n    if (n <= 1) return 1;\n    return n + sum(n - 1);\n}\nint main(void) {\n    printf(\"%d\\n\", sum(5));  // 15\n    return 0;\n}",analysis:{key:"递归 = 基例 + 递推：sum(n) = n + sum(n-1)，n &lt;= 1 时返回 1 停止。",why:"sum(5) 展开为 5 + sum(4) = 5+4+3+2+1 = 15，每一层把问题缩小 1，基例保证终止。",extra:"递归每层占一块栈帧，n 很大会栈溢出；递归擅长树、分治（归并排序、快速排序），这类结构用循环写反而复杂。"}}
         ]
       },
       {
@@ -1903,7 +1903,7 @@
           {type:"选择题", text:"volatile 告诉编译器什么？", options:["变量是常量","变量可能被外部改变，不要优化读写","变量存到寄存器","变量是全局的"], answer:1, explanation:"volatile 表示变量可能被硬件、中断等外部因素改变，编译器每次访问都必须真实读写，不能优化缓存。"},
           {type:"判断题", text:"操作硬件寄存器时，一般都应该用 volatile 修饰指针。", options:["正确","错误"], answer:0, explanation:"寄存器值会被硬件随时改变，不用 volatile 的话编译器可能把读操作优化掉，导致读不到最新值。"},
           {type:"填空题", text:"声明一个 volatile 的 unsigned int 变量 flag，完整的声明语句是？", placeholder:"填写完整声明", accepted:["volatile unsigned int flag;","volatile unsigned int flag"], explanation:"顺序是 volatile unsigned int flag;。也可以写 unsigned volatile int，但习惯把 volatile 放前面。"},
-          {type:"程序题", text:"写一个 volatile 修饰的 int 变量 running，用 while 循环等待它变为 0（模拟等待中断修改标志）。", explanation:"volatile int running = 1; 在主循环 while (running) {} 中等待。中断或别处把它置 0 后循环退出。", solution:"#include <stdio.h>\nvolatile int running = 1;\nint main(void) {\n    // 模拟：稍后 running 被置 0\n    running = 0;\n    while (running) { }   // 每次真实读取 running\n    printf(\"done\\n\");\n    return 0;\n}"}
+          {type:"程序题", text:"写一个 volatile 修饰的 int 变量 running，用 while 循环等待它变为 0（模拟等待中断修改标志）。", explanation:"volatile int running = 1; 在主循环 while (running) {} 中等待。中断或别处把它置 0 后循环退出。", solution:"#include <stdio.h>\nvolatile int running = 1;\nint main(void) {\n    // 模拟：稍后 running 被置 0\n    running = 0;\n    while (running) { }   // 每次真实读取 running\n    printf(\"done\\n\");\n    return 0;\n}",analysis:{key:"volatile 告诉编译器：这个变量可能被外部（中断/硬件）改变，每次访问必须真实读写，不许优化缓存。",why:"如果不加 volatile，编译器可能把 while (running) 优化成“只读一次寄存器”的死循环；加了 volatile 后每轮都去内存读，running 被置 0 就能退出。",extra:"volatile 不改语义只改“读写的诚实度”；操作硬件寄存器时指针必须 volatile（如 #define REG (*(volatile unsigned int*)0x40020014)）；多线程共享变量应该用原子操作而不是 volatile。"}}
         ]
       },
       {
@@ -1919,7 +1919,7 @@
           {type:"选择题", text:"中断服务函数里应该尽量避免做什么？", options:["设置标志变量","做耗时操作（如长延时、阻塞等待）","读一个寄存器","清除中断标志"], answer:1, explanation:"中断服务函数要短、快。耗时操作会阻塞其他中断和主流程，应把处理挪到主循环，中断里只做标记。"},
           {type:"判断题", text:"优先级高的中断可以打断正在执行的低优先级中断。", options:["正确","错误"], answer:0, explanation:"这就是中断嵌套：高优先级可以抢占低优先级。系统会保存现场，处理完高优先级再恢复低优先级。"},
           {type:"填空题", text:"保护共享变量的“暂时禁止中断”的代码区域叫______区。", placeholder:"填写两个字", accepted:["临界"], explanation:"临界区：不允许被中断打断的关键代码段。进入前关中断，退出前开中断，保证操作原子性。"},
-          {type:"程序题", text:"用 volatile 标志模拟：主循环等待一个标志，说明中断“只标记不干活”的思路。", explanation:"volatile int flag = 0; 主循环 while (!flag) {} 等待；中断（示意）把 flag 置 1，主循环退出继续处理。", solution:"#include <stdio.h>\nvolatile int flag = 0;\nint main(void) {\n    flag = 1;   // 模拟中断把标志置 1\n    while (!flag) { }   // 等待\n    printf(\"flag set\\n\");\n    return 0;\n}"}
+          {type:"程序题", text:"用 volatile 标志模拟：主循环等待一个标志，说明中断“只标记不干活”的思路。", explanation:"volatile int flag = 0; 主循环 while (!flag) {} 等待；中断（示意）把 flag 置 1，主循环退出继续处理。", solution:"#include <stdio.h>\nvolatile int flag = 0;\nint main(void) {\n    flag = 1;   // 模拟中断把标志置 1\n    while (!flag) { }   // 等待\n    printf(\"flag set\\n\");\n    return 0;\n}",analysis:{key:"中断服务原则：只标记、不干活——中断里置标志，主循环轮询并处理。",why:"主循环 while (!flag) 等待，中断（示意）把 flag 置 1 后循环退出继续处理；真正的处理放主循环，中断保持又短又快。",extra:"中断和主循环共享的变量必须 volatile；对多字节变量要防“读到一半被改写”，必要时关中断（临界区）；这就是前后台系统架构。"}}
         ]
       },
       {
@@ -1935,7 +1935,7 @@
           {type:"选择题", text:"状态机的三个基本要素是什么？", options:["状态、事件、迁移","输入、输出、运算","变量、函数、循环","地址、指针、结构体"], answer:0, explanation:"状态机由状态、触发事件、状态迁移组成：某状态遇到某事件时，按规则迁移到新状态并执行动作。"},
           {type:"判断题", text:"用状态机写按键消抖，可以避免机械按键抖动导致的误触发。", options:["正确","错误"], answer:0, explanation:"状态机配合定时判断“稳定按下”一段时间后才确认，能滤掉按下瞬间的抖动，是嵌入式常用做法。"},
           {type:"填空题", text:"状态机中，“按下的瞬间”这一类触发条件通常叫做______。", placeholder:"填写两个字", accepted:["事件"], explanation:"事件是触发状态迁移的条件，如按键按下、定时超时、数据到达。"},
-          {type:"程序题", text:"用一个简单的两状态状态机（开关灯）练习：state 在 ON/OFF 之间切换，每次按键事件翻转并输出。", explanation:"enum { OFF, ON } state = OFF; 事件到来时 state = (state == OFF) ? ON : OFF; 并输出。体现“事件驱动状态迁移”。", solution:"#include <stdio.h>\nenum { OFF, ON } state = OFF;\nint main(void) {\n    for (int i = 0; i < 3; i++) {   // 模拟 3 次按键事件\n        state = (state == OFF) ? ON : OFF;\n        printf(\"%s\\n\", state == ON ? \"ON\" : \"OFF\");\n    }\n    return 0;\n}"}
+          {type:"程序题", text:"用一个简单的两状态状态机（开关灯）练习：state 在 ON/OFF 之间切换，每次按键事件翻转并输出。", explanation:"enum { OFF, ON } state = OFF; 事件到来时 state = (state == OFF) ? ON : OFF; 并输出。体现“事件驱动状态迁移”。", solution:"#include <stdio.h>\nenum { OFF, ON } state = OFF;\nint main(void) {\n    for (int i = 0; i < 3; i++) {   // 模拟 3 次按键事件\n        state = (state == OFF) ? ON : OFF;\n        printf(\"%s\\n\", state == ON ? \"ON\" : \"OFF\");\n    }\n    return 0;\n}",analysis:{key:"状态机三要素：状态、事件、迁移；这里用枚举表示状态，事件到来时按规则切换。",why:"state = (state == OFF) ? ON : OFF 实现“事件驱动迁移”：每次事件翻转状态；三次事件输出 ON OFF ON。",extra:"状态机适合按键消抖、菜单、通信协议等“多步骤 + 易出错”流程；多状态可用 switch-case 实现，逻辑可画图、可测试。"}}
         ]
       },
       {
@@ -1951,7 +1951,7 @@
           {type:"选择题", text:"RTOS 中“任务”通常是什么样的？", options:["一个带栈空间的死循环函数","一个普通 if 语句","一个全局变量","一个中断服务函数"], answer:0, explanation:"RTOS 任务是一段死循环代码，有自己的栈。调度器按优先级分配 CPU 时间，让多个任务轮流执行。"},
           {type:"判断题", text:"信号量可以用来同步两个任务：一个等信号，另一个发信号。", options:["正确","错误"], answer:0, explanation:"信号量是任务同步的工具：任务 A 获取信号量阻塞等待，任务 B 完成后释放信号量唤醒 A。"},
           {type:"填空题", text:"任务之间传递数据常用______（一种先进先出的数据结构）。", placeholder:"填写两个字", accepted:["队列"], explanation:"队列按先进先出传递数据，是任务间通信的标准方式，也常配合中断收数据。"},
-          {type:"程序题", text:"用状态变量模拟任务间通信：任务 A 把 0~4 放入数组（队列模拟），任务 B 依次读取并输出。", explanation:"用数组和 front/rear 模拟队列：写入 0~4，再按先进先出读出并打印。体现队列 FIFO 特性。", solution:"#include <stdio.h>\n#define SIZE 8\nint q[SIZE], front = 0, rear = 0;\nvoid enq(int v) { q[rear] = v; rear = (rear + 1) % SIZE; }\nint deq(void) { int v = q[front]; front = (front + 1) % SIZE; return v; }\nint main(void) {\n    for (int i = 0; i < 5; i++) enq(i);\n    while (front != rear) printf(\"%d \", deq());  // 0 1 2 3 4\n    return 0;\n}"}
+          {type:"程序题", text:"用状态变量模拟任务间通信：任务 A 把 0~4 放入数组（队列模拟），任务 B 依次读取并输出。", explanation:"用数组和 front/rear 模拟队列：写入 0~4，再按先进先出读出并打印。体现队列 FIFO 特性。", solution:"#include <stdio.h>\n#define SIZE 8\nint q[SIZE], front = 0, rear = 0;\nvoid enq(int v) { q[rear] = v; rear = (rear + 1) % SIZE; }\nint deq(void) { int v = q[front]; front = (front + 1) % SIZE; return v; }\nint main(void) {\n    for (int i = 0; i < 5; i++) enq(i);\n    while (front != rear) printf(\"%d \", deq());  // 0 1 2 3 4\n    return 0;\n}",analysis:{key:"环形队列用 front/rear 下标 + 取模（% SIZE）实现空间复用；先进先出（FIFO）。",why:"enq 依次放 0~4，rear 后移；deq 从 front 依次取，输出 0 1 2 3 4——先入的先出，体现队列特性。",extra:"环形队列要区分满/空（留一个空位或用计数器），否则 front == rear 同时表示“空”和“满”；队列是 RTOS 里任务间传数据的标准机制。"}}
         ]
       },
       {
@@ -1968,7 +1968,7 @@
           {type:"选择题", text:"DHT11 传感器一次完整返回多少位数据？", options:["8 位","16 位","40 位","64 位"], answer:2, explanation:"DHT11 返回 40 位：湿度 16 位 + 温度 16 位 + 校验 8 位。读完后要校验，防止数据错误。"},
           {type:"判断题", text:"做完整项目时，最好先让每个小模块单独验证，再整合到一起。", options:["正确","错误"], answer:0, explanation:"模块化调试：每步都有可见成果，出问题能快速定位，比一次性写完再查错高效得多。"},
           {type:"填空题", text:"常见 OLED 屏幕使用的通信接口是______。", placeholder:"填写接口名", accepted:["I2C","i2c"], explanation:"小尺寸 OLED 多用 I2C（地址常见 0x3C），只需两根数据线，接线简单。"},
-          {type:"程序题", text:"写一个简单的 OLED 显示拼接：定义 char 数组，用 snprintf 拼出 T:25.5C H:60% 这样的字符串。", explanation:"snprintf 把浮点和整数格式化进字符串，注意浮点用 %.1f。数组要够大，防止溢出。", solution:"#include <stdio.h>\nint main(void) {\n    float temp = 25.5;\n    int humi = 60;\n    char line[32];\n    snprintf(line, sizeof line, \"T:%.1fC H:%d%%\", temp, humi);\n    printf(\"%s\\n\", line);  // T:25.5C H:60%\n    return 0;\n}"}
+          {type:"程序题", text:"写一个简单的 OLED 显示拼接：定义 char 数组，用 snprintf 拼出 T:25.5C H:60% 这样的字符串。", explanation:"snprintf 把浮点和整数格式化进字符串，注意浮点用 %.1f。数组要够大，防止溢出。", solution:"#include <stdio.h>\nint main(void) {\n    float temp = 25.5;\n    int humi = 60;\n    char line[32];\n    snprintf(line, sizeof line, \"T:%.1fC H:%d%%\", temp, humi);\n    printf(\"%s\\n\", line);  // T:25.5C H:60%\n    return 0;\n}",analysis:{key:"snprintf 把格式化内容写入字符数组：%.1f 一位小数、%% 转义成字面百分号；数组要够大防溢出。",why:"格式串 \"T:%.1fC H:%d%%\" 分别对应 float temp 和 int humi；snprintf 自动补 \\0；32 字节足够容纳。",extra:"snprintf 比 sprintf 安全：它限制最多写 n 个字符，防止缓冲区溢出（经典安全漏洞根源）；嵌入式里拼接显示字符串前先算好最大长度。"}}
         ]
       },
       {
@@ -1985,7 +1985,7 @@
           {type:"选择题", text:"K&R 的《C 程序设计语言》通常被称为什么地位的书？", options:["入门漫画","C 语言圣经","小说","操作手册"], answer:1, explanation:"K&R 是 C 语言之父写的经典，被公认为 C 语言“圣经”，篇幅短但密度极高，适合进阶时精读。"},
           {type:"判断题", text:"多功能电子钟的“调时菜单”适合用状态机来组织。", options:["正确","错误"], answer:0, explanation:"菜单在不同模式（显示/调时/确认）间切换，正是状态机最擅长的场景：状态+事件+迁移。"},
           {type:"填空题", text:"STM32 内部用于维持时间计数的外设简称是______。", placeholder:"填写三个字母", accepted:["RTC"], explanation:"RTC（Real-Time Clock）实时时钟外设，配合外部晶振和电池，可在低功耗下持续计时。"},
-          {type:"程序题", text:"写代码把秒数 3661 转换成 hh:mm:ss 格式（1:01:01）并输出。", explanation:"h = 3661/3600 = 1；m = (3661%3600)/60 = 1；s = 3661%60 = 1。用整除和取余拆分时间。", solution:"#include <stdio.h>\nint main(void) {\n    int total = 3661;\n    int h = total / 3600;\n    int m = (total % 3600) / 60;\n    int s = total % 60;\n    printf(\"%02d:%02d:%02d\\n\", h, m, s);  // 01:01:01\n    return 0;\n}"}
+          {type:"程序题", text:"写代码把秒数 3661 转换成 hh:mm:ss 格式（1:01:01）并输出。", explanation:"h = 3661/3600 = 1；m = (3661%3600)/60 = 1；s = 3661%60 = 1。用整除和取余拆分时间。", solution:"#include <stdio.h>\nint main(void) {\n    int total = 3661;\n    int h = total / 3600;\n    int m = (total % 3600) / 60;\n    int s = total % 60;\n    printf(\"%02d:%02d:%02d\\n\", h, m, s);  // 01:01:01\n    return 0;\n}",analysis:{key:"用整除 / 和取余 % 拆分时间：h = total/3600，m = (total%3600)/60，s = total%60。",why:"3661 = 1×3600 + 61；61 = 1×60 + 1；所以 h=1, m=1, s=1；%02d 保证不足两位补 0 输出 01:01:01。",extra:"这种“总量拆成 时/分/秒”的换算在 RTC 显示、倒计时、延时计算里很常用；%02d 补零宽度也可以写成 %2d（空格补位）。"}}
         ]
       }
     ];
@@ -2805,7 +2805,7 @@
             showFeedback(index, "neutral", "先写下你的代码或思路，再看参考答案哦。");
             return;
           }
-          showFeedback(index, "neutral", `<div class="feedback-title">标准答案与讲解</div><div class="feedback-detail"><strong>你的作答：</strong><pre><code>${esc(code)}</code></pre></div><div class="feedback-detail"><strong>参考代码：</strong><pre><code>${esc(q.solution)}</code></pre></div><div class="feedback-detail"><strong>解析：</strong>${esc(q.explanation)}</div>`);
+          showFeedback(index, "neutral", `<div class="feedback-title">标准答案与讲解</div><div class="feedback-detail"><strong>你的作答：</strong><pre><code>${esc(code)}</code></pre></div><div class="feedback-detail"><strong>参考代码：</strong><pre><code>${esc(q.solution)}</code></pre></div><div class="feedback-detail"><strong>解析：</strong>${esc(q.explanation)}</div>${q.analysis ? `<div class="analysis-block" style="margin-top:12px;padding:12px;border:1px solid var(--line);border-radius:10px;background:var(--pale)"><strong>📖 程序题解析</strong><p style="margin:8px 0 4px"><b>🎯 知识重点：</b>${q.analysis.key}</p><p style="margin:4px 0"><b>🧠 答案为什么要这样写：</b>${q.analysis.why}</p><p style="margin:4px 0"><b>🔍 补充知识点：</b>${q.analysis.extra}</p></div>` : ""}`);
           root.querySelector(`#self-grade-${index}`).hidden = false;
           reveal.disabled = true;
           reveal.textContent = "已显示参考答案";
