@@ -264,9 +264,61 @@
       .pet-shop-dialog { padding: 17px; }
       .pet-shop-items { grid-template-columns: 1fr; }
     }
-  </style>
+  
+/* 40 分钟学习倒计时 */
+#studyTimer {
+  position: fixed; top: 14px; right: 14px; z-index: 9999;
+  background: #fff; border: 2px solid #69b8a8; border-radius: 14px;
+  padding: 10px 16px; box-shadow: 0 4px 14px rgba(0,0,0,.12);
+  text-align: center; user-select: none; font-family: inherit;
+}
+#studyTimer .st-label { font-size: 12px; color: #708783; }
+#studyTimer .st-time {
+  font-size: 26px; font-weight: 700; color: #438f82;
+  font-variant-numeric: tabular-nums; line-height: 1.3;
+}
+#studyTimer.st-done .st-time { color: #69b8a8; font-size: 18px; }
+#studyTimer .st-reset {
+  margin-top: 5px; border: 0; background: #e8f5ef; color: #438f82;
+  border-radius: 8px; padding: 3px 10px; font-size: 12px; cursor: pointer;
+}
+#studyTimer .st-reset:hover { background: #d5ebe2; }
+#studyModal {
+  position: fixed; inset: 0; z-index: 10000;
+  background: rgba(52,75,75,.45);
+  display: flex; align-items: center; justify-content: center;
+}
+#studyModal .st-modal-box {
+  background: #fff; border-radius: 18px; padding: 26px 30px;
+  max-width: 340px; text-align: center; box-shadow: 0 10px 30px rgba(0,0,0,.25);
+}
+#studyModal .st-modal-box h3 { margin: 0 0 10px; color: #438f82; font-size: 22px; }
+#studyModal .st-modal-box p { color: #344b4b; margin: 0 0 18px; line-height: 1.7; }
+#studyModal .st-modal-box button {
+  border: 0; background: #69b8a8; color: #fff; border-radius: 10px;
+  padding: 9px 22px; font-size: 15px; cursor: pointer;
+}
+#studyModal .st-modal-box button:hover { background: #438f82; }
+@media (max-width: 640px) {
+  #studyTimer { top: 8px; right: 8px; padding: 6px 10px; }
+  #studyTimer .st-time { font-size: 20px; }
+}
+</style>
 </head>
 <body>
+<div id="studyTimer" title="学习倒计时：每天 40 分钟，时间到了提醒你休息">
+  <div class="st-label">⏳ 学习倒计时</div>
+  <div class="st-time" id="stTime">40:00</div>
+  <button class="st-reset" id="stReset" title="重新开始一轮 40 分钟">重新开始</button>
+</div>
+<div id="studyModal" style="display:none">
+  <div class="st-modal-box">
+    <h3>🎉 今日学习完成！</h3>
+    <p>你已经专注学习了 40 分钟，很棒的坚持！<br>可以休息一下啦～<br>（想继续的话，点右上角「重新开始」）</p>
+    <button id="stModalOk">好的，去休息</button>
+  </div>
+</div>
+
   <header class="topbar">
     <div class="brand"><span class="brand-mark">C</span><span>C 起点 · STM32 实战</span></div>
     <span class="top-note">先学 C，再让单片机动起来</span>
@@ -338,6 +390,78 @@
     </form>
   </dialog>
   <script>
+    // ===== 40 分钟学习倒计时：进入网站自动开始，到点提醒 =====
+    (function(){
+      var MIN = 40, KEY = 'c_stm32_study_timer';
+      var timerEl = document.getElementById('studyTimer');
+      var timeEl = document.getElementById('stTime');
+      var resetBtn = document.getElementById('stReset');
+      var modal = document.getElementById('studyModal');
+      var okBtn = document.getElementById('stModalOk');
+      if (!timerEl || !timeEl) return;
+
+      function todayStr(){ var d = new Date(); return d.getFullYear()+'-'+(d.getMonth()+1)+'-'+d.getDate(); }
+      function pad(n){ return (n<10?'0':'')+n; }
+      function fmt(sec){ var m = Math.floor(sec/60), s = sec%60; return pad(m)+':'+pad(s); }
+      function load(){ try { return JSON.parse(localStorage.getItem(KEY)); } catch(e){ return null; } }
+      function save(v){ try { localStorage.setItem(KEY, JSON.stringify(v)); } catch(e){} }
+
+      var st = load();
+      var t = todayStr();
+      if (!st || st.date !== t) {
+        st = { date: t, end: Date.now() + MIN*60*1000, done: false };
+        save(st);
+      }
+      var done = !!st.done;
+      var tick = null;
+
+      function render(){
+        if (done) {
+          timerEl.classList.add('st-done');
+          timeEl.textContent = '✅ 已完成';
+        } else {
+          timeEl.textContent = fmt(Math.max(0, Math.round((st.end - Date.now())/1000)));
+        }
+      }
+      function finish(){
+        done = true; st.done = true; save(st);
+        if (tick) clearInterval(tick);
+        timerEl.classList.add('st-done');
+        timeEl.textContent = '✅ 已完成';
+        modal.style.display = 'flex';
+        if ('Notification' in window && Notification.permission === 'granted') {
+          try { new Notification('学习完成 🎉', { body: '今日 40 分钟学习已完成，可以休息啦！' }); } catch(e){}
+        }
+      }
+      function startTick(){
+        if (tick) clearInterval(tick);
+        tick = setInterval(function(){
+          var remain = st.end - Date.now();
+          if (remain <= 0) { finish(); }
+          else { timeEl.textContent = fmt(Math.round(remain/1000)); }
+        }, 500);
+      }
+
+      if (done) { render(); }
+      else if (st.end <= Date.now()) { finish(); }
+      else { render(); startTick(); }
+
+      resetBtn.addEventListener('click', function(){
+        done = false;
+        st = { date: todayStr(), end: Date.now() + MIN*60*1000, done: false };
+        save(st);
+        timerEl.classList.remove('st-done');
+        render();
+        startTick();
+      });
+      okBtn.addEventListener('click', function(){
+        modal.style.display = 'none';
+        if ('Notification' in window && Notification.permission === 'default') {
+          Notification.requestPermission();
+        }
+      });
+    })();
+
     const lessons = [
       {
         title: "认识 C 语言与第一个程序", level: "入门 · 第 1 课",
