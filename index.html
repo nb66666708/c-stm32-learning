@@ -283,6 +283,13 @@
   border-radius: 8px; padding: 3px 10px; font-size: 12px; cursor: pointer;
 }
 #studyTimer .st-reset:hover { background: #d5ebe2; }
+#studyTimer .st-action {
+  margin-top: 6px; border: 0; background: #69b8a8; color: #fff;
+  border-radius: 8px; padding: 5px 16px; font-size: 13px; cursor: pointer;
+  font-weight: 600; display: block; margin-left: auto; margin-right: auto;
+}
+#studyTimer .st-action:hover { background: #438f82; }
+#studyTimer .st-action:disabled { background: #d5ebe2; color: #708783; cursor: default; }
 #studyModal {
   position: fixed; inset: 0; z-index: 10000;
   background: rgba(52,75,75,.45);
@@ -362,9 +369,10 @@
 </div>
 <div id="noteSavedTip" style="opacity:0">笔记已保存 ✓</div>
 
-<div id="studyTimer" title="学习倒计时：每天 40 分钟，时间到了提醒你休息">
+<div id="studyTimer" title="学习倒计时：每天 40 分钟，点开始才计时，时间到了提醒你休息">
   <div class="st-label">⏳ 学习倒计时</div>
   <div class="st-time" id="stTime">40:00</div>
+  <button class="st-action" id="stAction" title="开始计时">开始计时</button>
   <button class="st-reset" id="stReset" title="重新开始一轮 40 分钟">重新开始</button>
 </div>
 <div id="studyModal" style="display:none">
@@ -595,15 +603,16 @@
       });
     })();
 
-    // ===== 40 分钟学习倒计时：进入网站自动开始，到点提醒 =====
+    // ===== 40 分钟学习倒计时：点开始才计时，支持暂停/继续，到点提醒 =====
     (function(){
       var MIN = 40, KEY = 'c_stm32_study_timer';
-      var timerEl = document.getElementById('studyTimer');
       var timeEl = document.getElementById('stTime');
+      var actionBtn = document.getElementById('stAction');
       var resetBtn = document.getElementById('stReset');
       var modal = document.getElementById('studyModal');
       var okBtn = document.getElementById('stModalOk');
-      if (!timerEl || !timeEl) return;
+      var timerEl = document.getElementById('studyTimer');
+      if (!timeEl || !actionBtn) return;
 
       function todayStr(){ var d = new Date(); return d.getFullYear()+'-'+(d.getMonth()+1)+'-'+d.getDate(); }
       function pad(n){ return (n<10?'0':'')+n; }
@@ -611,28 +620,43 @@
       function load(){ try { return JSON.parse(localStorage.getItem(KEY)); } catch(e){ return null; } }
       function save(v){ try { localStorage.setItem(KEY, JSON.stringify(v)); } catch(e){} }
 
+      var TOTAL = MIN * 60; // 2400 秒
       var st = load();
       var t = todayStr();
-      if (!st || st.date !== t) {
-        st = { date: t, end: Date.now() + MIN*60*1000, done: false };
+      if (!st || st.date !== t || !st.state) {
+        st = { date: t, state: 'idle', remaining: TOTAL, end: 0 };
         save(st);
       }
-      var done = !!st.done;
       var tick = null;
 
       function render(){
-        if (done) {
+        if (st.state === 'done') {
           timerEl.classList.add('st-done');
           timeEl.textContent = '✅ 已完成';
+          actionBtn.textContent = '已完成';
+          actionBtn.disabled = true;
+          return;
+        }
+        timerEl.classList.remove('st-done');
+        actionBtn.disabled = false;
+        if (st.state === 'idle') {
+          timeEl.textContent = fmt(TOTAL);
+          actionBtn.textContent = '开始计时';
+        } else if (st.state === 'paused') {
+          timeEl.textContent = fmt(st.remaining);
+          actionBtn.textContent = '继续';
         } else {
-          timeEl.textContent = fmt(Math.max(0, Math.round((st.end - Date.now())/1000)));
+          timeEl.textContent = fmt(Math.max(0, Math.round((st.end - Date.now()) / 1000)));
+          actionBtn.textContent = '暂停';
         }
       }
       function finish(){
-        done = true; st.done = true; save(st);
+        st.state = 'done'; save(st);
         if (tick) clearInterval(tick);
         timerEl.classList.add('st-done');
         timeEl.textContent = '✅ 已完成';
+        actionBtn.textContent = '已完成';
+        actionBtn.disabled = true;
         modal.style.display = 'flex';
         if ('Notification' in window && Notification.permission === 'granted') {
           try { new Notification('学习完成 🎉', { body: '今日 40 分钟学习已完成，可以休息啦！' }); } catch(e){}
@@ -641,23 +665,34 @@
       function startTick(){
         if (tick) clearInterval(tick);
         tick = setInterval(function(){
+          if (st.state !== 'running') return;
           var remain = st.end - Date.now();
           if (remain <= 0) { finish(); }
-          else { timeEl.textContent = fmt(Math.round(remain/1000)); }
+          else { timeEl.textContent = fmt(Math.round(remain / 1000)); }
         }, 500);
       }
 
-      if (done) { render(); }
-      else if (st.end <= Date.now()) { finish(); }
-      else { render(); startTick(); }
-
+      actionBtn.addEventListener('click', function(){
+        if (st.state === 'idle') {
+          st.state = 'running';
+          st.end = Date.now() + TOTAL * 1000;
+          save(st); render(); startTick();
+        } else if (st.state === 'paused') {
+          st.state = 'running';
+          st.end = Date.now() + st.remaining * 1000;
+          save(st); render(); startTick();
+        } else if (st.state === 'running') {
+          st.remaining = Math.max(1, Math.round((st.end - Date.now()) / 1000));
+          st.state = 'paused';
+          if (tick) clearInterval(tick);
+          save(st); render();
+        }
+      });
       resetBtn.addEventListener('click', function(){
-        done = false;
-        st = { date: todayStr(), end: Date.now() + MIN*60*1000, done: false };
+        if (tick) clearInterval(tick);
+        st = { date: todayStr(), state: 'idle', remaining: TOTAL, end: 0 };
         save(st);
-        timerEl.classList.remove('st-done');
         render();
-        startTick();
       });
       okBtn.addEventListener('click', function(){
         modal.style.display = 'none';
@@ -665,6 +700,13 @@
           Notification.requestPermission();
         }
       });
+
+      // 初始化
+      if (st.state === 'done') { render(); }
+      else if (st.state === 'running') {
+        if (st.end <= Date.now()) { finish(); }
+        else { render(); startTick(); }
+      } else { render(); }
     })();
 
     const lessons = [
