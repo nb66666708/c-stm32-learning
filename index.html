@@ -291,6 +291,16 @@
 }
 #studyTimer .st-action:hover { background: #438f82; }
 #studyTimer .st-action:disabled { background: #d5ebe2; color: #708783; cursor: default; }
+    .wb-badge { display: inline-block; margin-left: 5px; padding: 1px 7px; border-radius: 10px; background: #e8543f; color: #fff; font-size: 11px; line-height: 16px; }
+    .wrongbook-tools { display: flex; flex-wrap: wrap; gap: 9px; margin: 14px 0 20px; }
+    .wrongbook-item, .wrongbook-quiz-item { border: 1px solid #f0d9d4; border-radius: 14px; padding: 14px 16px; margin-bottom: 13px; background: #fffbfa; }
+    .wrongbook-head { display: flex; align-items: center; justify-content: space-between; gap: 10px; font-size: 12px; color: #a45545; margin-bottom: 8px; }
+    .wrongbook-q { margin: 6px 0 8px; font-weight: 600; line-height: 1.6; }
+    .wrongbook-exp { color: var(--muted); font-size: 12px; line-height: 1.65; margin-top: 7px; }
+    .wrongbook-quiz-item .wrongbook-opt { display: block; margin: 6px 0; padding: 8px 10px; border: 1px solid var(--line); border-radius: 9px; cursor: pointer; }
+    .wrongbook-quiz-item input[type=radio] { margin-right: 7px; }
+    .wrongbook-quiz-actions { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 10px; }
+    .wrongbook-quiz-actions textarea { width: 100%; min-height: 76px; }
 #studyModal {
   position: fixed; inset: 0; z-index: 10000;
   background: rgba(52,75,75,.45);
@@ -414,6 +424,7 @@
         <div class="game-actions">
           <button class="small-btn" id="daily-checkin">🌞 每日签到</button>
           <button class="secondary-btn" id="open-pet-shop">🐾 动物贴纸小店</button>
+          <button class="small-btn" id="open-wrongbook">📕 错题本<span class="wb-badge" id="wrong-count">0</span></button>
         </div>
         <div class="daily-quest">
           <div class="daily-quest-heading"><strong>📚 今日小任务：答对 3 道题</strong><span id="daily-quest-count">0 / 3</span></div>
@@ -708,6 +719,164 @@
         if (st.end <= Date.now()) { finish(); }
         else { render(); startTick(); }
       } else { render(); }
+    })();
+    // ===== 错题本：答错自动收集，答对自动移除，可重练 =====
+    (function(){
+      var WB_KEY = 'c_stm32_wrongbook';
+      var rootEl = document.getElementById('lesson');
+      function loadWrong(){ try { return JSON.parse(localStorage.getItem(WB_KEY)) || []; } catch(e){ return []; } }
+      function saveWrong(a){ try { localStorage.setItem(WB_KEY, JSON.stringify(a.slice(0, 300))); } catch(e){} }
+      function updateWrongBadge(){
+        var el = document.getElementById('wrong-count');
+        if (el) el.textContent = loadWrong().length;
+      }
+      function wrongbookAdd(key, q, lessonTitle, response){
+        var a = loadWrong();
+        var item = { key: key, lesson: lessonTitle, type: q.type, text: q.text,
+          options: q.options || null, answer: (q.answer !== undefined ? q.answer : null),
+          accepted: q.accepted || null, solution: q.solution || null,
+          explanation: q.explanation || '', response: response || '',
+          time: new Date().toLocaleString('zh-CN', {hour12: false}) };
+        var idx = -1;
+        for (var i = 0; i < a.length; i++) if (a[i].key === key) { idx = i; break; }
+        if (idx >= 0) a[idx] = item; else a.unshift(item);
+        saveWrong(a); updateWrongBadge();
+      }
+      function wrongbookRemove(key){
+        saveWrong(loadWrong().filter(function(x){ return x.key !== key; }));
+        updateWrongBadge();
+      }
+      function correctText(it){
+        if (it.options && it.answer !== null && it.options[it.answer]) return it.options[it.answer];
+        if (it.accepted && it.accepted.length) return it.accepted[0];
+        return it.solution || '';
+      }
+      function esc2(s){
+        return String(s == null ? '' : s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+      }
+      function wrongbookRender(){
+        if (typeof renderNav === 'function') renderNav();
+        var items = loadWrong();
+        rootEl.innerHTML = '<header class="lesson-head"><div class="eyebrow">复习工具</div><h1>📕 错题本</h1><p class="intro">答错的题会自动收进来；答对一次或点“已掌握”就会移除。按点复习，越刷越少。</p></header>' +
+          '<div class="body-content"><div class="wrongbook-tools">' +
+          '<button class="secondary-btn" id="wb-back">← 返回课程</button>' +
+          '<button class="small-btn" id="wb-quiz">重练全部错题</button>' +
+          '<button class="secondary-btn" id="wb-clear">🗑️ 清空错题本</button></div>' +
+          (items.length ? items.map(function(it, i){
+            return '<section class="wrongbook-item"><div class="wrongbook-head"><span>📚 ' + esc2(it.lesson) + '</span><span>' + esc2(it.type) + ' · ' + esc2(it.time) + '</span></div>' +
+              '<p class="wrongbook-q">' + esc2(it.text) + '</p>' +
+              '<p style="margin:4px 0"><strong>你的作答：</strong>' + esc2(it.response) + '</p>' +
+              '<p style="margin:4px 0"><strong>正确答案：</strong>' + esc2(correctText(it)) + '</p>' +
+              '<p class="wrongbook-exp">💡 ' + esc2(it.explanation) + '</p>' +
+              '<button class="small-btn" data-wb-del="' + i + '">已掌握，移除</button></section>';
+          }).join('') : '<p class="tip">错题本是空的——答错的题会自动收进来，答对或标记掌握后自动移除。去挑战几道题吧！</p>') + '</div>';
+        var back = document.getElementById('wb-back');
+        if (back) back.addEventListener('click', function(){ if (typeof render === 'function') render(); });
+        var quiz = document.getElementById('wb-quiz');
+        if (quiz) quiz.addEventListener('click', renderWrongQuiz);
+        var clearBtn = document.getElementById('wb-clear');
+        if (clearBtn) clearBtn.addEventListener('click', function(){
+          try { localStorage.removeItem(WB_KEY); } catch(e){}
+          updateWrongBadge(); wrongbookRender();
+        });
+        rootEl.querySelectorAll('[data-wb-del]').forEach(function(btn){
+          btn.addEventListener('click', function(){
+            var idx = Number(btn.dataset.wbDel);
+            var it = loadWrong()[idx];
+            if (it) wrongbookRemove(it.key);
+            wrongbookRender();
+          });
+        });
+      }
+      function renderWrongQuiz(){
+        if (typeof renderNav === 'function') renderNav();
+        var items = loadWrong();
+        rootEl.innerHTML = '<header class="lesson-head"><div class="eyebrow">复习工具</div><h1>✍️ 重练错题</h1><p class="intro">重新做一遍错题，答对会自动移出错题本。程序题可对照标准答案后自评。</p></header>' +
+          '<div class="body-content"><div class="wrongbook-tools"><button class="secondary-btn" id="wqz-back">← 返回错题本</button></div>' +
+          (items.length ? items.map(function(it, i){
+            var body = '';
+            if (it.options && it.options.length) {
+              body = it.options.map(function(o, oi){ return '<label class="wrongbook-opt"><input type="radio" name="wq-' + i + '" value="' + oi + '">' + esc2(o) + '</label>'; }).join('') +
+                '<div class="wrongbook-quiz-actions"><button class="small-btn" data-wq-check="' + i + '">检查答案</button></div>';
+            } else if (it.type === '程序题') {
+              body = '<textarea id="wq-code-' + i + '" class="code-input" placeholder="写下你的思路或代码…"></textarea>' +
+                '<div class="wrongbook-quiz-actions"><button class="secondary-btn" data-wq-reveal="' + i + '">对照标准答案</button><button class="small-btn" data-wq-master="' + i + '">已掌握，移除</button><button class="secondary-btn" data-wq-notyet="' + i + '">还没掌握</button></div>';
+            } else {
+              body = '<input id="wq-fill-' + i + '" class="code-input" placeholder="填写答案">' +
+                '<div class="wrongbook-quiz-actions"><button class="small-btn" data-wq-check="' + i + '">检查答案</button></div>';
+            }
+            return '<section class="wrongbook-quiz-item"><div class="wrongbook-head"><span>📚 ' + esc2(it.lesson) + '</span><span>' + esc2(it.type) + '</span></div>' +
+              '<p class="wrongbook-q">' + esc2(it.text) + '</p>' + body +
+              '<div class="feedback-detail" id="wq-fb-' + i + '" style="margin-top:10px"></div></section>';
+          }).join('') : '<p class="tip">没有错题了，全部掌握 🎉</p>') + '</div>';
+        var back = document.getElementById('wqz-back');
+        if (back) back.addEventListener('click', wrongbookRender);
+        rootEl.querySelectorAll('[data-wq-check]').forEach(function(btn){
+          btn.addEventListener('click', function(){
+            var i = Number(btn.dataset.wqCheck);
+            var it = loadWrong()[i];
+            if (!it) return;
+            var fb = document.getElementById('wq-fb-' + i);
+            if (!fb) return;
+            var isCorrect = false;
+            if (it.options && it.options.length) {
+              var sel = rootEl.querySelector('input[name="wq-' + i + '"]:checked');
+              if (!sel) { fb.textContent = '先选择一个答案哦。'; return; }
+              isCorrect = Number(sel.value) === it.answer;
+            } else {
+              var input = document.getElementById('wq-fill-' + i);
+              if (!input) return;
+              var val = input.value.trim();
+              if (!val) { fb.textContent = '先填写答案哦。'; return; }
+              var norm = function(x){ return x.toLowerCase().replace(/\s+/g, ''); };
+              isCorrect = (it.accepted || []).some(function(a){ return norm(a) === norm(val); });
+            }
+            if (isCorrect) {
+              wrongbookRemove(it.key);
+              fb.innerHTML = '<strong>✅ 答对了！已从错题本移除。</strong>';
+            } else {
+              fb.innerHTML = '<strong>还差一点：</strong>正确答案是 ' + esc2(correctText(it)) + '<br>💡 ' + esc2(it.explanation);
+            }
+          });
+        });
+        rootEl.querySelectorAll('[data-wq-reveal]').forEach(function(btn){
+          btn.addEventListener('click', function(){
+            var i = Number(btn.dataset.wqReveal);
+            var it = loadWrong()[i];
+            var fb = document.getElementById('wq-fb-' + i);
+            if (!it || !fb) return;
+            fb.innerHTML = '<strong>参考代码：</strong><pre><code>' + esc2(it.solution || '(无)') + '</code></pre><br>💡 ' + esc2(it.explanation);
+          });
+        });
+        rootEl.querySelectorAll('[data-wq-master]').forEach(function(btn){
+          btn.addEventListener('click', function(){
+            var i = Number(btn.dataset.wqMaster);
+            var it = loadWrong()[i];
+            if (!it) return;
+            wrongbookRemove(it.key);
+            var fb = document.getElementById('wq-fb-' + i);
+            if (fb) fb.innerHTML = '<strong>✅ 已掌握，从错题本移除！</strong>';
+            var cnt = loadWrong().length;
+            if (cnt === 0) {
+              setTimeout(function(){ wrongbookRender(); }, 900);
+            }
+          });
+        });
+        rootEl.querySelectorAll('[data-wq-notyet]').forEach(function(btn){
+          btn.addEventListener('click', function(){
+            var i = Number(btn.dataset.wqNotyet);
+            var fb = document.getElementById('wq-fb-' + i);
+            if (fb) fb.innerHTML = '没关系，多看几遍解析，想清楚错在哪再战。';
+          });
+        });
+      }
+      window.wrongbookAdd = wrongbookAdd;
+      window.wrongbookRemove = wrongbookRemove;
+      window.wrongbookRender = wrongbookRender;
+      window.renderWrongQuiz = renderWrongQuiz;
+      var btn = document.getElementById('open-wrongbook');
+      if (btn) btn.addEventListener('click', wrongbookRender);
+      updateWrongBadge();
     })();
 
     const lessons = [
@@ -2359,7 +2528,56 @@
           {type:"填空题", text:"STM32 内部用于维持时间计数的外设简称是______。", placeholder:"填写三个字母", accepted:["RTC"], explanation:"RTC（Real-Time Clock）实时时钟外设，配合外部晶振和电池，可在低功耗下持续计时。"},
           {type:"程序题", text:"写代码把秒数 3661 转换成 hh:mm:ss 格式（1:01:01）并输出。", explanation:"h = 3661/3600 = 1；m = (3661%3600)/60 = 1；s = 3661%60 = 1。用整除和取余拆分时间。", solution:"#include <stdio.h>\nint main(void) {\n    int total = 3661;\n    int h = total / 3600;\n    int m = (total % 3600) / 60;\n    int s = total % 60;\n    printf(\"%02d:%02d:%02d\\n\", h, m, s);  // 01:01:01\n    return 0;\n}",analysis:{key:"用整除 / 和取余 % 拆分时间：h = total/3600，m = (total%3600)/60，s = total%60。",why:"3661 = 1×3600 + 61；61 = 1×60 + 1；所以 h=1, m=1, s=1；%02d 保证不足两位补 0 输出 01:01:01。",extra:"这种“总量拆成 时/分/秒”的换算在 RTC 显示、倒计时、延时计算里很常用；%02d 补零宽度也可以写成 %2d（空格补位）。"}}
         ]
+      },
+      {
+        title: "位操作与位域：嵌入式里的“开关艺术”", level: "C 语言进阶 · 专题课 61",
+        intro: "寄存器编程里全是 0 和 1：一个字节的每一位都可能代表一个开关、一个状态。这课把 & | ^ ~ << >> 六种位操作讲到能直接上手，再讲位域怎么把几个开关塞进一个字节。",
+        goals: ["会用六种位操作", "掌握置位、清位、翻转、取位四招", "理解位域与寄存器标志位"],
+        content: [
+          ["六个位操作一句话记住", "& 按位与：两边都是 1 结果才 1（用来“保留”某几位）。| 按位或：有一个 1 就是 1（用来“打开”某几位）。^ 异或：不一样才是 1（用来“翻转”）。~ 取反：0 变 1、1 变 0。<< 左移：整体往左挪，右边补 0（相当于乘 2）。>> 右移：整体往右挪（无符号数左边补 0，相当于除 2）。", "unsigned char b = 0b1100;\nunsigned char r = b & 0b1010;   // 1100 & 1010 = 1000\nr = b | 0b0011;                  // 1100 | 0011 = 1111\nr = b ^ 0b1111;                  // 异或全 1 = 取反：0011\nr = b << 1;                      // 11000 = 24（左移一位乘 2）"],
+          ["置位、清位、翻转、取位", "置位：x |= (1u << k)（把第 k 位变 1，其他不动）。清位：x &= ~(1u << k)（第 k 位变 0）。翻转：x ^= (1u << k)。取位：x & (1u << k) 非零说明第 k 位是 1。掩码 1u << k 像一个“探针”，只碰你想碰的那一位。", "x |= (1u << 3);    // 置位第 3 位\nx &= ~(1u << 3);   // 清位第 3 位\nx ^= (1u << 3);    // 翻转第 3 位\nif (x & (1u << 3)) { /* 第 3 位是 1 */ }"],
+          ["位域：一个字节里排开关", "位域让你给成员指定占几个位，适合描述寄存器里的标志位。注意：位域的“怎么排”依赖编译器，跨平台写硬件驱动时别依赖它的内存布局，读寄存器标志通常直接位运算更可靠。", "struct Status {\n    unsigned int busy : 1;\n    unsigned int error : 1;\n    unsigned int level : 6;\n};   // 共 8 位，正好一个字节"]
+        ],
+        questions: [
+          {type:"选择题", text:"想检测 x 的第 3 位是否为 1，正确的表达式是？", options:["x & (1u << 3)","x | (1u << 3)","x ^ (1u << 3)","x >> 3"], answer:0, explanation:"按位与掩码：1u << 3 只有第 3 位是 1，与 x 相与后其他位全清 0，结果非零说明第 3 位是 1。"},
+          {type:"判断题", text:"把 x 的第 2 位清 0 可以写 x &= ~(1u << 2)。", options:["正确","错误"], answer:0, explanation:"~(1u << 2) 只有第 2 位是 0、其余全 1，与 x 相与会把第 2 位清零而保留其他位。"},
+          {type:"填空题", text:"把 x 的第 0 位翻转（0 变 1、1 变 0）的表达式是 x ___ (1u << 0)。", placeholder:"填写运算符", accepted:["^=","^"], explanation:"异或的特点：与 1 异或会翻转，与 0 异或保持不变，所以 x ^= (1u << k) 只翻转第 k 位。"},
+          {type:"程序题", text:"写一个函数 count_ones(unsigned int x)，统计 x 的二进制里 1 的个数，主函数读入一个整数并输出结果。", explanation:"循环 32 次（或直到 x 为 0），每次 x & 1u 判断最低位，再 x >>= 1。这是经典面试题。", solution:"#include <stdio.h>\nint count_ones(unsigned int x) {\n    int cnt = 0;\n    while (x) { cnt += x & 1u; x >>= 1; }\n    return cnt;\n}\nint main(void) {\n    unsigned int n;\n    if (scanf(\"%u\", &n) == 1) printf(\"%d\\n\", count_ones(n));\n    return 0;\n}",analysis:{key:"count_ones 的核心是“取最低位 + 右移”：x & 1u 拿到最低位，x >>= 1 丢掉它，循环直到 x 为 0。",why:"while (x) 在 x 变成 0 后停止（0 没有 1 了）；cnt += x & 1u 把当前最低位加进计数；每轮右移一位，正好把每一位都看一遍。",extra:"更快的算法用 x &= (x - 1) 每次直接消掉最右边的 1（Brian Kernighan 算法），循环次数等于 1 的个数；对 0 输入 count_ones 返回 0，while (x) 一次都不进。"}}
+        ]
+      },
+      {
+        title: "内存管理与动态分配：别让内存“悄悄泄漏”", level: "C 语言进阶 · 专题课 62",
+        intro: "malloc 不是魔法，它只是从堆里“借”一块内存。借了要还（free），还了不能再碰（悬垂指针），借了不还是泄漏。这课把三种申请函数、三种典型错误一次讲清。",
+        goals: ["分清 malloc/calloc/realloc", "认识泄漏、悬垂、越界三类错误", "养成“申请检查、释放配对”的习惯"],
+        content: [
+          ["malloc / calloc / realloc 三兄弟", "malloc(n) 申请 n 字节，内容未初始化。calloc(n, size) 申请 n 个 size 字节并把内存清零。realloc(p, newsize) 调整大小：能原地扩就原地扩，不行就复制到新块，返回新地址（可能和原来不同）。", "int *a = malloc(10 * sizeof(int));       // 未初始化\nint *b = calloc(10, sizeof(int));         // 全 0\nint *c = realloc(b, 20 * sizeof(int));    // 扩容，b 可能失效"],
+          ["三类经典内存错误", "泄漏：申请了不释放，长期运行内存只增不减（服务器跑几天就崩）。悬垂：free 之后还去读写那块内存，行为未定义。越界：访问分配范围之外，悄悄破坏相邻数据甚至被攻击者利用。", "free(p);\n*p = 1;         // 悬垂指针！p 已失效\nint *q = malloc(4);\nq[10] = 0;      // 越界写，危险"],
+          ["防御三招", "① 申请后立刻检查 NULL。② 释放后立刻 p = NULL。③ 谁申请谁释放，别跨模块乱还。嵌入式/服务器场景还要想清楚：这块内存“最长活多久”，别让生命周期失控。", "int *p = malloc(100 * sizeof(int));\nif (!p) return 1;\n// ...使用...\nfree(p);\np = NULL;"]
+        ],
+        questions: [
+          {type:"选择题", text:"calloc 相比 malloc 多做了什么？", options:["把内存清零","自动释放内存","检查越界","申请更大的内存"], answer:0, explanation:"calloc 会先把申请到的内存全部置 0，适合数组、结构体等希望初值确定的场景；malloc 不做初始化。"},
+          {type:"判断题", text:"realloc 失败时返回 NULL，但原内存块仍然有效，仍需要 free。", options:["正确","错误"], answer:0, explanation:"realloc 失败不会释放原块，你要保存原指针并用它继续工作（或最终释放它）。别把返回值直接覆盖原指针。"},
+          {type:"填空题", text:"free 之后把指针置为 ______，可以避免悬垂指针。", placeholder:"填写英文", accepted:["NULL","null"], explanation:"free 后指针仍存着旧地址，置 NULL 后再次误用会立刻暴露（对 NULL 解引用易发现），养成习惯。"},
+          {type:"程序题", text:"用 calloc 申请 5 个 int 并输出第 3 个元素的值（验证 calloc 清零），最后正确释放。", explanation:"calloc(5, sizeof(int)) 得到全 0 数组，arr[2] 应为 0。输出 0 即证明已清零。", solution:"#include <stdio.h>\n#include <stdlib.h>\nint main(void) {\n    int *arr = calloc(5, sizeof(int));\n    if (!arr) return 1;\n    printf(\"%d\\n\", arr[2]);   // calloc 清零，应为 0\n    free(arr);\n    return 0;\n}",analysis:{key:"calloc 的两参数写法：个数 × 单个大小；它会清零，所以 arr[2] 是 0 而不是随机值。",why:"printf(\"%d\\n\", arr[2]) 输出 0 就是清零的证据；malloc 的话 arr[2] 是未初始化垃圾值；用完 free 是必须的配对动作。",extra:"calloc 实际可能用虚拟内存按页清零，大块申请时比 malloc+memset 更快；arr[2] 下标 2 对应第 3 个元素（从 0 数），别数错。"}}
+        ]
+      },
+      {
+        title: "中断优先级与 NVIC：谁先响应，由你说了算", level: "STM32 进阶 · 专题课 63",
+        intro: "多个中断同时来了，先处理谁？NVIC 就是 Cortex-M 的“中断调度中心”。这课讲清抢占优先级与子优先级的区别、怎么用 HAL 配置，以及中断服务程序必须遵守的纪律。",
+        goals: ["理解抢占优先级与子优先级", "会用 HAL_NVIC_SetPriority 配置", "掌握中断服务程序的设计原则"],
+        content: [
+          ["抢占优先级 vs 子优先级", "抢占优先级决定“能不能打断别人”：抢占优先级小的更紧急（数字越小优先级越高），可以打断正在执行的抢占优先级大的中断。子优先级只在“同时到达、抢占优先级相同”时用来排队。", "HAL_NVIC_SetPriority(USART1_IRQn, 0, 0);   // 抢占 0，最紧急\nHAL_NVIC_SetPriority(TIM2_IRQn, 2, 0);     // 抢占 2，可以被 0 打断"],
+          ["优先级分组（NVIC Priority Group）", "STM32 的优先级寄存器 4 位，通过分组决定几位给抢占、几位给子优先级。比如 GROUP4：抢占占 4 位（0-15），子优先级 0 位。分组影响全局，工程里通常只在初始化设一次。", "HAL_NVIC_SetPriorityGrouping(NVIC_PRIORITYGROUP_4);  // 4 位全部给抢占优先级"],
+          ["中断服务程序的纪律", "ISR 要短、快、不阻塞：只做标记和搬运数据，耗时工作在主循环做。ISR 与主循环共享的变量要 volatile；修改多字节共享数据时考虑临界区（关中断一小段）保证原子性。", "void EXTI0_IRQHandler(void) {\n    if (__HAL_GPIO_EXTI_GET_IT(GPIO_PIN_0)) {\n        __HAL_GPIO_EXTI_CLEAR_IT(GPIO_PIN_0);\n        button_pressed = 1;   // 只做标记\n    }\n}"]
+        ],
+        questions: [
+          {type:"选择题", text:"两个中断同时到达，抢占优先级相同时，用哪个决定先后？", options:["子优先级","IRQ 编号","时钟频率","代码顺序"], answer:0, explanation:"抢占优先级相同的情况下，子优先级数字小的先响应。子优先级只在同抢占优先级内排队用。"},
+          {type:"判断题", text:"中断服务函数里做长时间延时（如 HAL_Delay(500)）是坏习惯。", options:["正确","错误"], answer:0, explanation:"ISR 里长延时会阻塞其他中断和主循环，破坏实时性。正确做法是中断里只标记，主循环再做耗时处理。"},
+          {type:"填空题", text:"HAL 里配置中断优先级用的函数是 HAL_NVIC_Set______。", placeholder:"填写英文单词", accepted:["Priority"], explanation:"HAL_NVIC_SetPriority(IRQn, PreemptPriority, SubPriority) 配置指定中断源的抢占与子优先级。"},
+          {type:"程序题", text:"用 C 模拟两个任务按优先级执行：函数 high 输出 H，函数 low 输出 L，模拟“高优先级先运行”，主函数先调用 low 再调用 high，输出执行顺序。", explanation:"用一个函数“调度”：模拟只有 high 优先级高，先处理 high。输出应为 H L（先高后低）。", solution:"#include <stdio.h>\nvoid high(void) { printf(\"H\"); }\nvoid low(void)  { printf(\"L\"); }\nint main(void) {\n    high();   // 模拟：高优先级先执行\n    low();    // 低优先级后执行\n    printf(\"\\n\");\n    return 0;\n}",analysis:{key:"优先级调度的直观模型：紧急的（高优先级）先处理，普通的（低优先级）后处理；程序里体现为先调用 high 再调用 low。",why:"printf(\"H\") 先执行输出 H，再输出 L，得到 HL——模拟“高优先级抢占先执行”的顺序；真实 NVIC 里抢占优先级数字小的先响应，与此同理。",extra:"真实系统中低优先级中断可能被高优先级反复打断（饥饿）；子优先级只在同抢占级别时排队；设置优先级分组后，抢占/子优先级位数分配会影响可用的数值范围。"}}
+        ]
       }
+
     ];
     lessons.push(...extraLessons);
     const theorySupplements = {
@@ -2495,6 +2713,54 @@
     ]);
     attachJudgeTests("结构体、枚举与类型别名", "定义一个包含 int x、y 的 Point", [
       {input:"", output:"2 5\n"}
+    ]);
+    attachJudgeTests("输入数据：学会使用 scanf 和检查结果", "写一个程序片段：读取整数 age", [
+      {input:"25\n", output:"25\n"},
+      {input:"-8\n", output:"-8\n"}
+    ]);
+    attachJudgeTests("条件判断：让程序根据情况选择", "写一个 if/else：当整数 score", [
+      {input:"75\n", output:"Pass\n"},
+      {input:"60\n", output:"Pass\n"},
+      {input:"40\n", output:"Try again\n"}
+    ]);
+    attachJudgeTests("循环：重复执行但要能停下来", "写一个 for 循环，把整数 i 从 1 到 5", [
+      {input:"", output:"1\n2\n3\n4\n5\n"}
+    ]);
+    attachJudgeTests("数据在内存里怎么存", "写一段代码：定义 int x = 5", [
+      {input:"", output:"5 -5\n0\n"}
+    ]);
+    attachJudgeTests("整数溢出与类型转换陷阱", "写代码验证：int a = -1", [
+      {input:"", output:"0\n"}
+    ]);
+    attachJudgeTests("函数指针与回调函数", "用 qsort 把数组", [
+      {input:"", output:"1 3 5 8 "}
+    ]);
+    attachJudgeTests("预处理器与宏的陷阱", "用宏定义一个", [
+      {input:"", output:"5\n7\n"}
+    ]);
+    attachJudgeTests("程序内存布局与变量生命周期", "写代码：用 static 局部变量", [
+      {input:"", output:"1 2 3\n"}
+    ]);
+    attachJudgeTests("动态内存与内存安全", "用 malloc 申请 5 个 int", [
+      {input:"", output:"15\n"}
+    ]);
+    attachJudgeTests("栈与队列：两种经典容器", "用数组实现一个容量 10 的栈", [
+      {input:"", output:"3 2 1 "}
+    ]);
+    attachJudgeTests("排序与二分查找", "在已排序数组", [
+      {input:"", output:"3\n"}
+    ]);
+    attachJudgeTests("递归与分治", "用递归写一个函数，计算 1 到 n", [
+      {input:"", output:"15\n"}
+    ]);
+    attachJudgeTests("volatile 与寄存器编程", "写一个 volatile 修饰的 int 变量", [
+      {input:"", output:"done\n"}
+    ]);
+    attachJudgeTests("综合项目：温湿度采集小站", "写一个简单的 OLED 显示拼接", [
+      {input:"", output:"T:25.5C H:60%\n"}
+    ]);
+    attachJudgeTests("综合项目：多功能电子钟 + 进阶路线", "写代码把秒数 3661", [
+      {input:"", output:"01:01:01\n"}
     ]);
     const legacyProgressKey = "c-start-progress-v1";
     const legacyGameKey = "c-start-game-v2";
@@ -2860,6 +3126,11 @@
         game.dailyQuestRewarded = true;
         game.coins += 15;
         game.xp += 15;
+      }
+      if (correct) {
+        if (window.wrongbookRemove) window.wrongbookRemove(key);
+      } else if (window.wrongbookAdd) {
+        window.wrongbookAdd(key, q, lesson.title, responseLabel);
       }
       game.answers[key] = correct;
       saveGame();
