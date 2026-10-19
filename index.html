@@ -93,6 +93,11 @@
     .api-config-actions { display: flex; justify-content: flex-end; gap: 8px; margin-top: 16px; }
     .api-config-status { min-height: 18px; margin-top: 9px; color: #9b574d; font-size: 11px; line-height: 1.5; }
     .pet-shop-items { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 10px; margin-top: 18px; }
+    .shop-section-title { grid-column: 1 / -1; margin: 14px 0 4px; font-size: 15px; color: var(--ink); }
+    .gacha-box { grid-column: 1 / -1; border: 1px dashed #e4d7ae; border-radius: 12px; padding: 12px 14px; margin: 4px 0; background: #fffdf4; }
+    .gacha-head { display: flex; justify-content: space-between; align-items: center; font-size: 14px; }
+    .gacha-head span { color: var(--muted); font-size: 12px; }
+    .gacha-desc { margin: 6px 0 10px; color: var(--muted); font-size: 12px; line-height: 1.6; }
     .pet-shop-item { display: flex; align-items: center; gap: 9px; padding: 11px; border: 1px solid var(--line); border-radius: 14px; background: #fbfcf8; }
     .shop-pet-emoji { display: grid; place-items: center; width: 42px; height: 42px; flex: 0 0 42px; border-radius: 13px; background: #edf5ec; font-size: 25px; }
     .shop-pet-info { min-width: 0; flex: 1; }
@@ -503,37 +508,42 @@
       }
       window.__restoreNotes = restoreNotes;
 
-      // 选中文本 → 弹出工具栏（鼠标 + 触摸/平板兼容）
-      function showToolbarOnSelection(){
-        setTimeout(function(){
-          var sel = window.getSelection();
-          var el = theorySection();
-          if (!el) { hideToolbar(); return; }
-          if (!sel || sel.isCollapsed || sel.toString().trim() === '') { hideToolbar(); return; }
+      // 选中文本 → 弹出工具栏（鼠标 + 平板触摸全兼容：用 selectionchange 最可靠）
+      var selTimer = null;
+      function updateToolbarFromSelection(){
+        var sel = window.getSelection();
+        var el = theorySection();
+        if (!el || !sel || sel.isCollapsed || sel.toString().trim() === '') { hideToolbar(); return; }
+        try {
           if (!el.contains(sel.anchorNode) || !el.contains(sel.focusNode)) { hideToolbar(); return; }
-          var range = sel.getRangeAt(0).cloneRange();
-          var rect = range.getBoundingClientRect();
-          if (!rect || (rect.width === 0 && rect.height === 0)) { hideToolbar(); return; }
-          currentRange = range;
-          toolbar.style.display = 'flex';
-          var top = rect.top - 48;
-          if (top < 8) top = rect.bottom + 8;
-          var left = rect.left + rect.width / 2;
-          toolbar.style.top = Math.max(8, top) + 'px';
-          toolbar.style.left = Math.max(8, left - toolbar.offsetWidth / 2) + 'px';
-        }, 10);
+        } catch(e) { hideToolbar(); return; }
+        var range = sel.getRangeAt(0).cloneRange();
+        var rect = range.getBoundingClientRect();
+        if (!rect || (rect.width === 0 && rect.height === 0)) { hideToolbar(); return; }
+        currentRange = range;
+        toolbar.style.display = 'flex';
+        // 平板上默认放选区下方，避开系统长按菜单和放大镜
+        var top = rect.bottom + 10;
+        if (top + 60 > window.innerHeight) top = rect.top - 52;
+        if (top < 8) top = 8;
+        var left = rect.left + rect.width / 2;
+        var half = toolbar.offsetWidth / 2;
+        toolbar.style.top = top + 'px';
+        toolbar.style.left = Math.max(8, Math.min(window.innerWidth - toolbar.offsetWidth - 8, left - half)) + 'px';
       }
-      document.addEventListener('mouseup', showToolbarOnSelection);
-      document.addEventListener('pointerup', function(ev){ if (ev.pointerType !== 'mouse') showToolbarOnSelection(); });
-      document.addEventListener('touchend', function(){ setTimeout(showToolbarOnSelection, 20); });
-      document.addEventListener('pointerdown', function(ev){
-        if (toolbar && !toolbar.contains(ev.target)) hideToolbar();
-      });
+      function scheduleUpdate(){
+        if (selTimer) clearTimeout(selTimer);
+        selTimer = setTimeout(updateToolbarFromSelection, 60);
+      }
+      document.addEventListener('selectionchange', scheduleUpdate);
+      document.addEventListener('mouseup', scheduleUpdate);
+      document.addEventListener('touchend', function(){ setTimeout(scheduleUpdate, 100); });
       function hideToolbar(){
         if (toolbar) toolbar.style.display = 'none';
         currentRange = null;
       }
       toolbar.addEventListener('pointerdown', function(ev){ ev.preventDefault(); });
+      toolbar.addEventListener('mousedown', function(ev){ ev.preventDefault(); });
 
       // 工具函数
       function textNodesInRange(range){
@@ -5754,6 +5764,7 @@
     let game = Object.assign({
       xp: 0, coins: 0, streak: 0, bestStreak: 0, solved: [], rewarded: [], attempts: [], answers: {},
       lastCheckIn: "", checkInStreak: 0, totalCheckIns: 0, ownedPets: ["fox"], activePet: "fox",
+      ownedCosmetics: [], activeCosmetic: "", gachaCount: 0, feedCount: 0,
       dailyQuestDate: localDateKey(), dailyQuestSolved: [], dailyQuestRewarded: false
     }, storedGame);
     game.solved = new Set(game.solved);
@@ -5762,6 +5773,10 @@
     game.ownedPets = new Set(Array.isArray(game.ownedPets) ? game.ownedPets : ["fox"]);
     game.ownedPets.add("fox");
     if (!game.ownedPets.has(game.activePet)) game.activePet = "fox";
+    game.ownedCosmetics = new Set(Array.isArray(game.ownedCosmetics) ? game.ownedCosmetics : []);
+    if (typeof game.activeCosmetic !== "string") game.activeCosmetic = "";
+    if (typeof game.gachaCount !== "number") game.gachaCount = 0;
+    if (typeof game.feedCount !== "number") game.feedCount = 0;
     if (game.dailyQuestDate !== localDateKey()) {
       game.dailyQuestDate = localDateKey();
       game.dailyQuestSolved = [];
@@ -5830,6 +5845,10 @@
           rewarded: [...game.rewarded],
           attempts: [...game.attempts],
           ownedPets: [...game.ownedPets],
+          ownedCosmetics: [...game.ownedCosmetics],
+          activeCosmetic: game.activeCosmetic,
+          gachaCount: game.gachaCount,
+          feedCount: game.feedCount,
           dailyQuestSolved: [...game.dailyQuestSolved]
         }));
       } catch (error) {
@@ -5851,8 +5870,27 @@
       {id: "cat", name: "橘子猫", emoji: "🐱", price: 40},
       {id: "panda", name: "竹竹熊猫", emoji: "🐼", price: 55},
       {id: "capybara", name: "慢慢水豚", emoji: "🦫", price: 70},
-      {id: "chick", name: "七日小鸡", emoji: "🐥", price: 0}
+      {id: "chick", name: "七日小鸡", emoji: "🐥", price: 0},
+      // 以下只能从扭蛋机抽到
+      {id: "owl", name: "熬夜猫头鹰", emoji: "🦉", price: null, rare: "稀有"},
+      {id: "turtle", name: "稳赢乌龟", emoji: "🐢", price: null, rare: "普通"},
+      {id: "frog", name: "呱唧青蛙", emoji: "🐸", price: null, rare: "普通"},
+      {id: "octopus", name: "百变章鱼", emoji: "🐙", price: null, rare: "稀有"},
+      {id: "dragon", name: "迷你小龙", emoji: "🐲", price: null, rare: "史诗"},
+      {id: "unicorn", name: "彩虹独角兽", emoji: "🦄", price: null, rare: "史诗"}
     ];
+
+    const cosmeticCatalog = [
+      {id: "bolt", name: "小闪电", emoji: "⚡", price: 10},
+      {id: "bow", name: "蝴蝶结", emoji: "🎀", price: 15},
+      {id: "grad", name: "毕业帽", emoji: "🎓", price: 20},
+      {id: "sunglass", name: "酷酷墨镜", emoji: "🕶️", price: 25},
+      {id: "fire", name: "火焰光环", emoji: "🔥", price: 45},
+      {id: "crown", name: "小皇冠", emoji: "👑", price: 60}
+    ];
+
+    const GACHA_PRICE = 30;
+    const FEED_PRICE = 5;
 
     const checkInRewards = [
       {coins: 20, xp: 5},
@@ -5943,13 +5981,119 @@
     function renderPetShop() {
       const items = document.getElementById("pet-shop-items");
       if (!items) return;
-      items.innerHTML = petCatalog.map(pet => {
+      const msg = document.getElementById("pet-shop-message");
+      const activePet = petCatalog.find(p => p.id === game.activePet) || petCatalog[0];
+
+      // 分区 1：贴纸（宠物）
+      const petHtml = petCatalog.map(pet => {
         const owned = game.ownedPets.has(pet.id);
         const equipped = game.activePet === pet.id;
-        const label = equipped ? "正在陪伴" : owned ? "换上它" : `兑换 ${pet.price} 🪙`;
-        return `<article class="pet-shop-item"><span class="shop-pet-emoji" aria-hidden="true">${pet.emoji}</span><div class="shop-pet-info"><strong>${pet.name}</strong><small>${owned ? "已收藏" : `贴纸 · ${pet.price} 金币`}</small></div><button class="${equipped ? "secondary-btn" : "small-btn"}" data-pet="${pet.id}" ${equipped ? "disabled" : ""}>${label}</button></article>`;
+        const label = equipped ? "正在陪伴" : owned ? "换上它" : (pet.price === null ? "仅扭蛋获得" : `兑换 ${pet.price} 🪙`);
+        const disabled = equipped || (!owned && pet.price === null);
+        const rareBadge = pet.price === null ? `<small style="color:#b06"> · ${pet.rare || "扭蛋"}</small>` : "";
+        return `<article class="pet-shop-item"><span class="shop-pet-emoji" aria-hidden="true">${pet.emoji}</span><div class="shop-pet-info"><strong>${pet.name}${rareBadge}</strong><small>${owned ? "已收藏" : (pet.price === null ? "扭蛋限定贴纸" : `贴纸 · ${pet.price} 金币`)}</small></div><button class="${equipped ? "secondary-btn" : "small-btn"}" data-pet="${pet.id}" ${disabled ? "disabled" : ""}>${label}</button></article>`;
       }).join("");
+
+      // 分区 2：装扮（给当前宠物戴）
+      const cosmeticHtml = cosmeticCatalog.map(cos => {
+        const owned = game.ownedCosmetics.has(cos.id);
+        const equipped = game.activeCosmetic === cos.id;
+        const label = equipped ? "戴着呢" : owned ? "戴上它" : `${cos.price} 🪙`;
+        return `<article class="pet-shop-item"><span class="shop-pet-emoji" aria-hidden="true">${cos.emoji}</span><div class="shop-pet-info"><strong>${cos.name}</strong><small>${owned ? "已拥有" : `装扮 · ${cos.price} 金币`}</small></div><button class="${equipped ? "secondary-btn" : "small-btn"}" data-cosmetic="${cos.id}" ${equipped ? "disabled" : ""}>${label}</button></article>`;
+      }).join("");
+
+      // 分区 3：扭蛋 + 喂食
+      const funHtml = `
+        <div class="gacha-box">
+          <div class="gacha-head"><strong>🎰 幸运扭蛋机</strong><span>已抽 ${game.gachaCount} 次</span></div>
+          <p class="gacha-desc">花 ${GACHA_PRICE} 金币抽一次：随机得到扭蛋限定贴纸、装扮，或金币返利。连抽不腻！</p>
+          <button class="small-btn" id="do-gacha" ${game.coins < GACHA_PRICE ? "disabled" : ""}>🎰 抽一次（${GACHA_PRICE} 🪙）</button>
+        </div>
+        <div class="gacha-box">
+          <div class="gacha-head"><strong>🍬 喂一口</strong><span>已喂 ${game.feedCount} 次</span></div>
+          <p class="gacha-desc">花 ${FEED_PRICE} 金币喂 ${activePet.emoji}，它会开心，随机加 3~12 XP（有概率暴击 ×2！）</p>
+          <button class="small-btn" id="do-feed" ${game.coins < FEED_PRICE ? "disabled" : ""}>🍬 喂一口（${FEED_PRICE} 🪙）</button>
+        </div>`;
+
+      items.innerHTML = `
+        <h3 class="shop-section-title">🐾 学习伙伴</h3>
+        ${petHtml}
+        <h3 class="shop-section-title">🎩 装扮（给当前宠物戴上）</h3>
+        ${cosmeticHtml}
+        <h3 class="shop-section-title">🎮 好玩一下</h3>
+        ${funHtml}`;
+
+      // 绑定扭蛋/喂食
+      const gachaBtn = document.getElementById("do-gacha");
+      if (gachaBtn) gachaBtn.addEventListener("click", doGacha);
+      const feedBtn = document.getElementById("do-feed");
+      if (feedBtn) feedBtn.addEventListener("click", doFeed);
+
       document.getElementById("pet-shop-balance").textContent = `当前余额：${game.coins} 金币 · 答对新题和每日签到都能赚金币。`;
+    }
+
+    // 扭蛋抽奖
+    function doGacha() {
+      if (game.coins < GACHA_PRICE) return;
+      game.coins -= GACHA_PRICE;
+      game.gachaCount += 1;
+      const msg = document.getElementById("pet-shop-message");
+      // 奖池：扭蛋限定宠物（未拥有的权重高）+ 装扮（未拥有）+ 金币返利
+      const pool = [];
+      petCatalog.filter(p => p.price === null).forEach(p => {
+        const w = game.ownedPets.has(p.id) ? 1 : (p.rare === "史诗" ? 3 : p.rare === "稀有" ? 5 : 10);
+        pool.push({kind: "pet", id: p.id, w});
+      });
+      cosmeticCatalog.forEach(c => {
+        const w = game.ownedCosmetics.has(c.id) ? 1 : Math.max(2, 12 - Math.floor(c.price / 10));
+        pool.push({kind: "cosmetic", id: c.id, w});
+      });
+      pool.push({kind: "coins", amount: 10, w: 8, label: "10 金币"});
+      pool.push({kind: "coins", amount: 25, w: 4, label: "25 金币"});
+      pool.push({kind: "coins", amount: 60, w: 1, label: "60 金币"});
+
+      const totalW = pool.reduce((s, it) => s + it.w, 0);
+      let roll = Math.random() * totalW;
+      let picked = pool[pool.length - 1];
+      for (const it of pool) { roll -= it.w; if (roll <= 0) { picked = it; break; } }
+
+      let text = "";
+      if (picked.kind === "pet") {
+        const pet = petCatalog.find(p => p.id === picked.id);
+        if (game.ownedPets.has(picked.id)) {
+          game.coins += 15; text = `又抽到 ${pet.emoji} ${pet.name}（已有，折成 15 金币返利）`;
+        } else {
+          game.ownedPets.add(picked.id); text = `🎉 恭喜获得扭蛋限定 ${pet.rare || ""}贴纸 ${pet.emoji} ${pet.name}！`;
+        }
+      } else if (picked.kind === "cosmetic") {
+        const cos = cosmeticCatalog.find(c => c.id === picked.id);
+        if (game.ownedCosmetics.has(picked.id)) {
+          game.coins += 15; text = `又抽到 ${cos.emoji} ${cos.name}（已有，折成 15 金币返利）`;
+        } else {
+          game.ownedCosmetics.add(picked.id); text = `🎩 恭喜获得装扮 ${cos.emoji} ${cos.name}！去装扮区戴上吧。`;
+        }
+      } else {
+        game.coins += picked.amount; text = `💰 返利奖池：拿到 ${picked.label}！`;
+      }
+      if (msg) msg.textContent = text;
+      saveGame(); renderPetShop(); updateGamePanel();
+    }
+
+    // 喂食
+    function doFeed() {
+      if (game.coins < FEED_PRICE) return;
+      game.coins -= FEED_PRICE;
+      game.feedCount += 1;
+      let xp = 3 + Math.floor(Math.random() * 10); // 3~12
+      const crit = Math.random() < 0.2;
+      if (crit) xp *= 2;
+      game.xp += xp;
+      const activePet = petCatalog.find(p => p.id === game.activePet) || petCatalog[0];
+      const msg = document.getElementById("pet-shop-message");
+      if (msg) msg.textContent = crit
+        ? `✨ 暴击！${activePet.emoji} ${activePet.name}吃得超开心，+${xp} XP（双倍暴击！）`
+        : `${activePet.emoji} ${activePet.name} 吧唧吧唧吃完了，+${xp} XP`;
+      saveGame(); renderPetShop(); updateGamePanel();
     }
 
     function updateGamePanel() {
@@ -5971,9 +6115,10 @@
       const mini = document.getElementById("mini-xp");
       if (mini) mini.textContent = `${game.xp} XP · ${rankForXp(game.xp)}`;
       const pet = petCatalog.find(item => item.id === game.activePet) || petCatalog[0];
+      const cos = cosmeticCatalog.find(c => c.id === game.activeCosmetic);
       const petEmoji = document.getElementById("pet-emoji");
       const petName = document.getElementById("pet-name");
-      if (petEmoji) petEmoji.textContent = pet.emoji;
+      if (petEmoji) petEmoji.textContent = pet.emoji + (cos ? cos.emoji : "");
       if (petName) petName.textContent = pet.name;
       const checkIn = document.getElementById("daily-checkin");
       if (checkIn) {
@@ -6625,21 +6770,43 @@
       if (event.target === petShopDialog) petShopDialog.close();
     });
     document.getElementById("pet-shop-items").addEventListener("click", event => {
-      const button = event.target.closest("button[data-pet]");
-      if (!button) return;
-      const pet = petCatalog.find(item => item.id === button.dataset.pet);
-      if (!pet) return;
-      if (game.ownedPets.has(pet.id)) {
-        game.activePet = pet.id;
-        document.getElementById("pet-shop-message").textContent = `${pet.emoji} ${pet.name}来陪你学习啦！`;
-      } else if (game.coins < pet.price) {
-        document.getElementById("pet-shop-message").textContent = `还差 ${pet.price - game.coins} 金币就能兑换${pet.name}，签到或答题再攒一点吧。`;
-        return;
+      const msg = document.getElementById("pet-shop-message");
+      const petBtn = event.target.closest("button[data-pet]");
+      const cosBtn = event.target.closest("button[data-cosmetic]");
+
+      if (petBtn) {
+        const pet = petCatalog.find(item => item.id === petBtn.dataset.pet);
+        if (!pet) return;
+        if (game.ownedPets.has(pet.id)) {
+          game.activePet = pet.id;
+          msg.textContent = `${pet.emoji} ${pet.name}来陪你学习啦！`;
+        } else if (game.coins < pet.price) {
+          msg.textContent = `还差 ${pet.price - game.coins} 金币就能兑换${pet.name}，签到或答题再攒一点吧。`;
+          return;
+        } else {
+          game.coins -= pet.price;
+          game.ownedPets.add(pet.id);
+          game.activePet = pet.id;
+          msg.textContent = `兑换成功！${pet.emoji} ${pet.name}加入你的小队啦。`;
+        }
+      } else if (cosBtn) {
+        const cos = cosmeticCatalog.find(c => c.id === cosBtn.dataset.cosmetic);
+        if (!cos) return;
+        if (game.ownedCosmetics.has(cos.id)) {
+          // 已拥有：再点一下 = 摘下来
+          game.activeCosmetic = (game.activeCosmetic === cos.id) ? "" : cos.id;
+          msg.textContent = game.activeCosmetic ? `给宠物戴上 ${cos.emoji} ${cos.name} 啦！` : `把 ${cos.name} 摘下来了。`;
+        } else if (game.coins < cos.price) {
+          msg.textContent = `还差 ${cos.price - game.coins} 金币买 ${cos.name}，答题或签到再攒一点。`;
+          return;
+        } else {
+          game.coins -= cos.price;
+          game.ownedCosmetics.add(cos.id);
+          game.activeCosmetic = cos.id;
+          msg.textContent = `购买成功！${cos.emoji} ${cos.name} 已给宠物戴上。`;
+        }
       } else {
-        game.coins -= pet.price;
-        game.ownedPets.add(pet.id);
-        game.activePet = pet.id;
-        document.getElementById("pet-shop-message").textContent = `兑换成功！${pet.emoji} ${pet.name}加入你的小队啦。`;
+        return;
       }
       saveGame();
       updateGamePanel();
