@@ -5893,23 +5893,30 @@
     const GACHA_PRICE = 30;
     const FEED_PRICE = 5;
 
-    // 宠物进化表：每只 3 个形态（1级起步 → 第 5 级进化一次 → 第 9 级最终形态）
+    // 宠物进化表：每只 5 个形态（学习是持久战，一路升上去）
+    // 进化阈值：0 / 300 / 1000 / 2500 / 5000 经验
     const petEvolution = {
-      fox:     { forms: [{name:"小狐狸", emoji:"🦊"}, {name:"灵狐", emoji:"🦊✨"}, {name:"九尾天狐", emoji:"🔥🦊"}] },
-      rabbit:  { forms: [{name:"棉花兔", emoji:"🐰"}, {name:"爱心兔", emoji:"🐰💗"}, {name:"月光兔", emoji:"🌙🐰"}] },
-      cat:     { forms: [{name:"橘子猫", emoji:"🐱"}, {name:"星星猫", emoji:"🐱⭐"}, {name:"狮子喵", emoji:"🦁"}] },
-      panda:   { forms: [{name:"竹竹熊猫", emoji:"🐼"}, {name:"清风熊猫", emoji:"🐼🍃"}, {name:"竹仙熊猫", emoji:"🎋🐼"}] },
-      capybara:{ forms: [{name:"慢慢水豚", emoji:"🦫"}, {name:"温泉水豚", emoji:"♨️🦫"}, {name:"福气水豚", emoji:"🧧🦫"}] },
-      chick:   { forms: [{name:"七日小鸡", emoji:"🐥"}, {name:"大公鸡", emoji:"🐔"}, {name:"火凤凰", emoji:"🦅"}] },
-      owl:     { forms: [{name:"熬夜猫头鹰", emoji:"🦉"}, {name:"观星猫头鹰", emoji:"🦉🔭"}, {name:"月光智者", emoji:"🌕🦉"}] },
-      turtle:  { forms: [{name:"稳赢乌龟", emoji:"🐢"}, {name:"爬山龟", emoji:"🏔️🐢"}, {name:"闪电龟", emoji:"⚡🐢"}] },
-      frog:    { forms: [{name:"呱唧青蛙", emoji:"🐸"}, {name:"唱歌蛙", emoji:"🐸🎵"}, {name:"蛙国王", emoji:"👑🐸"}] },
-      octopus: { forms: [{name:"百变章鱼", emoji:"🐙"}, {name:"彩虹章鱼", emoji:"🐙🌈"}, {name:"梦幻章鱼", emoji:"🐙✨"}] },
-      dragon:  { forms: [{name:"迷你小龙", emoji:"🐲"}, {name:"火山幼龙", emoji:"🌋🐲"}, {name:"东方神龙", emoji:"🐉"}] },
-      unicorn: { forms: [{name:"彩虹独角兽", emoji:"🦄"}, {name:"星辰独角兽", emoji:"🦄⭐"}, {name:"天马", emoji:"🌟🦄"}] }
+      fox:     { forms: [{name:"小狐狸", emoji:"🦊"}, {name:"灵狐", emoji:"🦊✨"}, {name:"焰狐", emoji:"🦊🔥"}, {name:"月狐", emoji:"🦊🌙"}, {name:"九尾天狐", emoji:"🔥🦊"}] },
+      rabbit:  { forms: [{name:"棉花兔", emoji:"🐰"}, {name:"爱心兔", emoji:"🐰💗"}, {name:"花见兔", emoji:"🐰🌸"}, {name:"盛装兔", emoji:"🐰🎀"}, {name:"月光仙兔", emoji:"🌙🐰"}] },
+      cat:     { forms: [{name:"橘子猫", emoji:"🐱"}, {name:"星星猫", emoji:"🐱⭐"}, {name:"夜猫", emoji:"🐱🌙"}, {name:"橘猫王", emoji:"🐱👑"}, {name:"狮子喵", emoji:"🦁"}] },
+      panda:   { forms: [{name:"竹竹熊猫", emoji:"🐼"}, {name:"清风熊猫", emoji:"🐼🍃"}, {name:"竹林熊猫", emoji:"🐼🎋"}, {name:"云游熊猫", emoji:"🐼☁️"}, {name:"竹仙熊猫", emoji:"🎋🐼"}] },
+      capybara:{ forms: [{name:"慢慢水豚", emoji:"🦫"}, {name:"温泉水豚", emoji:"🦫♨️"}, {name:"品茶水豚", emoji:"🦫🍵"}, {name:"禅修水豚", emoji:"🦫🧘"}, {name:"福气水豚", emoji:"🧧🦫"}] },
+      chick:   { forms: [{name:"七日小鸡", emoji:"🐥"}, {name:"小公鸡", emoji:"🐔"}, {name:"大公鸡", emoji:"🐓"}, {name:"金羽鸡", emoji:"🐤"}, {name:"火凤凰", emoji:"🦅"}] },
+      owl:     { forms: [{name:"熬夜猫头鹰", emoji:"🦉"}, {name:"观星猫头鹰", emoji:"🦉🔭"}, {name:"读书猫头鹰", emoji:"🦉📚"}, {name:"月光猫头鹰", emoji:"🦉🌙"}, {name:"月光智者", emoji:"🌕🦉"}] },
+      turtle:  { forms: [{name:"稳赢乌龟", emoji:"🐢"}, {name:"爬山龟", emoji:"🏔️🐢"}, {name:"渡海龟", emoji:"🌊🐢"}, {name:"闪电龟", emoji:"⚡🐢"}, {name:"玄龟", emoji:"🐢💎"}] },
+      frog:    { forms: [{name:"呱唧青蛙", emoji:"🐸"}, {name:"唱歌蛙", emoji:"🐸🎵"}, {name:"浪里蛙", emoji:"🐸🌊"}, {name:"花蛙", emoji:"🐸🌸"}, {name:"蛙国王", emoji:"👑🐸"}] },
+      octopus: { forms: [{name:"百变章鱼", emoji:"🐙"}, {name:"彩虹章鱼", emoji:"🐙🌈"}, {name:"深海章鱼", emoji:"🐙💧"}, {name:"梦幻章鱼", emoji:"🐙✨"}, {name:"星辰章鱼", emoji:"🐙🌟"}] },
+      dragon:  { forms: [{name:"迷你小龙", emoji:"🐲"}, {name:"火山幼龙", emoji:"🌋🐲"}, {name:"山岭龙", emoji:"⛰️🐉"}, {name:"风云龙", emoji:"🌪️🐉"}, {name:"东方神龙", emoji:"🐉"}] },
+      unicorn: { forms: [{name:"彩虹独角兽", emoji:"🦄"}, {name:"星辰独角兽", emoji:"🦄⭐"}, {name:"云海独角兽", emoji:"🦄🌊"}, {name:"花见独角兽", emoji:"🦄🌸"}, {name:"天马", emoji:"🌟🦄"}] }
     };
-    // 进化阈值：exp 达 100 升二阶，达 650 升三阶
-    function petStage(exp){ exp = exp || 0; if (exp >= 650) return 3; if (exp >= 100) return 2; return 1; }
+    // 进化阈值：exp 达 300 升二阶，1000 三阶，2500 四阶，5000 五阶（满级）
+    const EVO_THRESHOLDS = [0, 300, 1000, 2500, 5000];
+    function petStage(exp){
+      exp = exp || 0;
+      let stage = 1;
+      for (let i = 0; i < EVO_THRESHOLDS.length; i++) if (exp >= EVO_THRESHOLDS[i]) stage = i + 1;
+      return stage;
+    }
     function petForm(petId){
       const p = petCatalog.find(x => x.id === petId) || petCatalog[0];
       const evo = petEvolution[petId];
@@ -5917,11 +5924,13 @@
       const exp = (game.petExp && game.petExp[petId]) || 0;
       const stage = petStage(exp);
       const form = evo.forms[stage - 1];
-      // 等级数字 1~10
+      // 等级数字 1~10，对应 5 个形态区间
       let lv;
-      if (stage === 1) lv = Math.min(Math.floor(Math.sqrt(exp)) + 1, 4);
-      else if (stage === 2) lv = Math.min(5 + Math.floor((exp - 100) / 110), 8);
-      else lv = Math.min(9 + Math.floor((exp - 650) / 200), 10);
+      if (stage === 1) lv = Math.min(1 + Math.floor(exp / 100), 2);
+      else if (stage === 2) lv = Math.min(3 + Math.floor((exp - 300) / 350), 4);
+      else if (stage === 3) lv = Math.min(5 + Math.floor((exp - 1000) / 750), 6);
+      else if (stage === 4) lv = Math.min(7 + Math.floor((exp - 2500) / 1250), 9);
+      else lv = 10;
       return { name: form.name, emoji: form.emoji, stage, exp, lv };
     }
     function addPetExp(petId, amount){
@@ -5932,7 +5941,7 @@
       const afterStage = petStage(game.petExp[petId]);
       if (afterStage > beforeStage) {
         const f = petForm(petId);
-        return `🎉 恭喜！陪伴宠物进化成 ${f.emoji} ${f.name}（第 ${afterStage} 形态）！`;
+        return `🎉 恭喜！陪伴宠物进化成 ${f.emoji} ${f.name}（第 ${afterStage}/5 形态）！`;
       }
       return null;
     }
