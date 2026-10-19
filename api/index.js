@@ -22,7 +22,7 @@ const WANDBOX_URL = "https://wandbox.org/api/compile.json";
 const WANDBOX_COMPILER = "gcc-13.2.0-c";
 
 const MAX_BODY_BYTES = 256_000;
-const MAX_COURSES = 60;
+const MAX_COURSES = 200;
 const RATE_WINDOW_SECONDS = 60;
 const RATE_LIMIT_GENERATE = 5;
 const RATE_LIMIT_JUDGE = 8;
