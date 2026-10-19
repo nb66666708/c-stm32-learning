@@ -98,6 +98,22 @@
     .gacha-head { display: flex; justify-content: space-between; align-items: center; font-size: 14px; }
     .gacha-head span { color: var(--muted); font-size: 12px; }
     .gacha-desc { margin: 6px 0 10px; color: var(--muted); font-size: 12px; line-height: 1.6; }
+    .adv-intro { padding: 10px 12px; background: #f6f9ff; border-radius: 10px; font-size: 13px; }
+    .adv-lesson-list { display: flex; flex-direction: column; gap: 8px; margin-top: 6px; }
+    .adv-lesson-btn { text-align: left; }
+    .adv-stage-tag { font-size: 12px; color: var(--muted); margin-bottom: 10px; }
+    .adv-arena { display: flex; align-items: center; justify-content: space-around; gap: 10px; padding: 14px 8px; background: linear-gradient(180deg, #f3f7ff, #fdf6f6); border-radius: 12px; }
+    .adv-side { flex: 1; text-align: center; font-size: 13px; }
+    .adv-pet-emoji { font-size: 40px; line-height: 1.3; }
+    .adv-vs { font-weight: 700; color: var(--muted); }
+    .adv-hp-track { position: relative; height: 16px; margin-top: 6px; background: #e8e8e8; border-radius: 8px; overflow: hidden; }
+    .adv-hp-fill { height: 100%; border-radius: 8px; transition: width .3s; }
+    .adv-hp-track span { position: absolute; inset: 0; font-size: 10px; line-height: 16px; text-align: center; color: #333; }
+    .adv-question { margin-top: 14px; }
+    .adv-q-text { font-size: 14px; line-height: 1.7; margin-bottom: 10px; }
+    .adv-options { display: grid; gap: 8px; }
+    .adv-log { margin-top: 12px; min-height: 24px; font-size: 13px; color: #53637c; white-space: pre-line; line-height: 1.7; }
+    .adv-conclusion { text-align: center; padding: 20px 0; }
     .pet-shop-item { display: flex; align-items: center; gap: 9px; padding: 11px; border: 1px solid var(--line); border-radius: 14px; background: #fbfcf8; }
     .shop-pet-emoji { display: grid; place-items: center; width: 42px; height: 42px; flex: 0 0 42px; border-radius: 13px; background: #edf5ec; font-size: 25px; }
     .shop-pet-info { min-width: 0; flex: 1; }
@@ -434,6 +450,7 @@
         <div class="game-actions">
           <button class="small-btn" id="daily-checkin">🌞 每日签到</button>
           <button class="secondary-btn" id="open-pet-shop">🐾 动物贴纸小店</button>
+          <button class="small-btn" id="open-adventure">🎮 闯关冒险</button>
           <button class="small-btn" id="open-wrongbook">📕 错题本<span class="wb-badge" id="wrong-count">0</span></button>
         </div>
         <div class="daily-quest">
@@ -457,6 +474,13 @@
     <p class="shop-note" id="pet-shop-balance"></p>
     <div class="pet-shop-items" id="pet-shop-items"></div>
     <p class="shop-note" id="pet-shop-message" role="status" aria-live="polite"></p>
+  </dialog>
+  <dialog class="pet-shop-dialog" id="adventure-dialog" aria-labelledby="adventure-title">
+    <div class="pet-shop-head">
+      <div><h2 id="adventure-title">🎮 闯关冒险</h2><p>选一门课当关卡，答对题你的宠物揍怪物，答错怪物揍你。打完 Boss 得金币和宠物经验！</p></div>
+      <button class="pet-shop-close" id="close-adventure" aria-label="关闭">×</button>
+    </div>
+    <div id="adventure-body"></div>
   </dialog>
   <dialog class="api-config-dialog" id="api-config-dialog" aria-labelledby="api-config-title">
     <form id="api-config-form">
@@ -6152,6 +6176,174 @@
         ? `✨ 暴击！${activeForm.emoji} ${activeForm.name}吃得超开心，+${xp} XP（双倍暴击！）`
         : `${activeForm.emoji} ${activeForm.name} 吧唧吧唧吃完了，+${xp} XP，宠物经验 +15`);
       saveGame(); renderPetShop(); updateGamePanel();
+    }
+
+    // ========== 🎮 闯关冒险（宠物小精灵式打怪） ==========
+    const adventureDialog = document.getElementById("adventure-dialog");
+    document.getElementById("open-adventure").addEventListener("click", () => { renderAdventureHome(); adventureDialog.showModal(); });
+    document.getElementById("close-adventure").addEventListener("click", () => adventureDialog.close());
+    adventureDialog.addEventListener("click", e => { if (e.target === adventureDialog) adventureDialog.close(); });
+
+    const ADVENTURE_TOTAL = 10;
+    let adv = null; // 对局状态
+
+    const wildPets = [
+      {emoji:"🐀", name:"灰毛鼠"}, {emoji:"🐛", name:"卷卷虫"}, {emoji:"🦟", name:"小蚊子"},
+      {emoji:"🐌", name:"慢吞吞蜗牛"}, {emoji:"🐜", name:"大力蚁"}, {emoji:"🐝", name:"蜂蜜蜂"},
+      {emoji:"🦗", name:"聒噪蟋蟀"}, {emoji:"🕷️", name:"小黑蛛"}, {emoji:"🐍", name:"小青蛇"},
+      {emoji:"🦇", name:"夜宵蝙蝠"}
+    ];
+    const bossPets = [
+      {emoji:"👾", name:"代码魔王"}, {emoji:"🤖", name:"语法怪兽"},
+      {emoji:"🐛", name:"缓冲区溢出王"}, {emoji:"👻", name:"野指针幽灵"}
+    ];
+
+    function adventureLessons(){
+      return Object.keys(practicePool).filter(title =>
+        practicePool[title].some(q => q.t === "s" && Array.isArray(q.o) && q.o.length >= 2));
+    }
+
+    function renderAdventureHome(){
+      const body = document.getElementById("adventure-body");
+      const f = petForm(game.activePet);
+      const lessons = adventureLessons();
+      body.innerHTML = `
+        <div class="adv-intro">
+          <div>出战伙伴：<strong>${f.emoji} ${f.name} Lv.${f.lv}</strong></div>
+          <div style="color:var(--muted);font-size:12px;margin-top:4px;">10 关一局：第 5、10 关是 BOSS。答对题 → 你揍怪；答错 → 怪揍你。通关得金币+宠物经验。</div>
+        </div>
+        <h3 style="margin:14px 0 8px;font-size:14px;">选择一门课当闯关地图：</h3>
+        <div class="adv-lesson-list">
+          ${lessons.map((t, i) => `<button class="small-btn adv-lesson-btn" data-lesson="${i}">🗺️ ${t}</button>`).join("")}
+        </div>`;
+      body.querySelectorAll(".adv-lesson-btn").forEach(btn => {
+        btn.addEventListener("click", () => startAdventure(lessons[Number(btn.dataset.lesson)]));
+      });
+    }
+
+    function advPickQuestion(title){
+      const pool = practicePool[title].filter(q => q.t === "s" && Array.isArray(q.o) && q.o.length >= 2 && Number.isInteger(q.a));
+      return pool[Math.floor(Math.random() * pool.length)];
+    }
+
+    function startAdventure(title){
+      const f = petForm(game.activePet);
+      const myMax = 25 + f.lv * 8;
+      adv = {
+        title, stage: 1,
+        myHp: myMax, myMax,
+        enemy: null, enemyHp: 0, enemyMax: 0,
+        q: null, over: false
+      };
+      nextAdvStage();
+    }
+
+    function nextAdvStage(){
+      const isBoss = adv.stage === ADVENTURE_TOTAL || adv.stage === 5;
+      const list = isBoss ? bossPets : wildPets;
+      adv.enemy = list[Math.floor(Math.random() * list.length)];
+      adv.enemyMax = isBoss ? 40 + adv.stage * 10 : 18 + adv.stage * 6;
+      adv.enemyHp = adv.enemyMax;
+      adv.q = advPickQuestion(adv.title);
+      renderAdvBattle();
+    }
+
+    function hpBar(cur, max, color){
+      const pct = Math.max(0, Math.round(cur / max * 100));
+      return `<div class="adv-hp-track"><div class="adv-hp-fill" style="width:${pct}%;background:${color}"></div><span>${Math.max(0,cur)}/${max}</span></div>`;
+    }
+
+    function renderAdvBattle(){
+      const body = document.getElementById("adventure-body");
+      const f = petForm(game.activePet);
+      body.innerHTML = `
+        <div class="adv-stage-tag">第 ${adv.stage} / ${ADVENTURE_TOTAL} 关${adv.stage === 5 || adv.stage === ADVENTURE_TOTAL ? " · 👹 BOSS" : ""}</div>
+        <div class="adv-arena">
+          <div class="adv-side">
+            <div class="adv-pet-emoji">${f.emoji}</div>
+            <strong>${f.name} Lv.${f.lv}</strong>
+            ${hpBar(adv.myHp, adv.myMax, "#2f9e44")}
+          </div>
+          <div class="adv-vs">VS</div>
+          <div class="adv-side">
+            <div class="adv-pet-emoji">${adv.enemy.emoji}</div>
+            <strong>${adv.enemy.name}</strong>
+            ${hpBar(adv.enemyHp, adv.enemyMax, "#e5484d")}
+          </div>
+        </div>
+        <div class="adv-question">
+          <div class="adv-q-text">${esc(adv.q.q)}</div>
+          <div class="adv-options">
+            ${adv.q.o.map((op, i) => `<button class="small-btn adv-opt" data-i="${i}">${esc(op)}</button>`).join("")}
+          </div>
+        </div>
+        <div class="adv-log" id="adv-log"></div>`;
+      body.querySelectorAll(".adv-opt").forEach(btn => {
+        btn.addEventListener("click", () => advAnswer(Number(btn.dataset.i)));
+      });
+    }
+
+    function advAnswer(i){
+      if (adv.over || !adv.q) return;
+      const correct = (i === adv.q.a);
+      const dmgToEnemy = correct ? 9 + Math.floor(Math.random() * 7) : 0;
+      const dmgToMe = correct ? 0 : 7 + Math.floor(Math.random() * 6);
+      adv.enemyHp -= dmgToEnemy;
+      adv.myHp -= dmgToMe;
+
+      let msg = "";
+      if (correct) {
+        msg = `✅ 答对！${petForm(game.activePet).emoji} 对 ${adv.enemy.name} 造成 ${dmgToEnemy} 点伤害！`;
+      } else {
+        msg = `❌ 答错（正确：${adv.q.o[adv.q.a]}）！${adv.enemy.name} 反击你 ${dmgToMe} 点伤害！`;
+      }
+      document.querySelectorAll(".adv-opt").forEach(b => b.disabled = true);
+      const logEl = document.getElementById("adv-log");
+      if (logEl) logEl.textContent = msg;
+      saveGame();
+
+      setTimeout(() => {
+        if (adv.enemyHp <= 0) {
+          const isFinal = adv.stage === ADVENTURE_TOTAL;
+          const coinReward = isFinal ? 100 : 8;
+          game.coins += coinReward;
+          const expGain = isFinal ? 50 : 5;
+          const evo = addPetExp(game.activePet, expGain);
+          msg += `\n🎉 击败 ${adv.enemy.name}！+${coinReward} 金币，宠物经验 +${expGain}${evo ? "。" + evo : ""}`;
+          if (isFinal) {
+            adv.over = true;
+            saveGame(); updateGamePanel();
+            bodyConclusion(true, msg);
+            return;
+          }
+          adv.stage += 1;
+          nextAdvStage();
+          const log2 = document.getElementById("adv-log");
+          if (log2) log2.textContent = msg;
+          return;
+        }
+        if (adv.myHp <= 0) {
+          adv.over = true;
+          bodyConclusion(false, `💀 你的宠物倒下了……闯关失败。再接再厉，答更多题把宠物练强再来！`);
+          return;
+        }
+        renderAdvBattle();
+        const log2 = document.getElementById("adv-log");
+        if (log2) log2.textContent = msg;
+      }, 450);
+    }
+
+    function bodyConclusion(win, msg){
+      const body = document.getElementById("adventure-body");
+      body.innerHTML = `
+        <div class="adv-conclusion">
+          <div style="font-size:42px">${win ? "🏆" : "💀"}</div>
+          <h3>${win ? "通关成功！" : "挑战失败"}</h3>
+          <p style="white-space:pre-line;color:var(--muted);font-size:13px;line-height:1.8">${esc(msg)}</p>
+          <button class="small-btn" id="adv-again">再来一局</button>
+        </div>`;
+      document.getElementById("adv-again").addEventListener("click", () => startAdventure(adv.title));
+      saveGame(); updateGamePanel();
     }
 
     function updateGamePanel() {
