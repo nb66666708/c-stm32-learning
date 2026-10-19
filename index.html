@@ -5764,7 +5764,7 @@
     let game = Object.assign({
       xp: 0, coins: 0, streak: 0, bestStreak: 0, solved: [], rewarded: [], attempts: [], answers: {},
       lastCheckIn: "", checkInStreak: 0, totalCheckIns: 0, ownedPets: ["fox"], activePet: "fox",
-      ownedCosmetics: [], activeCosmetic: "", gachaCount: 0, feedCount: 0,
+      ownedCosmetics: [], activeCosmetic: "", gachaCount: 0, feedCount: 0, petExp: {},
       dailyQuestDate: localDateKey(), dailyQuestSolved: [], dailyQuestRewarded: false
     }, storedGame);
     game.solved = new Set(game.solved);
@@ -5849,6 +5849,7 @@
           activeCosmetic: game.activeCosmetic,
           gachaCount: game.gachaCount,
           feedCount: game.feedCount,
+          petExp: game.petExp || {},
           dailyQuestSolved: [...game.dailyQuestSolved]
         }));
       } catch (error) {
@@ -5891,6 +5892,50 @@
 
     const GACHA_PRICE = 30;
     const FEED_PRICE = 5;
+
+    // 宠物进化表：每只 3 个形态（1级起步 → 第 5 级进化一次 → 第 9 级最终形态）
+    const petEvolution = {
+      fox:     { forms: [{name:"小狐狸", emoji:"🦊"}, {name:"灵狐", emoji:"🦊✨"}, {name:"九尾天狐", emoji:"🔥🦊"}] },
+      rabbit:  { forms: [{name:"棉花兔", emoji:"🐰"}, {name:"爱心兔", emoji:"🐰💗"}, {name:"月光兔", emoji:"🌙🐰"}] },
+      cat:     { forms: [{name:"橘子猫", emoji:"🐱"}, {name:"星星猫", emoji:"🐱⭐"}, {name:"狮子喵", emoji:"🦁"}] },
+      panda:   { forms: [{name:"竹竹熊猫", emoji:"🐼"}, {name:"清风熊猫", emoji:"🐼🍃"}, {name:"竹仙熊猫", emoji:"🎋🐼"}] },
+      capybara:{ forms: [{name:"慢慢水豚", emoji:"🦫"}, {name:"温泉水豚", emoji:"♨️🦫"}, {name:"福气水豚", emoji:"🧧🦫"}] },
+      chick:   { forms: [{name:"七日小鸡", emoji:"🐥"}, {name:"大公鸡", emoji:"🐔"}, {name:"火凤凰", emoji:"🦅"}] },
+      owl:     { forms: [{name:"熬夜猫头鹰", emoji:"🦉"}, {name:"观星猫头鹰", emoji:"🦉🔭"}, {name:"月光智者", emoji:"🌕🦉"}] },
+      turtle:  { forms: [{name:"稳赢乌龟", emoji:"🐢"}, {name:"爬山龟", emoji:"🏔️🐢"}, {name:"闪电龟", emoji:"⚡🐢"}] },
+      frog:    { forms: [{name:"呱唧青蛙", emoji:"🐸"}, {name:"唱歌蛙", emoji:"🐸🎵"}, {name:"蛙国王", emoji:"👑🐸"}] },
+      octopus: { forms: [{name:"百变章鱼", emoji:"🐙"}, {name:"彩虹章鱼", emoji:"🐙🌈"}, {name:"梦幻章鱼", emoji:"🐙✨"}] },
+      dragon:  { forms: [{name:"迷你小龙", emoji:"🐲"}, {name:"火山幼龙", emoji:"🌋🐲"}, {name:"东方神龙", emoji:"🐉"}] },
+      unicorn: { forms: [{name:"彩虹独角兽", emoji:"🦄"}, {name:"星辰独角兽", emoji:"🦄⭐"}, {name:"天马", emoji:"🌟🦄"}] }
+    };
+    // 进化阈值：exp 达 100 升二阶，达 650 升三阶
+    function petStage(exp){ exp = exp || 0; if (exp >= 650) return 3; if (exp >= 100) return 2; return 1; }
+    function petForm(petId){
+      const p = petCatalog.find(x => x.id === petId) || petCatalog[0];
+      const evo = petEvolution[petId];
+      if (!evo) return { name: p.name, emoji: p.emoji, stage: 1, exp: 0, lv: 1 };
+      const exp = (game.petExp && game.petExp[petId]) || 0;
+      const stage = petStage(exp);
+      const form = evo.forms[stage - 1];
+      // 等级数字 1~10
+      let lv;
+      if (stage === 1) lv = Math.min(Math.floor(Math.sqrt(exp)) + 1, 4);
+      else if (stage === 2) lv = Math.min(5 + Math.floor((exp - 100) / 110), 8);
+      else lv = Math.min(9 + Math.floor((exp - 650) / 200), 10);
+      return { name: form.name, emoji: form.emoji, stage, exp, lv };
+    }
+    function addPetExp(petId, amount){
+      if (!petId) return null;
+      game.petExp = game.petExp || {};
+      const beforeStage = petStage(game.petExp[petId] || 0);
+      game.petExp[petId] = (game.petExp[petId] || 0) + amount;
+      const afterStage = petStage(game.petExp[petId]);
+      if (afterStage > beforeStage) {
+        const f = petForm(petId);
+        return `🎉 恭喜！陪伴宠物进化成 ${f.emoji} ${f.name}（第 ${afterStage} 形态）！`;
+      }
+      return null;
+    }
 
     const checkInRewards = [
       {coins: 20, xp: 5},
@@ -5988,10 +6033,12 @@
       const petHtml = petCatalog.map(pet => {
         const owned = game.ownedPets.has(pet.id);
         const equipped = game.activePet === pet.id;
+        const form = petForm(pet.id);
         const label = equipped ? "正在陪伴" : owned ? "换上它" : (pet.price === null ? "仅扭蛋获得" : `兑换 ${pet.price} 🪙`);
         const disabled = equipped || (!owned && pet.price === null);
         const rareBadge = pet.price === null ? `<small style="color:#b06"> · ${pet.rare || "扭蛋"}</small>` : "";
-        return `<article class="pet-shop-item"><span class="shop-pet-emoji" aria-hidden="true">${pet.emoji}</span><div class="shop-pet-info"><strong>${pet.name}${rareBadge}</strong><small>${owned ? "已收藏" : (pet.price === null ? "扭蛋限定贴纸" : `贴纸 · ${pet.price} 金币`)}</small></div><button class="${equipped ? "secondary-btn" : "small-btn"}" data-pet="${pet.id}" ${disabled ? "disabled" : ""}>${label}</button></article>`;
+        const levelBadge = owned ? `<small style="color:#2563eb"> · Lv.${form.lv}${form.stage > 1 ? " ✨" + form.stage + "阶" : ""}</small>` : "";
+        return `<article class="pet-shop-item"><span class="shop-pet-emoji" aria-hidden="true">${owned ? form.emoji : pet.emoji}</span><div class="shop-pet-info"><strong>${owned ? form.name : pet.name}${rareBadge}${levelBadge}</strong><small>${owned ? "已收藏" : (pet.price === null ? "扭蛋限定贴纸" : `贴纸 · ${pet.price} 金币`)}</small></div><button class="${equipped ? "secondary-btn" : "small-btn"}" data-pet="${pet.id}" ${disabled ? "disabled" : ""}>${label}</button></article>`;
       }).join("");
 
       // 分区 2：装扮（给当前宠物戴）
@@ -6003,6 +6050,7 @@
       }).join("");
 
       // 分区 3：扭蛋 + 喂食
+      const activeForm = petForm(game.activePet);
       const funHtml = `
         <div class="gacha-box">
           <div class="gacha-head"><strong>🎰 幸运扭蛋机</strong><span>已抽 ${game.gachaCount} 次</span></div>
@@ -6010,8 +6058,8 @@
           <button class="small-btn" id="do-gacha" ${game.coins < GACHA_PRICE ? "disabled" : ""}>🎰 抽一次（${GACHA_PRICE} 🪙）</button>
         </div>
         <div class="gacha-box">
-          <div class="gacha-head"><strong>🍬 喂一口</strong><span>已喂 ${game.feedCount} 次</span></div>
-          <p class="gacha-desc">花 ${FEED_PRICE} 金币喂 ${activePet.emoji}，它会开心，随机加 3~12 XP（有概率暴击 ×2！）</p>
+          <div class="gacha-head"><strong>🍬 喂一口</strong><span>已喂 ${game.feedCount} 次 · 当前伙伴 ${activeForm.emoji} ${activeForm.name} Lv.${activeForm.lv}</span></div>
+          <p class="gacha-desc">花 ${FEED_PRICE} 金币喂当前伙伴，它会开心，随机加 3~12 XP（20% 概率暴击 ×2），同时它自己涨 15 宠物经验，够了就进化！</p>
           <button class="small-btn" id="do-feed" ${game.coins < FEED_PRICE ? "disabled" : ""}>🍬 喂一口（${FEED_PRICE} 🪙）</button>
         </div>`;
 
@@ -6088,11 +6136,12 @@
       const crit = Math.random() < 0.2;
       if (crit) xp *= 2;
       game.xp += xp;
-      const activePet = petCatalog.find(p => p.id === game.activePet) || petCatalog[0];
+      const evolveMsg = addPetExp(game.activePet, 15); // 喂食喂出宠物经验
+      const activeForm = petForm(game.activePet);
       const msg = document.getElementById("pet-shop-message");
-      if (msg) msg.textContent = crit
-        ? `✨ 暴击！${activePet.emoji} ${activePet.name}吃得超开心，+${xp} XP（双倍暴击！）`
-        : `${activePet.emoji} ${activePet.name} 吧唧吧唧吃完了，+${xp} XP`;
+      if (msg) msg.textContent = (evolveMsg ? evolveMsg + " " : "") + (crit
+        ? `✨ 暴击！${activeForm.emoji} ${activeForm.name}吃得超开心，+${xp} XP（双倍暴击！）`
+        : `${activeForm.emoji} ${activeForm.name} 吧唧吧唧吃完了，+${xp} XP，宠物经验 +15`);
       saveGame(); renderPetShop(); updateGamePanel();
     }
 
@@ -6116,10 +6165,11 @@
       if (mini) mini.textContent = `${game.xp} XP · ${rankForXp(game.xp)}`;
       const pet = petCatalog.find(item => item.id === game.activePet) || petCatalog[0];
       const cos = cosmeticCatalog.find(c => c.id === game.activeCosmetic);
+      const form = petForm(game.activePet);
       const petEmoji = document.getElementById("pet-emoji");
       const petName = document.getElementById("pet-name");
-      if (petEmoji) petEmoji.textContent = pet.emoji + (cos ? cos.emoji : "");
-      if (petName) petName.textContent = pet.name;
+      if (petEmoji) petEmoji.textContent = form.emoji + (cos ? cos.emoji : "");
+      if (petName) petName.textContent = `${form.name} Lv.${form.lv}`;
       const checkIn = document.getElementById("daily-checkin");
       if (checkIn) {
         const checkedIn = game.lastCheckIn === localDateKey();
@@ -6252,6 +6302,13 @@
             window.wrongbookAdd(key, q, lesson.title, responseLabel);
           }
           markPractice(lesson.title, q.pk, correct);
+          if (correct) {
+            const evolveMsg = addPetExp(game.activePet, 2);
+            if (evolveMsg) {
+              const gm = document.getElementById("game-message");
+              if (gm) gm.textContent = evolveMsg;
+            }
+          }
           const badge = root.querySelector(`[data-question="${i}"] .prog-badge`);
           if (badge) { badge.textContent = correct ? "✓ 已答对" : "✗ 已答错"; badge.className = "prog-badge " + (correct ? "correct" : "wrong"); }
           showFeedback(i, correct ? "correct" : "wrong",
