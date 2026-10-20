@@ -6550,29 +6550,39 @@
           }
           adv.stage += 1;
           nextAdvStage();
+          saveGame();
           const log2 = document.getElementById("adv-log");
           if (log2) log2.textContent = msg;
           return;
         }
         if (adv.myHp <= 0) {
           adv.over = true;
+          saveGame();
           bodyConclusion(false, `💀 你的宠物倒下了……闯关失败。再接再厉，答更多题把宠物练强再来！`);
           return;
         }
         // 敌人还没死：保留敌人和血量，但换一道新题继续打
         drawNextQuestion();
         renderAdvBattle();
+        saveGame();
         const log2 = document.getElementById("adv-log");
         if (log2) log2.textContent = msg;
       }, 450);
     }
 
     function drawNextQuestion(){
-      const pool = practicePool[adv.title].filter(q =>
-        q.t === "s" && Array.isArray(q.o) && q.o.length >= 2 &&
-        Number.isInteger(q.a) && !adv.used.has(q.q));
-      const source = pool.length > 0 ? pool : practicePool[adv.title].filter(q =>
+      const all = practicePool[adv.title].filter(q =>
         q.t === "s" && Array.isArray(q.o) && q.o.length >= 2 && Number.isInteger(q.a));
+      // 优先抽没做过的题
+      const fresh = all.filter(q => !adv.used.has(q.q));
+      let source;
+      if (fresh.length > 0) {
+        source = fresh;
+      } else {
+        // 题用完了：从全部题里抽，但避免和上一题相同
+        source = all.filter(q => !adv.q || q.q !== adv.q.q);
+        if (source.length === 0) source = all;
+      }
       adv.q = source[Math.floor(Math.random() * source.length)];
       if (adv.q) adv.used.add(adv.q.q);
     }
