@@ -6161,9 +6161,41 @@
       const afterStage = petStage(game.petExp[petId]);
       if (afterStage > beforeStage) {
         const f = petForm(petId);
+        showEvolutionAnimation(f.emoji, f.name, afterStage);
         return `🎉 恭喜！陪伴宠物进化成 ${f.emoji} ${f.name}（第 ${afterStage}/5 形态）！`;
       }
       return null;
+    }
+
+    function showEvolutionAnimation(emoji, name, stage){
+      const overlay = document.createElement("div");
+      overlay.style.cssText = "position:fixed;inset:0;background:rgba(0,0,0,0.85);z-index:99999;display:flex;flex-direction:column;align-items:center;justify-content:center;pointer-events:none;animation:evoFade 0.3s ease-out;";
+      overlay.innerHTML = `
+        <div style="font-size:80px;animation:evoPulse 1.2s ease-in-out infinite;">${emoji}</div>
+        <div style="color:#ffd700;font-size:24px;font-weight:bold;margin-top:20px;text-shadow:0 0 20px #ffd700;">✨ 进化！${name} ✨</div>
+        <div style="color:#fff;font-size:16px;margin-top:10px;">第 ${stage}/5 形态</div>
+      `;
+      document.body.appendChild(overlay);
+      // 加动画关键帧
+      if (!document.getElementById("evo-style")) {
+        const style = document.createElement("style");
+        style.id = "evo-style";
+        style.textContent = `
+          @keyframes evoFade { from {opacity:0} to {opacity:1} }
+          @keyframes evoPulse { 0%,100% {transform:scale(1);filter:brightness(1);} 50% {transform:scale(1.3);filter:brightness(2);} }
+          @keyframes damageFloat { 0%{opacity:1;transform:translateY(0);} 100%{opacity:0;transform:translateY(-50px);} }
+        `;
+        document.head.appendChild(style);
+      }
+      setTimeout(() => { overlay.style.transition = "opacity 0.5s"; overlay.style.opacity = "0"; setTimeout(() => overlay.remove(), 500); }, 2000);
+    }
+
+    function showDamageFloat(x, y, text, color){
+      const el = document.createElement("div");
+      el.textContent = text;
+      el.style.cssText = `position:fixed;left:${x}px;top:${y}px;color:${color};font-size:20px;font-weight:bold;pointer-events:none;z-index:99998;animation:damageFloat 1s ease-out forwards;text-shadow:0 0 10px ${color};`;
+      document.body.appendChild(el);
+      setTimeout(() => el.remove(), 1000);
     }
 
     const checkInRewards = [
@@ -6519,8 +6551,12 @@
       const enemyEl = document.querySelector(".adv-side:last-child .adv-pet-emoji");
       if (correct && petEl) {
         petEl.animate([{transform:"translateX(0)"},{transform:"translateX(30px) scale(1.2)"},{transform:"translateX(0)"}],{duration:400,easing:"ease-out"});
+        const r = petEl.getBoundingClientRect();
+        showDamageFloat(r.left + r.width/2, r.top, `-${dmgToEnemy}`, "#ff6b6b");
       } else if (enemyEl) {
         enemyEl.animate([{transform:"translateX(0)"},{transform:"translateX(-30px) scale(1.2)"},{transform:"translateX(0)"}],{duration:400,easing:"ease-out"});
+        const r = enemyEl.getBoundingClientRect();
+        showDamageFloat(r.left + r.width/2, r.top, `-${dmgToMe}`, "#ffa500");
       }
 
       let msg = "";
