@@ -6555,15 +6555,21 @@
     const ADVENTURE_TOTAL = 10;
     let adv = null; // 对局状态
 
-    const wildPets = [
+    const wildPetsEarly = [
       {emoji:"🐀", name:"灰毛鼠"}, {emoji:"🐛", name:"卷卷虫"}, {emoji:"🦟", name:"小蚊子"},
-      {emoji:"🐌", name:"慢吞吞蜗牛"}, {emoji:"🐜", name:"大力蚁"}, {emoji:"🐝", name:"蜂蜜蜂"},
-      {emoji:"🦗", name:"聒噪蟋蟀"}, {emoji:"🕷️", name:"小黑蛛"}, {emoji:"🐍", name:"小青蛇"},
-      {emoji:"🦇", name:"夜宵蝙蝠"}
+      {emoji:"🐌", name:"慢吞吞蜗牛"}
+    ];
+    const wildPetsMid = [
+      {emoji:"🐜", name:"大力蚁"}, {emoji:"🐝", name:"蜂蜜蜂"}, {emoji:"🦗", name:"聒噪蟋蟀"},
+      {emoji:"🕷️", name:"小黑蛛"}
+    ];
+    const wildPetsLate = [
+      {emoji:"🐍", name:"小青蛇"}, {emoji:"🦇", name:"夜宵蝙蝠"}, {emoji:"🐺", name:"野狼"},
+      {emoji:"🦂", name:"毒蝎子"}
     ];
     const bossPets = [
       {emoji:"👾", name:"代码魔王"}, {emoji:"🤖", name:"语法怪兽"},
-      {emoji:"🐛", name:"缓冲区溢出王"}, {emoji:"👻", name:"野指针幽灵"}
+      {emoji:"🐉", name:"缓冲区溢出龙"}, {emoji:"👻", name:"野指针幽灵"}
     ];
 
     function adventureLessons(){
@@ -6609,11 +6615,16 @@
 
     function nextAdvStage(){
       const isBoss = adv.stage === ADVENTURE_TOTAL || adv.stage === 5;
-      const list = isBoss ? bossPets : wildPets;
+      // 按关卡选敌人难度：1-3 弱怪，4-6 中怪，7-9 强怪，BOSS 专属
+      let pool;
+      if (isBoss) pool = bossPets;
+      else if (adv.stage <= 3) pool = wildPetsEarly;
+      else if (adv.stage <= 6) pool = wildPetsMid;
+      else pool = wildPetsLate;
       // 避免连续遇到同一个敌人
       let enemy;
-      do { enemy = list[Math.floor(Math.random() * list.length)]; }
-      while (adv.enemy && enemy.emoji === adv.enemy.emoji && list.length > 1);
+      do { enemy = pool[Math.floor(Math.random() * pool.length)]; }
+      while (adv.enemy && enemy.emoji === adv.enemy.emoji && pool.length > 1);
       adv.enemy = enemy;
       adv.enemyMax = isBoss ? 30 + adv.stage * 8 : 12 + adv.stage * 4;
       adv.enemyHp = adv.enemyMax;
@@ -6701,8 +6712,13 @@
         showDamageFloat(r.left + r.width/2, r.top, `-${dmgToMe}${crit?" 💥暴击":""}`, crit ? "#ff0000" : "#ffa500");
       }
 
+      // 按宠物形态显示不同技能名
+      const stage = petForm(game.activePet).stage;
+      const skills = ["撞击", "突进", "🔥火焰喷射", "⚡闪电攻击", "✨终极圣光"];
+      const skillName = skills[Math.min(stage - 1, 4)];
+
       if (correct) {
-        msg = crit ? `💥 暴击！${petForm(game.activePet).emoji} 对 ${adv.enemy.name} 造成 ${dmgToEnemy} 点伤害！` : `✅ 命中！${petForm(game.activePet).emoji} 对 ${adv.enemy.name} 造成 ${dmgToEnemy} 点伤害！`;
+        msg = crit ? `💥 暴击！${petForm(game.activePet).emoji} 使用【${skillName}】对 ${adv.enemy.name} 造成 ${dmgToEnemy} 点伤害！` : `✅ 命中！${petForm(game.activePet).emoji} 使用【${skillName}】对 ${adv.enemy.name} 造成 ${dmgToEnemy} 点伤害！`;
       } else {
         msg = crit ? `💥 暴击！${adv.enemy.name} 反击你 ${dmgToMe} 点伤害！正确答案：${adv.q.o[adv.q.a]}` : `❌ 未命中！${adv.enemy.name} 反击你 ${dmgToMe} 点伤害！正确答案：${adv.q.o[adv.q.a]}`;
       }
