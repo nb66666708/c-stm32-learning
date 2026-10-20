@@ -6461,7 +6461,18 @@
       const used = new Set();
       while (picked.length < 10 && used.size < all.length) {
         const i = Math.floor(Math.random() * all.length);
-        if (!used.has(i)) { used.add(i); picked.push(all[i]); }
+        if (!used.has(i)) {
+          used.add(i);
+          // 打乱选项顺序
+          const q = all[i];
+          const correctText = q.o[q.a];
+          const opts = [...q.o];
+          for (let k = opts.length - 1; k > 0; k--) {
+            const j = Math.floor(Math.random() * (k + 1));
+            [opts[k], opts[j]] = [opts[j], opts[k]];
+          }
+          picked.push({...q, o: opts, a: opts.indexOf(correctText)});
+        }
       }
       let idx = 0, correct = 0;
       function ask(){
@@ -6719,7 +6730,18 @@
         if (source.length === 0) source = all;
       }
       adv.q = source[Math.floor(Math.random() * source.length)];
-      if (adv.q) adv.used.add(adv.q.q);
+      if (adv.q) {
+        // 打乱选项顺序，避免答案总在 A
+        const correctText = adv.q.o[adv.q.a];
+        const opts = [...adv.q.o];
+        for (let i = opts.length - 1; i > 0; i--) {
+          const j = Math.floor(Math.random() * (i + 1));
+          [opts[i], opts[j]] = [opts[j], opts[i]];
+        }
+        adv.q.o = opts;
+        adv.q.a = opts.indexOf(correctText);
+        adv.used.add(adv.q.q);
+      }
     }
 
     function bodyConclusion(win, msg){
