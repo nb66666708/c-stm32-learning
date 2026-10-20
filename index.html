@@ -2822,6 +2822,74 @@
           {type:"选择题", text:"RTC 闹钟（Alarm）的作用是？", options:["定时唤醒单片机","省电","加密","显示时间"], answer:0, explanation:"到点发中断唤醒单片机，做定时任务。"},
           {type:"判断题", text:"备份寄存器主电源断了数据就丢。", options:["正确","错误"], answer:1, explanation:"备份寄存器靠纽扣电池供电，掉电不丢。"}
         ]
+      },
+      {
+        title: "STM32 时钟系统：HSI/HSE/PLL/时钟树", level: "求职必备 · 第 74 课",
+        intro: "面试必问“STM32 时钟树怎么配”。HSI/HSE/LSI/LSE 四个时钟源，PLL 倍频出 72MHz，各外设挂在不同总线上。",
+        goals: ["分清 HSI/HSE/LSI/LSE 各自作用", "理解 PLL 倍频原理", "知道 AHB/APB1/APB2 总线频率", "会看时钟树图"],
+        content: [
+          ["四个时钟源", "HSI：内部 8MHz RC，启动默认用，精度差。HSE：外部晶振 8MHz，精度高，跑 PLL 用。LSI：内部约 40kHz，喂看门狗。LSE：外部 32.768kHz，喂 RTC。", "上电默认 HSI 8MHz\n配置后切到 HSE 8MHz → PLL ×9 = 72MHz\nLSI 喂 IWDG，LSE 喂 RTC"],
+          ["PLL 倍频", "HSE 8MHz 进 PLL，倍频 ×9 = 72MHz（F1）。AHB 分频 1 = 72MHz，APB1 分频 2 = 36MHz，APB2 分频 1 = 72MHz。", "HSE 8MHz → PLL ×9 → SYSCLK 72MHz\nAHB = 72MHz\nAPB1 = 36MHz（最高 36）\nAPB2 = 72MHz"],
+          ["各外设挂哪条总线", "GPIO/USART1/ADC 挂 APB2（72MHz）。USART2/3/SPI2/I2C 挂 APB1（36MHz）。DMA 挂 AHB（72MHz）。", "USART1 挂 APB2，波特率 115200 轻松\nUSART2 挂 APB1，最高 36MHz"],
+          ["为什么要懂时钟树", "配波特率算错、定时器频率不对、PLL 配错跑飞，都和时钟有关。CubeMX 自动配但要知道背后原理。", "CubeMX 选 HSE 8MHz → PLL ×9 = 72MHz\nGPIO 不用配时钟自动开 GPIOA 时钟"]
+        ],
+        questions: [
+          {type:"选择题", text:"STM32F1 主时钟 SYSCLK 最高多少？", options:["8MHz","36MHz","72MHz","168MHz"], answer:2, explanation:"F1 最高 72MHz，F4 最高 168MHz。"},
+          {type:"选择题", text:"RTC 用哪个时钟源？", options:["HSI","HSE","LSI","LSE 32.768kHz"], answer:3, explanation:"RTC 专用外部 32.768kHz 晶振。"},
+          {type:"选择题", text:"独立看门狗 IWDG 用哪个时钟？", options:["HSI","HSE","LSI","LSE"], answer:2, explanation:"LSI 约 40kHz，独立运行，主时钟挂了还能复位。"},
+          {type:"判断题", text:"HSE 是内部 RC 振荡器。", options:["正确","错误"], answer:1, explanation:"HSE 是外部晶振，HSI 才是内部 RC。"}
+        ]
+      },
+      {
+        title: "大小端与内存对齐：面试高频考点", level: "求职必备 · 第 75 课",
+        intro: "面试常问“什么是大小端”“结构体为什么有 padding”。这两点不懂，嵌入式面试直接挂。",
+        goals: ["理解大端/小端区别", "会判断当前芯片是大端还是小端", "理解结构体对齐规则", "会算结构体大小"],
+        content: [
+          ["什么是大小端", "多字节数据在内存里的存放顺序。小端（Little Endian）：低位字节放低地址。大端（Big Endian）：高位字节放低地址。STM32（ARM Cortex-M）默认小端。", "0x12345678\n小端内存：78 56 34 12（低地址放 78）\n大端内存：12 34 56 78（低地址放 12）"],
+          ["怎么判断大小端", "用 union 或指针：int a = 1; char *p = (char*)&a; 如果 *p == 1 就是小端（低位 0x01 放低地址）。", "int x = 0x01000000;\nchar *p = (char*)&x;\nif (*p == 0) 小端（00 在低地址）\nelse 大端"],
+          ["结构体对齐", "编译器为了 CPU 访问效率，给结构体成员按自然边界对齐。int 放 4 字节边界，short 放 2 字节边界。中间空隙叫 padding。", "struct { char a; int b; char c; }\n实际大小：1 + 3(pad) + 4 + 1 + 3(pad) = 16\n不是 6！"],
+          ["为什么要懂对齐", "串口收发结构体直接当 buffer 时，padding 会导致字节错位。通信协议要按字节数组收，不能直接 memcpy 结构体。", "串口收 4 字节温度：用 uint8_t buf[4] 拼\n不要直接把串口数据塞到结构体里（有 padding）"]
+        ],
+        questions: [
+          {type:"选择题", text:"STM32（Cortex-M）默认是？", options:["大端","小端","双端","可配置"], answer:1, explanation:"ARM Cortex-M 默认小端，可通过 SCB 配置但一般不改。"},
+          {type:"选择题", text:"0x12345678 在小端内存里低地址存的是？", options:["0x12","0x34","0x56","0x78"], answer:3, explanation:"小端低位字节放低地址，0x78 是最低字节。"},
+          {type:"选择题", text:"struct { char a; int b; } 大小（默认对齐）？", options:["5","8","12","16"], answer:1, explanation:"char 1 + pad 3 + int 4 = 8。"},
+          {type:"判断题", text:"串口收到的数据可以直接当结构体用。", options:["正确","错误"], answer:1, explanation:"结构体有 padding，直接塞会错位，要用字节数组手动拼。"}
+        ]
+      },
+      {
+        title: "环形缓冲区：串口收发的核心", level: "求职必备 · 第 76 课",
+        intro: "串口中断收数据，主循环处理，中间靠环形缓冲区解耦。面试常考“怎么实现无锁队列”。",
+        goals: ["理解环形缓冲区结构（头尾指针+数组）", "会实现最简单的 ring buffer", "理解为什么用它而不是普通数组", "知道满/空判断"],
+        content: [
+          ["为什么要环形缓冲区", "串口中断每来一个字节触发一次中断，如果中断里直接处理会丢数据。用 ring buffer：中断只管往尾巴加，主循环从头取。", "中断：收到字节 → buf[tail++] = byte\n主循环：while(head != tail) 处理 buf[head++]\n两者解耦，不丢数据"],
+          ["结构", "一个定长数组 + head（读位置）+ tail（写位置）。满：tail+1 == head。空：head == tail。留一个空位区分满和空。", "#define BUF_SIZE 64\nuint8_t buf[64];\nvolatile uint8_t head = 0, tail = 0;\nvoid push(uint8_t b) { buf[tail] = b; tail = (tail+1) % BUF_SIZE; }"],
+          ["取数据", "主循环从 head 读，读完 head 往前移。head == tail 表示空。", "uint8_t pop(void) {\n  if (head == tail) return 0;\n  uint8_t b = buf[head];\n  head = (head+1) % BUF_SIZE;\n  return b;\n}"],
+          ["无锁为什么安全", "单生产者（中断写 tail）单消费者（主循环读 head），head 和 tail 各自只被一个地方改，不用加锁。", "中断只写 tail，主循环只写 head\n两个指针互不干扰，原子操作（uint8_t）不用关中断"]
+        ],
+        questions: [
+          {type:"选择题", text:"环形缓冲区的核心是？", options:["数组 + 头尾指针","链表","队列","栈"], answer:0, explanation:"定长数组 + head/tail 取模实现循环。"},
+          {type:"选择题", text:"怎么判断缓冲区空？", options:["head == tail","head > tail","head < tail","tail = 0"], answer:0, explanation:"头尾指针相等表示空。"},
+          {type:"选择题", text:"环形缓冲区为什么不用加锁？", options:["单生产者单消费者，头尾各管各的","数组够大","中断优先级高","编译器自动加锁"], answer:0, explanation:"中断只写 tail，主循环只读 tail，写 head，互不干扰。"},
+          {type:"判断题", text:"串口中断里直接处理收到的数据。", options:["正确","错误"], answer:1, explanation:"中断要快，只往 ring buffer 加，主循环慢慢处理。"}
+        ]
+      },
+      {
+        title: "Cortex-M 中断机制深入：压栈/出栈/优先级", level: "求职必备 · 第 77 课",
+        intro: "进阶面试常问“中断发生时 CPU 干了什么”“PRIMASK 是干嘛的”。搞懂这个你就超过 80% 的应聘者。",
+        goals: ["理解中断自动压栈（xPSR/PC/LR/R0-R3/R12）", "知道中断优先级分组（抢占/子优先级）", "理解 PRIMASK/BASEPRI 关中断", "知道中断延迟从哪来"],
+        content: [
+          ["中断发生时 CPU 做了什么", "硬件自动把 xPSR/PC/LR/R0-R3/R12 压到当前栈（8 个字，32 字节），然后跳中断向量表对应的 ISR。ISR 结束时硬件自动出栈。这叫“自动压栈”，软件不用管。", "进中断：硬件压 8 个寄存器到栈\nISR 里随便用 R0-R3\n出中断：硬件自动弹出，继续跑原来的代码"],
+          ["中断优先级分组", "STM32 把 4 位优先级分成“抢占优先级”和“子优先级”。抢占优先级高的可以打断低的（嵌套）。子优先级只决定同时挂起时谁先跑。", "NVIC_PriorityGroup_2：2 位抢占 + 2 位子\nUSART1 抢占 1，定时器抢占 2\nUSART1 中断可以打断定时器中断（嵌套）"],
+          ["PRIMASK/BASEPRI", "PRIMASK=1 关所有可屏蔽中断（留 NMI/HardFault）。BASEPRI=n 关优先级 >= n 的中断，留高优先级的。关中断要快，开中断要及时。", "PRIMASK = 1;  // 关全部中断\n临界区操作（改共享变量）\nPRIMASK = 0;  // 开中断"],
+          ["中断延迟", "从中断触发到 ISR 第一条指令执行，典型 12 个周期（Cortex-M3）。影响因素：当前指令没执行完、压栈、向量表取值。", "72MHz 下 12 周期 ≈ 167ns\n对一般应用够用，高速采样要评估"]
+        ],
+        questions: [
+          {type:"选择题", text:"中断发生时硬件自动压几个寄存器？", options:["4","8","12","16"], answer:1, explanation:"xPSR/PC/LR/R0-R3/R12 = 8 个字（32 字节）。"},
+          {type:"选择题", text:"抢占优先级的作用是？", options:["高的可以打断低的","同时挂起时先跑","决定中断延迟","关中断"], answer:0, explanation:"抢占优先级高的中断可以嵌套打断低的。"},
+          {type:"选择题", text:"PRIMASK=1 的作用是？", options:["关所有可屏蔽中断","开所有中断","设优先级","进睡眠"], answer:0, explanation:"PRIMASK=1 关全部可屏蔽中断，留 NMI/HardFault。"},
+          {type:"判断题", text:"中断里可以随便调用 printf。", options:["正确","错误"], answer:1, explanation:"printf 耗时长且非可重入，中断里只做最简单的事（往 ring buffer 加字节）。"}
+        ]
       }
     ];
     lessons.push(...extraLessons);
