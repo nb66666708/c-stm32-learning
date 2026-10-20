@@ -2722,6 +2722,106 @@
           {type:"判断题", text:"ADC 参考电压 3.3V，输入 3.3V 时读到 4095。", options:["正确","错误"], answer:0, explanation:"满量程对应 4095（12 位）。"},
           {type:"判断题", text:"DMA 可以在 ADC 和内存之间双向搬运。", options:["正确","错误"], answer:0, explanation:"DMA 方向可配置：ADC→内存、内存→DAC、内存→SPI 等，灵活。"}
         ]
+      },
+      {
+        title: "Makefile 与构建系统：项目怎么编译出来", level: "求职必备 · 第 68 课",
+        intro: "工作中不会手动敲 gcc 命令。Makefile/CMake 是自动化编译的脚本，管理几百个源文件、头文件路径、库依赖。面试常问“你怎么管理构建”。",
+        goals: ["理解 Makefile 的目标、依赖、命令三要素", "会写一个最简单的 Makefile", "了解 CMake 的基本概念", "理解交叉编译的含义"],
+        content: [
+          ["Makefile 三要素", "目标: 依赖 命令。make 工具按这个规则判断要不要重新编译。比如 main: main.o utils.o 表示生成 main 需要这两个 .o 文件。", "main: main.o utils.o\n\tgcc -o main main.o utils.o\nmain.o: main.c\n\tgcc -c main.c -Iinclude"],
+          ["变量与自动变量", "用变量复用编译选项：CC=gcc, CFLAGS=-Wall -O2。自动变量 $@ 表示目标名，$< 表示第一个依赖，$^ 表示所有依赖。", "CFLAGS = -Wall -g\n%.o: %.c\n\t$(CC) $(CFLAGS) -c $< -o $@"],
+          ["CMake 是什么", "CMake 是跨平台的构建系统生成器：写 CMakeLists.txt，它生成 Makefile 或 VS 工程。大型项目（如 OpenCV、STM32 HAL）都用 CMake。", "cmake_minimum_required(VERSION 3.10)\nproject(myapp)\nadd_executable(myapp main.c utils.c)"],
+          ["交叉编译", "在电脑上编译，但程序跑在 STM32 上。用 arm-none-eabi-gcc 而不是 gcc。Makefile 里指定 CC=arm-none-eabi-gcc。", "CC = arm-none-eabi-gcc\nCFLAGS = -mcpu=cortex-m4 -mthumb"]
+        ],
+        questions: [
+          {type:"选择题", text:"Makefile 中 $@ 表示？", options:["目标名","第一个依赖","所有依赖","编译器"], answer:0, explanation:"$@ 是自动变量，表示当前规则的目标名。"},
+          {type:"选择题", text:"CMake 主要用来？", options:["写代码","生成 Makefile/工程文件","烧录程序","调试"], answer:1, explanation:"CMake 是构建系统生成器，写 CMakeLists.txt 生成 Makefile 或 VS 工程。"},
+          {type:"选择题", text:"交叉编译的意思是？", options:["同时编译多个文件","在电脑上编译跑在单片机的程序","编译器交叉了","用两个编译器"], answer:1, explanation:"在 x86 电脑上用 arm-none-eabi-gcc 编译出跑在 ARM MCU 上的程序。"},
+          {type:"判断题", text:"Makefile 里命令行前必须是 Tab 不是空格。", options:["正确","错误"], answer:0, explanation:"Makefile 的命令行必须以 Tab 开头，空格会报错。这是新手最常踩的坑。"}
+        ]
+      },
+      {
+        title: "Git 版本控制：工作必备技能", level: "求职必备 · 第 69 课",
+        intro: "公司代码全在 Git 仓库里。不会 git = 没法上班。掌握 add/commit/push/pull/branch/merge 是硬要求。",
+        goals: ["理解工作区/暂存区/本地仓库/远程仓库", "会用 add commit push pull", "会建分支、合并、解决冲突", "理解 .gitignore 作用"],
+        content: [
+          ["四个区域", "工作区（你改的文件）→ 暂存区（git add）→ 本地仓库（git commit）→ 远程仓库（git push）。pull 是反向：远程→本地→工作区。", "git add .\ngit commit -m \"修 bug\"\ngit push origin main"],
+          ["分支 Branch", "main 是主分支。新功能开 feature/xxx 分支，写完合并回 main。避免直接在 main 上改导致线上崩。", "git checkout -b feature/led\ngit add . && git commit -m \"加 LED\"\ngit checkout main\ngit merge feature/led"],
+          ["冲突解决", "两个人改同一行代码，pull 时会冲突。Git 标记 <<<<<<< ======= >>>>>>>，手动选留哪个，再 commit。", "<<<<<<< HEAD\nprintf(\"A\");\n=======\nprintf(\"B\");\n>>>>>>> feature"],
+          [".gitignore", "某些文件不提交：编译产物 .o、可执行文件、临时配置。写在 .gitignore 里 Git 自动忽略。", "*.o\n*.exe\nbuild/\n.vscode/"]
+        ],
+        questions: [
+          {type:"选择题", text:"git commit 的作用是？", options:["把改动存到本地仓库","把改动推到远程","把改动放到暂存区","下载远程代码"], answer:0, explanation:"commit 是存到本地仓库，push 才推远程。"},
+          {type:"选择题", text:"新建分支用？", options:["git checkout -b xxx","git branch xxx","git merge xxx","git pull xxx"], answer:0, explanation:"git checkout -b 名字 一条命令完成新建+切换。"},
+          {type:"判断题", text:"可以直接在 main 分支上改代码然后 push。", options:["正确","错误"], answer:1, explanation:"公司规范要求开 feature 分支，PR 审核后才合并 main。"}
+        ]
+      },
+      {
+        title: "STM32 看门狗与低功耗：产品能存活的关键", level: "求职必备 · 第 70 课",
+        intro: "工业/电池产品里，看门狗防止程序跑飞死机，低功耗让电池撑几年。面试常问“产品死机了怎么办”。",
+        goals: ["理解 IWDG 独立看门狗原理", "会配置 IWDG 定时喂狗", "理解低功耗模式（Sleep/Stop/Standby）", "知道什么时候用低功耗"],
+        content: [
+          ["IWDG 独立看门狗", "一个独立计数器，跑飞了没人喂狗就自动复位单片机。防止程序死循环/卡死后只能断电重启。", "配置：超时 1 秒\n主循环里 HAL_IWDG_Refresh(&hiwdg);"],
+          ["喂狗时机", "不能在中断里喂，也不能在死循环里喂。在主循环末尾喂，表示主循环跑完一圈了。", "while(1) { 传感器采集(); 处理数据(); HAL_IWDG_Refresh(&hiwdg); }"],
+          ["低功耗模式", "Sleep：CPU 睡，外设还跑。Stop：CPU 和大部分外设停，GPIO/RTC 唤醒，微安级。Standby：最省电，几微安。", "电池产品：平时 Stop 模式，按键/RTC 定时唤醒干活"],
+          ["低功耗注意事项", "进 Stop 前要停 SysTick；唤醒后要重新配置时钟（HSI 切回 HSE）。", "进 Stop：HAL_PWR_EnterSTOPMode(...);\n唤醒后：SystemClock_Config();"]
+        ],
+        questions: [
+          {type:"选择题", text:"看门狗（IWDG）的作用是？", options:["防止程序跑飞自动复位","省电","加快运行","加密"], answer:0, explanation:"没人喂狗就复位，防止死循环。"},
+          {type:"选择题", text:"喂狗应该在？", options:["主循环末尾","中断里","死循环里","初始化时喂一次"], answer:0, explanation:"主循环跑完一圈喂，表示程序正常。"},
+          {type:"选择题", text:"最省电的模式是？", options:["Run","Sleep","Stop","Standby"], answer:3, explanation:"Standby 最省电，几微安，只有 RTC/引脚能唤醒。"},
+          {type:"判断题", text:"进 Stop 模式唤醒后不用重新配时钟。", options:["正确","错误"], answer:1, explanation:"Stop 后 HSE 停了，唤醒后要用 HSI，要重新 SystemClock_Config()。"}
+        ]
+      },
+      {
+        title: "STM32 Flash 读写：存参数和日志", level: "求职必备 · 第 71 课",
+        intro: "产品要存配置参数（亮度、音量）、记录日志，不能每次上电都重置。Flash 读写是必备技能。",
+        goals: ["理解 Flash 的页/扇区结构", "会擦除指定扇区", "会按字节/半字/字写入", "知道磨损寿命概念"],
+        content: [
+          ["Flash 结构", "Flash 按页（F1 是 2KB，F4 是 16KB）组织。写之前必须先擦除（擦成全 1）。只能把 1 写成 0，不能把 0 写成 1。", "地址 0x08000000 开始\n每页 2KB（F1）或 16KB（F4）\n擦除最小单位是页/扇区"],
+          ["写 Flash 流程", "1. 解锁 Flash\n2. 擦除指定页\n3. 按半字/字写入\n4. 上锁", "HAL_FLASH_Unlock();\nHAL_FLASHEx_Erase(&eraseInit, &err);\nHAL_FLASH_Program(TYPEPROGRAM_HALFWORD, addr, value);\nHAL_FLASH_Lock();"],
+          ["存参数的正确姿势", "不要存在代码所在的扇区（会把代码擦没）。留最后一页专门存参数。上电时读出来，参数变了再写。", "#define PARAM_ADDR 0x0800FC00"],
+          ["Flash 寿命", "每页擦写寿命约 1 万次（F1）。不能频繁写。用磨损均衡：轮换写不同页。", "亮度调节：只在停 3 秒后写一次"]
+        ],
+        questions: [
+          {type:"选择题", text:"写 Flash 之前必须先？", options:["擦除","加密","复位","断电"], answer:0, explanation:"Flash 只能 1 写 0，要先擦成全 1 才能写。"},
+          {type:"选择题", text:"STM32F1 一页 Flash 大小是？", options:["1KB","2KB","16KB","64KB"], answer:1, explanation:"F1 是 2KB 一页，F4 是 16KB 一个扇区。"},
+          {type:"选择题", text:"存参数应该存在？", options:["代码所在扇区","最后一页独立存","RAM","寄存器"], answer:1, explanation:"存代码所在扇区会把程序擦没，要留最后一页专门存。"},
+          {type:"判断题", text:"Flash 每页可以无限次擦写。", options:["正确","错误"], answer:1, explanation:"寿命约 1 万次（F1），频繁写会磨坏。"}
+        ]
+      },
+      {
+        title: "Modbus 串口协议：工业现场通用语言", level: "求职必备 · 第 72 课",
+        intro: "工业设备 90% 用 Modbus 通信。PLC、传感器、仪表都讲 Modbus。会 Modbus = 能进工业自动化公司。",
+        goals: ["理解 Modbus RTU 帧结构", "知道功能码 03/06/16 的作用", "理解主从模式（一问一答）", "会用串口助手调试 Modbus"],
+        content: [
+          ["Modbus RTU 帧", "从机地址(1) + 功能码(1) + 数据(N) + CRC(2)。比如读保持寄存器：01 03 00 00 00 02 C4 0B。", "请求：01 03 00 00 00 02 01 32\n从机1, 读保持寄存器, 起始0, 读2个"],
+          ["常用功能码", "03=读保持寄存器（最常用），06=写单个寄存器，16=写多个寄存器。", "传感器温度：功能码 03 读地址 0\n收到 0x00EA = 234 / 10 = 23.4°C"],
+          ["主从模式", "主机（PLC/电脑）发请求，从机（传感器/仪表）回答。同一时刻只有主机说话。", "主机：01 03 00 00 00 02 ...\n从机1：01 03 04 00 0A ..."],
+          ["CRC 校验", "帧末尾 2 字节 CRC16，校验传输有没有出错。从机收到 CRC 错就丢弃不回应。", "用 Modbus CRC 算法：多项式 0xA001"]
+        ],
+        questions: [
+          {type:"选择题", text:"Modbus RTU 读保持寄存器用功能码？", options:["03","06","16","01"], answer:0, explanation:"03 读保持寄存器，最常用。"},
+          {type:"选择题", text:"Modbus 是主从模式，意思是？", options:["主机说话从机答","从机主动发","两人同时说","没有主机"], answer:0, explanation:"主机一问一答，从机不能主动发。"},
+          {type:"判断题", text:"Modbus 帧末尾有 CRC 校验。", options:["正确","错误"], answer:0, explanation:"CRC16 校验传输正确性，错了从机丢弃。"}
+        ]
+      },
+      {
+        title: "RTC 实时时钟：产品要有时间", level: "求职必备 · 第 73 课",
+        intro: "电子钟、数据日志、定时唤醒都要 RTC。STM32 内部 RTC 靠外部 32.768kHz 晶振跑，电池断电后还能走。",
+        goals: ["理解 RTC 是独立的定时器", "会设置/读取时间", "理解闹钟（Alarm）中断", "知道备份寄存器作用"],
+        content: [
+          ["RTC 是什么", "一个独立的定时器，用外部 32.768kHz 晶振，主电源断了接纽扣电池还能走。", "主电源 5V 正常走\n掉电后纽扣电池 CR1220 供电"],
+          ["设置/读取时间", "用 HAL_RTC_SetTime 设置时分秒，HAL_RTC_GetTime 读。", "RTC_TimeTypeDef t = {.Hours=14, .Minutes=30};\nHAL_RTC_SetTime(&hrtc, &t, RTC_FORMAT_BIN);"],
+          ["闹钟 Alarm", "RTC 到指定时间发中断。比如每天 8 点开机采集一次数据。", "RTC_AlarmTypeDef a = {.AlarmTime={.Hours=8}};\nHAL_RTC_SetAlarm_IT(&hrtc, &a, RTC_FORMAT_BIN);"],
+          ["备份寄存器", "10 个 32 位备份寄存器，主电源断了纽扣电池供电还能保留。存设备 ID。", "HAL_RTCEx_BKUPWrite(&hrtc, RTC_BKP_DR0, 0x1234);"]
+        ],
+        questions: [
+          {type:"选择题", text:"RTC 靠什么晶振走时？", options:["内部 8MHz","外部 32.768kHz","外部 8MHz","不需要晶振"], answer:1, explanation:"32.768kHz = 2^15，分频正好 1Hz。"},
+          {type:"选择题", text:"主电源断电后 RTC 靠？", options:["纽扣电池","主电容","不用电","USB"], answer:0, explanation:"接 CR1220 纽扣电池，能走几年。"},
+          {type:"选择题", text:"RTC 闹钟（Alarm）的作用是？", options:["定时唤醒单片机","省电","加密","显示时间"], answer:0, explanation:"到点发中断唤醒单片机，做定时任务。"},
+          {type:"判断题", text:"备份寄存器主电源断了数据就丢。", options:["正确","错误"], answer:1, explanation:"备份寄存器靠纽扣电池供电，掉电不丢。"}
+        ]
       }
     ];
     lessons.push(...extraLessons);
