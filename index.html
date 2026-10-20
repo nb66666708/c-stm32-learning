@@ -6886,7 +6886,7 @@
           <section><h2 class="section-title">本课目标</h2><ul class="goals">${lesson.goals.map(goal => `<li>${esc(goal)}</li>`).join("")}</ul></section>
           <section id="theorySection"><h2 class="section-title">理论知识 · 先学后练</h2>${lesson.content.map(item => `<div class="concept"><h3 style="font-size:15px;margin:0 0 7px">${esc(item[0])}</h3><p>${item[1]}</p>${item[2] ? `<pre><code>${esc(item[2])}</code></pre>` : ""}</div>`).join("")}</section>
           ${lesson.lab ? `<section class="lab-section"><div class="eyebrow">跟着做 · 本课实战</div><h2 class="section-title" style="margin-top:7px">${esc(lesson.lab.title)}</h2><ol class="lab-steps">${lesson.lab.steps.map(step => `<li>${esc(step)}</li>`).join("")}</ol>${lesson.lab.code ? `<pre><code>${esc(lesson.lab.code)}</code></pre>` : ""}<div class="lab-result"><strong>✅ 验收标准：</strong>${esc(lesson.lab.result)}</div></section>` : ""}
-          <section class="exercise-section"><div class="exercise-top"><h2 class="section-title" style="margin:0">练习一下</h2><span class="exercise-count">${lesson.questions.length} 道题 · 选择 · 判断 · 填空 · 编程</span>${practicePool[lesson.title] ? `<button class="small-btn" id="open-practice" style="margin-left:auto">📝 更多练习（${practiceCount(practicePool[lesson.title])} 道 · 已做 ${practiceDoneCount(lesson.title)}）</button>` : ""}</div>${lesson.questions.map(questionMarkup).join("")}</section>
+          <section class="exercise-section"><div class="exercise-top"><h2 class="section-title" style="margin:0">练习一下</h2><span class="exercise-count">${lesson.questions.length} 道题 · 选择 · 判断 · 填空 · 编程</span>${practicePool[lesson.title] ? `<button class="small-btn" id="open-practice" style="margin-left:auto">📝 更多练习（${practiceCount(practicePool[lesson.title])} 道 · 已做 ${practiceDoneCount(lesson.title)}）</button>` : ""}</div>${lesson.questions.map((q, i) => { q.pk = 'L' + i; return questionMarkup(q, i, lesson.title); }).join("")}</section>
           <div class="lesson-actions"><button class="secondary-btn" id="prev" ${current === 0 ? "disabled" : ""}>← 上一课</button><button class="primary-btn" id="complete">${completed.has(current) ? "已完成 ✓" : "标记本课完成"}</button><button class="secondary-btn" id="next" ${current === lessons.length - 1 ? "disabled" : ""}>下一课 →</button></div>
           <p class="footer-note">进度保存在当前浏览器的本地存储中。带测试数据的标准 C 程序题可在线编译判分；提交的代码会发送至 Wandbox 隔离判题服务。STM32 HAL 和硬件相关代码需在对应工程或设备中验证。建议在电脑安装 GCC 或 Clang 实际编译练习。</p>
         </div>`;
@@ -6915,6 +6915,7 @@
             correct = q.accepted.some(answer => answer.toLowerCase().replace(/\s+/g, "") === value);
             responseLabel = document.getElementById(`answer-${index}`).value.trim();
           }
+          markPractice(lesson.title, q.pk, correct);
           submitResult(q, index, correct, responseLabel, false);
         });
         const runButton = root.querySelector(`[data-run-code="${index}"]`);
