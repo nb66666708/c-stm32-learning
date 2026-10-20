@@ -5711,7 +5711,17 @@
         {t:"j", q:"没有 DMA 也能采集 ADC，只是 CPU 占用率高。", a:0, e:"纯轮询可以，但高速采样时 CPU 全被占满。"},
         {t:"j", q:"DMA 搬完数据会发中断通知 CPU。", a:0, e:"传输完成/半完成中断是 DMA 标准功能。"},
         {t:"j", q:"ADC 参考电压 3.3V，输入 3.3V 时读到 4095。", a:0, e:"满量程对应 4095（12 位）。"},
-        {t:"j", q:"DMA 只能单向搬运（外设到内存）。", a:1, e:"DMA 方向可配置：外设→内存、内存→DAC、内存→SPI 等。"}
+        {t:"j", q:"DMA 只能单向搬运（外设到内存）。", a:1, e:"DMA 方向可配置：外设→内存、内存→DAC、内存→SPI 等。"},
+        {t:"s", q:"ADC 采样时间设置过短会导致？", o:["分辨率变高","采样不准、结果跳动","DMA 报错","CPU 占用变高"], a:1, e:"输入阻抗大的信号需要更长采样时间，否则电容充不到位。"},
+        {t:"s", q:"DMA 中断里最应该避免的是？", o:["更新状态变量","调用 printf 打印","设置完成标志","清中断标志"], a:1, e:"中断里调用 printf 等阻塞函数会拉长中断时间，影响实时性。"},
+        {t:"s", q:"STM32 中 ADC 转换完成标志是？", o:["RXNE","EOC","TXE","BUSY"], a:1, e:"EOC=End Of Conversion，表示一次转换完成。"},
+        {t:"s", q:"DMA 循环模式 vs 正常模式区别是？", o:["循环模式搬完自动从头开始","正常模式更快","循环模式省内存","没有区别"], a:0, e:"循环模式适合持续采集（如 ADC 不断采样），正常模式搬完即停。"},
+        {t:"s", q:"ADC 多通道扫描模式需要配合什么？", o:["DMA 或逐通道读取","只能单通道","GPIO 输出","定时器"], a:0, e:"扫描模式依次转换多个通道，通常用 DMA 自动搬运到数组。"},
+        {t:"s", q:"HAL_ADC_ConvCpltCallback 在什么时候调用？", o:["ADC 初始化时","一次转换完成时","DMA 搬运完成时","ADC 校准后"], a:2, e:"用 DMA 时，搬运完成触发此回调；不用 DMA 时转换完成触发。"},
+        {t:"s", q:"DMA 缓冲区放在哪里最安全？", o:["函数局部数组","全局或 static 数组","栈上","任意位置都行"], a:1, e:"局部数组函数返回后栈帧回收，DMA 还在写就会崩溃。"},
+        {t:"s", q:"STM32F4 DMA2 通常服务于？", o:["USART1","ADC1/SPI1 等高速外设","GPIO","定时器"], a:1, e:"DMA2 接高速外设（ADC、SPI1、USART1 等），DMA1 接低速外设。"},
+        {t:"s", q:"ADC 参考电压 3.3V，读到 0，说明？", o:["引脚接 0V 或 GND","ADC 坏了","分辨率设错","DMA 没启动"], a:0, e:"读数 0 对应输入≈0V（接地）。"},
+        {t:"s", q:"DMA 数据宽度设为 Half Word，对应几位？", o:["8 位","16 位","32 位","64 位"], a:1, e:"Byte=8 位，Half Word=16 位，Word=32 位。"}
       ]
     };
     const theorySupplements = {
@@ -6586,7 +6596,7 @@
 
     function startAdventure(title){
       const f = petForm(game.activePet);
-      const myMax = 25 + f.lv * 8;
+      const myMax = 30 + f.lv * 10;
       adv = {
         title, stage: 1,
         myHp: myMax, myMax,
@@ -6605,7 +6615,7 @@
       do { enemy = list[Math.floor(Math.random() * list.length)]; }
       while (adv.enemy && enemy.emoji === adv.enemy.emoji && list.length > 1);
       adv.enemy = enemy;
-      adv.enemyMax = isBoss ? 40 + adv.stage * 10 : 18 + adv.stage * 6;
+      adv.enemyMax = isBoss ? 30 + adv.stage * 8 : 12 + adv.stage * 4;
       adv.enemyHp = adv.enemyMax;
       drawNextQuestion();
       renderAdvBattle();
@@ -6650,9 +6660,9 @@
     function advAnswer(i){
       if (adv.over || !adv.q) return;
       const correct = (i === adv.q.a);
-      const stageBonus = adv.stage * 2;
-      const dmgToEnemy = correct ? 9 + Math.floor(Math.random() * 7) + Math.floor(stageBonus / 2) : 0;
-      const dmgToMe = correct ? 0 : 7 + Math.floor(Math.random() * 6) + Math.floor(stageBonus / 2);
+      const stageBonus = adv.stage;
+      const dmgToEnemy = correct ? 7 + Math.floor(Math.random() * 6) + stageBonus : 0;
+      const dmgToMe = correct ? 0 : 5 + Math.floor(Math.random() * 5) + stageBonus;
       adv.enemyHp -= dmgToEnemy;
       adv.myHp -= dmgToMe;
 
