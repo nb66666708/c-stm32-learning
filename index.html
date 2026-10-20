@@ -2941,6 +2941,40 @@
           {type:"选择题", text:"strlen 数到什么为止？", options:["数组结尾","\\0 字符","空格","换行"], answer:1, explanation:"字符串以 \\0 结尾，strlen 数到 \\0 为止（不含 \\0）。"},
           {type:"判断题", text:"strcpy 可以不检查 dst/src 非空。", options:["正确","错误"], answer:1, explanation:"野指针传入直接 segfault，生产代码要 assert。"}
         ]
+      },
+      {
+        title: "volatile / static / const：面试第一题", level: "求职必备 · 第 81 课",
+        intro: "面试官张嘴就问“volatile 有什么用”“static 有几种用法”。这三关键字搞不清，后面都不用聊了。",
+        goals: ["背出 volatile 三种用法", "分清 static 三种用法（局部/全局/函数）", "理解 const 修饰指针的读法", "会说什么时候必须加 volatile"],
+        content: [
+          ["volatile 三种用法", "① 修饰硬件寄存器（防止编译器优化掉读操作）；② 修饰中断和主循环共享的变量；③ 修饰多线程共享变量。告诉编译器：这个变量随时可能变，每次都从内存重读，不要优化到寄存器。", "volatile uint32_t *uart = (volatile uint32_t*)0x40013800;\n// 不 volatile：编译器可能只读一次放寄存器里\n// volatile：每次都从 0x40013800 重读（硬件状态真的变了）"],
+          ["中断共享变量为什么 volatile", "主循环读 flag，中断改 flag。不加 volatile 编译器可能把 flag 优化到寄存器，主循环永远看不到中断改的值，死循环。", "volatile uint8_t rx_flag = 0;\nvoid USART1_IRQHandler(void) { rx_flag = 1; }\nwhile(!rx_flag);  // 不 volatile 会死等"],
+          ["static 三种用法", "① 修饰局部变量：值保留，出函数不销毁；② 修饰全局变量：只限本文件用，其他文件 extern 不到；③ 修饰函数：只限本文件调用。", "void counter(void) {\n  static int n = 0;  // 只初始化一次\n  n++;\n}"],
+          ["const 修饰指针", "从右往左读：const int *p 是“指向 const int 的指针”（值不能改）；int *const p 是“const 指针指向 int”（指针不能改指向）。", "const int *p;    // *p 不能改，p 能改指向\nint *const p;    // p 不能改指向，*p 能改\nconst int *const p;  // 都不能改"]
+        ],
+        questions: [
+          {type:"选择题", text:"volatile 的作用是？", options:["让变量变快","告诉编译器每次从内存重读","加密","静态存储"], answer:1, explanation:"防止编译器把变量优化到寄存器，硬件/中断改了看不到。"},
+          {type:"选择题", text:"中断和主循环共享的变量要加？", options:["const","volatile","static","extern"], answer:1, explanation:"不加 volatile 主循环可能永远看不到中断改的值。"},
+          {type:"选择题", text:"static 修饰局部变量的作用是？", options:["变量变成全局","值保留，出函数不销毁","只能本文件用","加密"], answer:1, explanation:"静态局部变量只初始化一次，函数退出后值还在。"},
+          {type:"判断题", text:"const int *p 表示指针不能改指向。", options:["正确","错误"], answer:1, explanation:"const int *p 是指向 const int 的指针，值不能改但指针能改指向。int *const p 才是指针不能改指向。"}
+        ]
+      },
+      {
+        title: "STM32 寄存器操作与位带：HAL 背后是什么", level: "求职必备 · 第 82 课",
+        intro: "面试官问“HAL_GPIO_WritePin 背后干了什么”。懂寄存器操作才是真懂 MCU，不是调库侠。",
+        goals: ["理解寄存器映像（内存地址映射外设）", "会直接读写 GPIO_ODR 寄存器", "会用位操作（SET/CLR/TOGGLE）", "知道位带（bit-band）是什么"],
+        content: [
+          ["寄存器映像", "STM32 把外设寄存器映射到固定内存地址。GPIOA 基地址 0x40010800，ODR 偏移 0x14。读这个地址 = 读 GPIO 输出状态。", "#define GPIOA_ODR (*(volatile uint32_t*)0x40010814)\nGPIOA_ODR |= (1<<5);   // PA5 输出高\nGPIOA_ODR &= ~(1<<5);  // PA5 输出低"],
+          ["位操作四件套", "置 1：REG |= (1<<n)。清 0：REG &= ~(1<<n)。翻转：REG ^= (1<<n)。读位：(REG >> n) & 1。", "#define BIT_SET(r,n)   ((r) |=  (1<<(n)))\n#define BIT_CLEAR(r,n) ((r) &= ~(1<<(n)))\n#define BIT_TOGGLE(r,n)((r) ^=  (1<<(n)))"],
+          ["HAL 库在干嘛", "HAL_GPIO_WritePin(GPIOA, GPIO_PIN_5, SET) 展开就是 GPIOA->ODR |= GPIO_PIN_5。HAL 库只是帮你算地址、配时钟。", "HAL_GPIO_WritePin 本质：\nGPIOA->BSRR = GPIO_PIN_5;  // 置位寄存器（原子操作）"],
+          ["位带（bit-band）", "Cortex-M3 有位带区：把某个地址的某一位映射到一个独立地址。读写这个地址 = 原子操作那一位，不用读改写，中断安全。", "位带区地址 = 位带基 + 字偏移 * 32 + 位偏移 * 4\n直接写位带地址 = 原子置/清那一位"],
+        ],
+        questions: [
+          {type:"选择题", text:"GPIOA 基地址是？", options:["0x40010800","0x40020000","0x20000000","0x08000000"], answer:0, explanation:"APB2 上 GPIOA 基地址 0x40010800。"},
+          {type:"选择题", text:"把 PA5 置高的位操作是？", options:["GPIOA_ODR |= (1<<5)","GPIOA_ODR &= (1<<5)","GPIOA_ODR ^= (1<<5)","GPIOA_ODR = (1<<5)"], answer:0, explanation:"|= 置位（其他位不变），~ 取反是清位。"},
+          {type:"选择题", text:"HAL_GPIO_WritePin 本质是？", options:["查寄存器表","写 BSRR 寄存器","调操作系统","加密"], answer:1, explanation:"HAL 库展开就是写 BSRR/ODR 寄存器。"},
+          {type:"判断题", text:"位带区可以原子操作某一位，不用读改写。", options:["正确","错误"], answer:0, explanation:"位带把每一位映射到独立地址，写它 = 原子置/清，中断安全。"}
+        ]
       }
     ];
     lessons.push(...extraLessons);
