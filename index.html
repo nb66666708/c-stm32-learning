@@ -6719,14 +6719,16 @@
     function drawNextQuestion(){
       const all = practicePool[adv.title].filter(q =>
         q.t === "s" && Array.isArray(q.o) && q.o.length >= 2 && Number.isInteger(q.a));
+      // 用 题干+代码 作为唯一标识，避免同题干不同代码被误排除
+      const qkey = (q) => q.q + "||" + (q.code || "");
       // 优先抽没做过的题
-      const fresh = all.filter(q => !adv.used.has(q.q));
+      const fresh = all.filter(q => !adv.used.has(qkey(q)));
       let source;
       if (fresh.length > 0) {
         source = fresh;
       } else {
         // 题用完了：从全部题里抽，但避免和上一题相同
-        source = all.filter(q => !adv.q || q.q !== adv.q.q);
+        source = all.filter(q => !adv.q || qkey(q) !== qkey(adv.q));
         if (source.length === 0) source = all;
       }
       adv.q = source[Math.floor(Math.random() * source.length)];
@@ -6738,9 +6740,8 @@
           const j = Math.floor(Math.random() * (i + 1));
           [opts[i], opts[j]] = [opts[j], opts[i]];
         }
-        adv.q.o = opts;
-        adv.q.a = opts.indexOf(correctText);
-        adv.used.add(adv.q.q);
+        adv.q = {...adv.q, o: opts, a: opts.indexOf(correctText)};
+        adv.used.add(qkey(adv.q));
       }
     }
 
