@@ -454,6 +454,7 @@
           <button class="small-btn" id="open-adventure">🎮 闯关冒险</button>
           <button class="small-btn" id="open-wrongbook">📕 错题本<span class="wb-badge" id="wrong-count">0</span></button>
           <button class="small-btn" id="open-daily-challenge">🔥 每日挑战</button>
+          <button class="small-btn" id="open-map">🗺️ 知识图谱</button>
         </div>
         <div class="daily-quest">
           <div class="daily-quest-heading"><strong>📚 今日小任务：答对 3 道题</strong><span id="daily-quest-count">0 / 3</span></div>
@@ -6486,6 +6487,49 @@
       }
       ask();
     });
+
+    // 知识图谱弹窗
+    const mapDialog = document.createElement("dialog");
+    mapDialog.style.cssText = "max-width:680px;width:92vw;max-height:80vh;padding:24px;border-radius:16px;border:none;";
+    mapDialog.innerHTML = `
+      <h3 style="margin:0 0 16px;">🗺️ C 语言 + STM32 知识图谱</h3>
+      <div style="overflow-y:auto;max-height:60vh;line-height:1.8;font-size:14px;">
+        <div style="margin-bottom:18px;">
+          <strong style="color:#2563eb;">📘 C 语言主线</strong>
+          <ul style="margin:6px 0 0 20px;padding:0;">
+            <li><b>基础</b>：变量 → 数据类型 → 运算符 → printf/scanf</li>
+            <li><b>流程控制</b>：if/switch → for/while/do-while → break/continue</li>
+            <li><b>数组</b>：一维数组 → 二维数组 → 字符数组与字符串</li>
+            <li><b>函数</b>：定义/调用 → 形参实参 → 递归 → 变量作用域</li>
+            <li><b>指针</b>：指针概念 → 指针与数组 → 指针与字符串 → 函数指针</li>
+            <li><b>结构体</b>：struct → 结构体指针 → 链表基础</li>
+            <li><b>文件</b>：fopen/fread/fwrite → 文件读写实战</li>
+            <li><b>高阶</b>：指针运算 → 回调函数 → 位域 → 内存管理</li>
+          </ul>
+        </div>
+        <div style="margin-bottom:18px;">
+          <strong style="color:#16a34a;">💚 STM32 主线</strong>
+          <ul style="margin:6px 0 0 20px;padding:0;">
+            <li><b>入门</b>：STM32 是什么 → 开发环境 → 第一个工程</li>
+            <li><b>GPIO</b>：点亮 LED → 按键输入 → 外部中断</li>
+            <li><b>定时</b>：SysTick → 通用定时器 → PWM 输出</li>
+            <li><b>通信</b>：UART 串口 → I2C → SPI</li>
+            <li><b>模拟</b>：ADC 采集 → DAC 输出</li>
+            <li><b>高阶</b>：DMA → 寄存器映射 → 位操作 → 中断优先级</li>
+          </ul>
+        </div>
+        <div style="background:#fff8e1;padding:12px;border-radius:8px;font-size:13px;color:#92400e;">
+          💡 <b>学习路径建议</b>：C 语言基础（1-2 周）→ 指针/结构体（重点 1 周）→ STM32 GPIO（1 周）→ 定时器/串口（1 周）→ 综合项目（1 周）
+        </div>
+      </div>
+      <div style="text-align:right;margin-top:16px;">
+        <button class="small-btn" id="close-map">关闭</button>
+      </div>
+    `;
+    document.body.appendChild(mapDialog);
+    document.getElementById("open-map").addEventListener("click", () => mapDialog.showModal());
+    document.getElementById("close-map").addEventListener("click", () => mapDialog.close());
+    mapDialog.addEventListener("click", e => { if (e.target === mapDialog) mapDialog.close(); });
 
     const ADVENTURE_TOTAL = 10;
     let adv = null; // 对局状态
