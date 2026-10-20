@@ -177,6 +177,11 @@
     .feedback-detail strong { color: var(--ink); }
     .answer-key { margin-top: 8px; padding: 9px 11px; border-radius: 8px; color: #244a35; background: #e5f6ec; }
     .challenge-card { display: flex; align-items: center; justify-content: space-between; gap: 12px; padding: 13px 15px; border: 1px solid #f0dfad; border-radius: 12px; margin-bottom: 24px; background: linear-gradient(110deg, #fff9e8, #fffdf7); }
+    .must-know { border: 1px solid #ffd180; background: linear-gradient(110deg, #fff4e0, #fffaf0); border-radius: 12px; padding: 14px 18px; margin-bottom: 22px; }
+    .must-know h2 { color: #c46a00; margin: 0 0 10px; font-size: 16px; }
+    .must-know ul { margin: 0; padding-left: 20px; }
+    .must-know li { margin: 6px 0; font-size: 13.5px; line-height: 1.6; color: #5a4a2a; }
+    .must-know li strong { color: #b35900; }
     .challenge-card p { margin: 3px 0 0; color: #786744; font-size: 12px; }
     .challenge-controls { display: flex; flex-wrap: wrap; justify-content: flex-end; align-items: center; gap: 7px; }
     .challenge-controls select { border: 1px solid #e4d7ae; border-radius: 8px; padding: 9px; background: #fff; color: var(--ink); }
@@ -7596,6 +7601,7 @@
           <p class="challenge-status" id="challenge-status" role="status" aria-live="polite">每套挑战包含 20 或 30 道新题。首次使用请先配置 AI 后端；免费模型仍可能有账号额度或速率限制。</p>
           ${current >= starterLessons.length + 20 ? `<div class="tip" style="margin-bottom:22px"><strong>🧭 STM32 学习建议</strong><br>每课按“读原理图/芯片资料 → CubeMX 配置 → 编译下载 → 单独验证 → 改一个参数再观察”的顺序练习。先确保 C 的函数、数组、指针和位运算基础；接线前断电，GPIO 不直接驱动电机或大电流负载。不同芯片系列的引脚、时钟和 HAL 细节可能不同，请以你的具体型号为准。</div>` : ""}
           <section><h2 class="section-title">本课目标</h2><ul class="goals">${lesson.goals.map(goal => `<li>${esc(goal)}</li>`).join("")}</ul></section>
+          <section class="must-know"><h2>📌 必背考点速记（面试直接问）</h2><ul>${lesson.content.map(item => { const first = item[1].split(/[。\n]/)[0].slice(0, 80); return `<li><strong>${esc(item[0])}</strong>：${esc(first)}</li>`; }).join("")}</ul></section>
           <section id="theorySection"><h2 class="section-title">理论知识 · 先学后练</h2>${lesson.content.map(item => `<div class="concept"><h3 style="font-size:15px;margin:0 0 7px">${esc(item[0])}</h3><p>${item[1]}</p>${item[2] ? `<pre><code>${esc(item[2])}</code></pre>` : ""}</div>`).join("")}</section>
           ${lesson.lab ? `<section class="lab-section"><div class="eyebrow">跟着做 · 本课实战</div><h2 class="section-title" style="margin-top:7px">${esc(lesson.lab.title)}</h2><ol class="lab-steps">${lesson.lab.steps.map(step => `<li>${esc(step)}</li>`).join("")}</ol>${lesson.lab.code ? `<pre><code>${esc(lesson.lab.code)}</code></pre>` : ""}<div class="lab-result"><strong>✅ 验收标准：</strong>${esc(lesson.lab.result)}</div></section>` : ""}
           <section class="exercise-section"><div class="exercise-top"><h2 class="section-title" style="margin:0">练习一下</h2><span class="exercise-count">${lesson.questions.length} 道题 · 选择 · 判断 · 填空 · 编程</span>${practicePool[lesson.title] ? `<button class="small-btn" id="open-practice" style="margin-left:auto">📝 更多练习（${practiceCount(practicePool[lesson.title])} 道 · 已做 ${practiceDoneCount(lesson.title)}）</button>` : ""}</div>${lesson.questions.map((q, i) => { q.pk = 'L' + i; return questionMarkup(q, i, lesson.title); }).join("")}</section>
