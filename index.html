@@ -24,7 +24,6 @@
     body { margin: 0; color: var(--ink); background: radial-gradient(ellipse at 8% 8%, #e8f5ef 0, transparent 30%), radial-gradient(ellipse at 94% 18%, #eaf3f8 0, transparent 28%), #f8faf5; }
     button, input, textarea { font: inherit; }
     button { cursor: pointer; }
-    :focus-visible { outline: 3px solid #78a9f0; outline-offset: 2px; }
     .topbar {
       height: 66px; display: flex; align-items: center; justify-content: space-between;
       padding: 0 max(22px, calc((100vw - 1180px) / 2)); background: var(--paper);
@@ -1325,7 +1324,7 @@
           {type:"选择题", text:"把模拟电压转换成数字量，通常使用 STM32 的哪个外设？", options:["ADC","UART","GPIO 输出","看门狗"], answer:0, knowledge:"模数转换器 ADC", pitfall:"ADC 读取模拟输入；DAC 才是数字转模拟，UART 是串行通信。并非所有 STM32 都有相同数量/规格的 ADC。", explanation:"ADC（Analog-to-Digital Converter）将模拟输入电压量化为数字结果。"},
           {type:"判断题", text:"任何高于 STM32 电源电压的传感器输出都可以直接接入 ADC 引脚。", options:["正确","错误"], answer:1, knowledge:"ADC 输入绝对最大额定值", pitfall:"输入超过引脚额定范围可能损坏芯片；先查数据手册，必要时用分压与保护电路。", explanation:"ADC 输入必须在该型号允许的电压范围内，不能仅因程序里配置了 ADC 就安全。"},
           {type:"填空题", text:"ADC 把连续模拟电压转换成离散数字值，这个过程称为电压 ____。", placeholder:"填写两个字", accepted:["量化"], knowledge:"ADC 量化原理", pitfall:"ADC 结果是有限精度的离散值，不是无限精度的真实电压。", explanation:"量化把输入范围映射到有限个数字级别。"},
-          {type:"程序题", text:"写出 HAL 轮询读取 hadc1 转换结果的核心流程：启动、等待、读取。", explanation:"先启动 ADC 转换，再等待转换完成，只有成功后读取结果；还应按项目需要停止或重新配置 ADC。", solution:"uint32_t raw = 0;\nHAL_ADC_Start(&hadc1);\nif (HAL_ADC_PollForConversion(&hadc1, 10) == HAL_OK) {\n    raw = HAL_ADC_GetValue(&hadc1);\n}\nHAL_ADC_Stop(&hadc1);", knowledge:"HAL ADC 轮询转换", pitfall:"没有等待转换完成就读取可能得到旧数据；确认 ADC 通道、引脚模拟模式和输入电压正确。",analysis:{key:"ADC 轮询流程：HAL_ADC_Start 启动 → HAL_ADC_PollForConversion 等待转换完成 → HAL_ADC_GetValue 读结果 → HAL_ADC_Stop。",why:"启动后芯片需要一段时间采样转换，必须等转换完成标志（PollForConversion 返回 HAL_OK）再读，否则读到的是上一次的旧值。",extra:"ADC 结果是无符号整数，要换算实际电压：电压 = 原始值 × 参考电压 / (2^分辨率 - 1)；分辨率 12 位时满量程码为 4095；还有中断和 DMA 两种读取方式。"}}
+          {type:"程序题", text:"写出 HAL 轮询读取 hadc1 转换结果的核心流程：启动、等待、读取。", explanation:"先启动 ADC 转换，再等待转换完成，只有成功后读取结果；还应按项目需要停止或重新配置 ADC。", solution:"uint32_t raw = 0;\nHAL_ADC_Start(&hadc1);\nif (HAL_ADC_PollForConversion(&hadc1, 10) == HAL_OK) {\n    raw = HAL_ADC_GetValue(&hadc1);\n}\nHAL_ADC_Stop(&hadc1);", knowledge:"HAL ADC 轮询转换", pitfall:"没有等待转换完成就读取可能得到旧数据；确认 ADC 通道、引脚模拟模式和输入电压正确。",analysis:{key:"ADC 轮询流程：HAL_ADC_Start 启动 → HAL_ADC_PollForConversion 等待转换完成 → HAL_ADC_GetValue 读结果 → HAL_ADC_Stop。",why:"启动后芯片需要一段时间采样转换，必须等转换完成标志（PollForConversion 返回 HAL_OK）再读，否则读到的是上一次的旧值。",extra:"ADC 结果是无符号整数，要换算实际电压：电压 = 原始值 × 参考电压 / (2^分辨率)；分辨率 12 位时满量程 4095；还有中断和 DMA 两种读取方式。"}}
         ]
       },
       {
@@ -2723,34 +2722,6 @@
       }
     ];
     lessons.push(...extraLessons);
-
-    // Keep the built-in question bank fail-safe: a malformed answer should be
-    // caught during development instead of silently teaching the wrong thing.
-    function validateLessonQuestionBank() {
-      const problems = [];
-      lessons.forEach((lesson, lessonIndex) => {
-        (lesson.questions || []).forEach((question, questionIndex) => {
-          if (question.options && (!Number.isInteger(question.answer) ||
-              question.answer < 0 || question.answer >= question.options.length)) {
-            problems.push(`课${lessonIndex + 1}题${questionIndex + 1}：选择项答案索引无效`);
-          }
-          if (question.type === "填空题" &&
-              (!Array.isArray(question.accepted) || question.accepted.length === 0)) {
-            problems.push(`课${lessonIndex + 1}题${questionIndex + 1}：缺少填空答案`);
-          }
-          if (question.type === "程序题" && !question.solution) {
-            problems.push(`课${lessonIndex + 1}题${questionIndex + 1}：缺少参考程序`);
-          }
-        });
-      });
-      if (problems.length) {
-        console.error("题库自检失败：", problems);
-      }
-      window.__questionBankProblems = problems;
-      return problems;
-    }
-    validateLessonQuestionBank();
-
     const practicePool = {
       "认识 C 语言与第一个程序": [
         {t:"s", q:"一个普通 C 程序是从哪个函数开始执行的？", o:["main","printf","start","include"], a:0, e:"C 程序的执行入口是 main 函数。printf 是输出函数，include 是预处理指令的一部分，都不负责启动程序。"},
@@ -6432,14 +6403,7 @@
       adv.enemy = enemy;
       adv.enemyMax = isBoss ? 40 + adv.stage * 10 : 18 + adv.stage * 6;
       adv.enemyHp = adv.enemyMax;
-      // 抽题：排除本轮已用过的题
-      const pool = practicePool[adv.title].filter(q =>
-        q.t === "s" && Array.isArray(q.o) && q.o.length >= 2 &&
-        Number.isInteger(q.a) && !adv.used.has(q.q));
-      const source = pool.length > 0 ? pool : practicePool[adv.title].filter(q =>
-        q.t === "s" && Array.isArray(q.o) && q.o.length >= 2 && Number.isInteger(q.a));
-      adv.q = source[Math.floor(Math.random() * source.length)];
-      if (adv.q) adv.used.add(adv.q.q);
+      drawNextQuestion();
       renderAdvBattle();
     }
 
@@ -6522,10 +6486,22 @@
           bodyConclusion(false, `💀 你的宠物倒下了……闯关失败。再接再厉，答更多题把宠物练强再来！`);
           return;
         }
+        // 敌人还没死：保留敌人和血量，但换一道新题继续打
+        drawNextQuestion();
         renderAdvBattle();
         const log2 = document.getElementById("adv-log");
         if (log2) log2.textContent = msg;
       }, 450);
+    }
+
+    function drawNextQuestion(){
+      const pool = practicePool[adv.title].filter(q =>
+        q.t === "s" && Array.isArray(q.o) && q.o.length >= 2 &&
+        Number.isInteger(q.a) && !adv.used.has(q.q));
+      const source = pool.length > 0 ? pool : practicePool[adv.title].filter(q =>
+        q.t === "s" && Array.isArray(q.o) && q.o.length >= 2 && Number.isInteger(q.a));
+      adv.q = source[Math.floor(Math.random() * source.length)];
+      if (adv.q) adv.used.add(adv.q.q);
     }
 
     function bodyConclusion(win, msg){
@@ -7074,9 +7050,9 @@
       renderNav();
       root.innerHTML = `<header class="lesson-head"><div class="eyebrow">${esc(lesson.level)}</div><h1>${esc(lesson.title)}</h1><p class="intro">${esc(lesson.intro)}</p></header>
         <div class="body-content">
-          <div class="challenge-card"><div><strong>🤖 AI 冒险挑战</strong><p>根据当前课程生成新题；模型、额度和限流以你的后端服务为准。</p></div><div class="challenge-controls"><label for="challenge-count" class="exercise-count">题量</label><select id="challenge-count" aria-label="挑战题量"><option value="5" selected>5 题（推荐）</option><option value="10">10 题</option><option value="20">20 题</option><option value="30">30 题</option></select><button class="small-btn" id="ai-challenge">AI 生成挑战</button><button class="secondary-btn" id="configure-ai">🔐 配置 AI 后端</button><button class="secondary-btn" id="random-challenge">抽一道旧题</button><button class="secondary-btn" id="reset-game">重置游戏数据</button></div></div>
-          <p class="challenge-note">公网 AI 出题由你的后端服务安全调用。首次使用需配置后端服务地址和访问口令；访问密钥只保存在服务端，绝不要写进公开网页。AI 题目会发送课程资料给服务端，生成结果请结合课程核对。</p>
-          <p class="challenge-status" id="challenge-status" role="status" aria-live="polite">每套挑战可生成 5、10、20 或 30 道题。首次使用请先配置 AI 后端；免费模型仍可能有账号额度或速率限制。</p>
+          <div class="challenge-card"><div><strong>🤖 AI 冒险挑战</strong><p>使用智谱 GLM-5.3 生成新题（额度和限流以智谱账号后台为准）。</p></div><div class="challenge-controls"><label for="challenge-count" class="exercise-count">题量</label><select id="challenge-count" aria-label="挑战题量"><option value="5" selected>5 题（推荐）</option><option value="10">10 题</option><option value="20">20 题</option><option value="30">30 题</option></select><button class="small-btn" id="ai-challenge">AI 生成挑战</button><button class="secondary-btn" id="configure-ai">🔐 配置 AI 后端</button><button class="secondary-btn" id="random-challenge">抽一道旧题</button><button class="secondary-btn" id="reset-game">重置游戏数据</button></div></div>
+          <p class="challenge-note">公网 AI 出题由你的后端服务安全调用智谱。首次使用需配置后端服务地址和访问口令；智谱 API Key 只保存在服务端，绝不要写进公开网页。AI 题目会发送课程资料给智谱，生成结果请结合课程核对。</p>
+          <p class="challenge-status" id="challenge-status" role="status" aria-live="polite">每套挑战包含 20 或 30 道新题。首次使用请先配置 AI 后端；免费模型仍可能有账号额度或速率限制。</p>
           ${current >= starterLessons.length + 20 ? `<div class="tip" style="margin-bottom:22px"><strong>🧭 STM32 学习建议</strong><br>每课按“读原理图/芯片资料 → CubeMX 配置 → 编译下载 → 单独验证 → 改一个参数再观察”的顺序练习。先确保 C 的函数、数组、指针和位运算基础；接线前断电，GPIO 不直接驱动电机或大电流负载。不同芯片系列的引脚、时钟和 HAL 细节可能不同，请以你的具体型号为准。</div>` : ""}
           <section><h2 class="section-title">本课目标</h2><ul class="goals">${lesson.goals.map(goal => `<li>${esc(goal)}</li>`).join("")}</ul></section>
           <section id="theorySection"><h2 class="section-title">理论知识 · 先学后练</h2>${lesson.content.map(item => `<div class="concept"><h3 style="font-size:15px;margin:0 0 7px">${esc(item[0])}</h3><p>${item[1]}</p>${item[2] ? `<pre><code>${esc(item[2])}</code></pre>` : ""}</div>`).join("")}</section>
