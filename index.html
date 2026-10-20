@@ -111,6 +111,7 @@
     .adv-hp-track span { position: absolute; inset: 0; font-size: 10px; line-height: 16px; text-align: center; color: #333; }
     .adv-question { margin-top: 14px; }
     .adv-q-text { font-size: 14px; line-height: 1.7; margin-bottom: 10px; }
+    .adv-code { background: #1e293b; color: #e2e8f0; padding: 10px 12px; border-radius: 8px; font-size: 12px; line-height: 1.6; overflow-x: auto; margin-bottom: 10px; font-family: Consolas, Monaco, monospace; white-space: pre; }
     .adv-options { display: grid; gap: 8px; }
     .adv-log { margin-top: 12px; min-height: 24px; font-size: 13px; color: #53637c; white-space: pre-line; line-height: 1.7; }
     .adv-conclusion { text-align: center; padding: 20px 0; }
@@ -6493,6 +6494,7 @@
         </div>
         <div class="adv-question">
           <div class="adv-q-text">${esc(adv.q.q)}</div>
+          ${adv.q.code ? `<pre class="adv-code"><code>${esc(adv.q.code)}</code></pre>` : ""}
           <div class="adv-options">
             ${adv.q.o.map((op, i) => `<button class="small-btn adv-opt" data-i="${i}">${esc(op)}</button>`).join("")}
           </div>
@@ -6506,10 +6508,20 @@
     function advAnswer(i){
       if (adv.over || !adv.q) return;
       const correct = (i === adv.q.a);
-      const dmgToEnemy = correct ? 9 + Math.floor(Math.random() * 7) : 0;
-      const dmgToMe = correct ? 0 : 7 + Math.floor(Math.random() * 6);
+      const stageBonus = adv.stage * 2;
+      const dmgToEnemy = correct ? 9 + Math.floor(Math.random() * 7) + Math.floor(stageBonus / 2) : 0;
+      const dmgToMe = correct ? 0 : 7 + Math.floor(Math.random() * 6) + Math.floor(stageBonus / 2);
       adv.enemyHp -= dmgToEnemy;
       adv.myHp -= dmgToMe;
+
+      // 进攻动画：答对宠物冲，答错敌人冲
+      const petEl = document.querySelector(".adv-side:first-child .adv-pet-emoji");
+      const enemyEl = document.querySelector(".adv-side:last-child .adv-pet-emoji");
+      if (correct && petEl) {
+        petEl.animate([{transform:"translateX(0)"},{transform:"translateX(30px) scale(1.2)"},{transform:"translateX(0)"}],{duration:400,easing:"ease-out"});
+      } else if (enemyEl) {
+        enemyEl.animate([{transform:"translateX(0)"},{transform:"translateX(-30px) scale(1.2)"},{transform:"translateX(0)"}],{duration:400,easing:"ease-out"});
+      }
 
       let msg = "";
       if (correct) {
