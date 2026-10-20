@@ -2890,6 +2890,57 @@
           {type:"选择题", text:"PRIMASK=1 的作用是？", options:["关所有可屏蔽中断","开所有中断","设优先级","进睡眠"], answer:0, explanation:"PRIMASK=1 关全部可屏蔽中断，留 NMI/HardFault。"},
           {type:"判断题", text:"中断里可以随便调用 printf。", options:["正确","错误"], answer:1, explanation:"printf 耗时长且非可重入，中断里只做最简单的事（往 ring buffer 加字节）。"}
         ]
+      },
+      {
+        title: "FreeRTOS 深入：任务、队列、信号量", level: "求职必备 · 第 78 课",
+        intro: "大厂（大疆/汇顶/兆易）面 FreeRTOS 必考：任务怎么调度、队列怎么传数据、信号量和互斥锁区别、优先级反转怎么解决。",
+        goals: ["理解任务调度器（抢占式+时间片）", "会用队列在任务间传数据", "分清二值信号量/计数信号量/互斥锁", "知道优先级反转与优先级继承"],
+        content: [
+          ["任务调度", "FreeRTOS 是抢占式 RTOS：高优先级任务就绪就立刻跑，同优先级任务按时间片轮转。每个任务有自己的栈。", "xTaskCreate(TaskA, ...); vTaskStartScheduler();\nTaskA 优先级 2，TaskB 优先级 1\nTaskA 就绪时立刻抢过 CPU"],
+          ["队列 Queue", "任务间安全传数据的方式。写任务 xQueueSend，读任务 xQueueReceive。队列是拷贝不是传地址，天然线程安全。", "QueueHandle_t q = xQueueCreate(10, sizeof(int));\n任务1：int v=5; xQueueSend(q, &v, portMAX_DELAY);\n任务2：int r; xQueueReceive(q, &r, portMAX_DELAY);"],
+          ["信号量 vs 互斥锁", "二值信号量：中断给任务发信号（同步）。互斥锁：任务间抢资源（谁锁谁解）。互斥锁有优先级继承，信号量没有。", "中断：xSemaphoreGiveFromISR(sem);\n任务：xSemaphoreTake(sem, ...);  // 等中断\n互斥锁：xSemaphoreTake(mutex); 操作共享资源; xSemaphoreGive(mutex);"],
+          ["优先级反转", "低优先级任务持有互斥锁，高优先级任务等锁，中优先级任务抢 CPU 跑——高被低等。解决：优先级继承（低任务临时变高，快速放锁）。", "低任务持锁 → 高任务等锁 → 低任务临时升级到高优先级\n快速放锁 → 高任务拿到锁跑\nFreeRTOS 互斥锁自动做这事"]
+        ],
+        questions: [
+          {type:"选择题", text:"FreeRTOS 任务调度是？", options:["抢占式+时间片"," cooperative","轮询","单任务"], answer:0, explanation:"高优先级就绪立刻跑，同优先级时间片轮转。"},
+          {type:"选择题", text:"任务间传数据用？", options:["全局变量","队列","printf","中断"], answer:1, explanation:"队列拷贝传值，线程安全；全局变量要自己加锁。"},
+          {type:"选择题", text:"优先级继承是为了解决？", options:["优先级反转","内存泄漏","栈溢出","中断延迟"], answer:0, explanation:"低任务持锁时临时升级到高任务优先级，快速放锁。"},
+          {type:"判断题", text:"二值信号量和互斥锁是一回事。", options:["正确","错误"], answer:1, explanation:"信号量用于同步（中断给任务发信号），互斥锁用于互斥（任务抢资源），互斥锁有优先级继承。"}
+        ]
+      },
+      {
+        title: "OTA/IAP 升级：产品怎么远程更新", level: "求职必备 · 第 79 课",
+        intro: "大疆面必问“OTA 流程怎么设计”。Bootloader 分区、双区切换、CRC 校验、回滚机制——这是中高级嵌入式的分水岭。",
+        goals: ["理解 IAP（在应用编程）原理", "知道 Flash 怎么分区（Boot/AppA/AppB）", "会设计升级流程（下载→校验→切换→重启）", "知道回滚机制"],
+        content: [
+          ["IAP 是什么", "IAP（In-Application Programming）：MCU 能自己擦写 Flash 里的应用区。上电先跑 Bootloader，Bootloader 决定跳 App 还是升级。", "上电 → Bootloader（占前 16KB）\n  ├─ 有升级标志 → 收新固件 → 写 App 区\n  └─ 无升级标志 → 跳转到 App 区跑用户程序"],
+          ["Flash 分区", "Bootloader 区（固定前 16KB）+ App 区（剩下的）。高级做法用双区：AppA + AppB，A 跑时往 B 写新固件，写完切到 B。", "0x08000000 - 0x08003FFF: Bootloader（16KB）\n0x08004000 - 0x0800FFFF: AppA\n0x08010000 - 0x0801FFFF: AppB（可选双区）"],
+          ["升级流程", "1. Bootloader 检查升级标志\n2. 通过串口/网络收新固件，写 AppB\n3. CRC 校验完整性\n4. 校验通过 → 切启动区到 AppB\n5. 重启跑新固件", "收固件 → 写 Flash → CRC32 校验\n校验失败：不切，回滚跑旧固件\n校验成功：设标志位，重启跳新固件"],
+          ["为什么要回滚", "新固件跑飞了，要能回到旧版本。做法：新固件启动后要“喂狗”确认正常，否则 Bootloader 超时切回旧版本。", "新固件跑起来 → 每 10 秒写一次“正常”标志到备份区\n如果新固件死机（没写标志）→ Bootloader 下次启动回滚旧版本"]
+        ],
+        questions: [
+          {type:"选择题", text:"IAP 的意思是？", options:["在应用编程（MCU 自己升级 Flash）","在线调试","烧录器","加密"], answer:0, explanation:"MCU 能自己擦写 Flash 的应用区，不用烧录器。"},
+          {type:"选择题", text:"OTA 升级时新固件写在哪？", options:["Bootloader 区","另一个 App 区（双区）","RAM","寄存器"], answer:1, explanation:"双区设计：A 跑时往 B 写，写完切 B，安全。"},
+          {type:"选择题", text:"新固件写好后要做什么？", options:["直接跳","CRC 校验完整性","擦 Bootloader","断电"], answer:1, explanation:"CRC/MD5 校验传输出错，校验失败回滚旧版本。"},
+          {type:"判断题", text:"Bootloader 可以被 App 改写。", options:["正确","错误"], answer:1, explanation:"Bootloader 是产品的救命稻草，App 不能写它，否则变砖。"}
+        ]
+      },
+      {
+        title: "C 语言手撕题：面试手写高频题", level: "求职必备 · 第 80 课",
+        intro: "大厂面试要手写代码：strcpy、memcpy、strlen、strstr、反转字符串。写不对直接挂。",
+        goals: ["能手写 strcpy/memcpy", "能手写 strlen", "知道 strcpy 为什么要返回 char*", "理解 memcpy 的 overlapping 问题"],
+        content: [
+          ["手写 strcpy", "把 src 字符串（含结尾 \\0）拷到 dst。返回 dst 方便链式调用。要注意 assert 非空。", "char* strcpy(char* dst, const char* src) {\n  assert(dst && src);\n  char* r = dst;\n  while ((*dst++ = *src++));\n  return r;\n}"],
+          ["手写 memcpy", "拷 n 字节，不管内容。注意 overlapping：dst < src 从前拷，dst > src 从后拷（否则覆盖）。", "void* memcpy(void* dst, const void* src, size_t n) {\n  char* d = (char*)dst; const char* s = (const char*)src;\n  if (d < s) while(n--) *d++ = *s++;\n  else { d += n; s += n; while(n--) *--d = *--s; }\n  return dst;\n}"],
+          ["手写 strlen", "数到 \\0 为止。不能用 sizeof（那是整个数组大小）。", "size_t strlen(const char* s) {\n  const char* p = s;\n  while (*p) p++;\n  return p - s;\n}"],
+          ["strcpy 为什么返回 char*", "为了链式调用：printf(\"%s\", strcpy(buf, \"hi\"))。也方便当表达式用。返回 dst 起始地址。", "char buf[20];\nprintf(\"%s\\n\", strcpy(buf, \"hello\"));  // 链式"]
+        ],
+        questions: [
+          {type:"选择题", text:"strcpy 返回值是？", options:["dst 起始地址","src 起始地址","拷的长度","void"], answer:0, explanation:"返回 dst 起始地址，支持链式调用。"},
+          {type:"选择题", text:"memcpy 处理 overlapping 时？", options:["直接从前拷","dst>src 从后拷","不管","报错"], answer:1, explanation:"dst 在 src 后面时从后往前拷，否则会覆盖未读数据。"},
+          {type:"选择题", text:"strlen 数到什么为止？", options:["数组结尾","\\0 字符","空格","换行"], answer:1, explanation:"字符串以 \\0 结尾，strlen 数到 \\0 为止（不含 \\0）。"},
+          {type:"判断题", text:"strcpy 可以不检查 dst/src 非空。", options:["正确","错误"], answer:1, explanation:"野指针传入直接 segfault，生产代码要 assert。"}
+        ]
       }
     ];
     lessons.push(...extraLessons);
