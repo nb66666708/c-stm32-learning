@@ -453,6 +453,7 @@
           <button class="secondary-btn" id="open-pet-shop">🐾 动物贴纸小店</button>
           <button class="small-btn" id="open-adventure">🎮 闯关冒险</button>
           <button class="small-btn" id="open-wrongbook">📕 错题本<span class="wb-badge" id="wrong-count">0</span></button>
+          <button class="small-btn" id="open-daily-challenge">🔥 每日挑战</button>
         </div>
         <div class="daily-quest">
           <div class="daily-quest-heading"><strong>📚 今日小任务：答对 3 道题</strong><span id="daily-quest-count">0 / 3</span></div>
@@ -6107,7 +6108,11 @@
       {id: "grad", name: "毕业帽", emoji: "🎓", price: 20},
       {id: "sunglass", name: "酷酷墨镜", emoji: "🕶️", price: 25},
       {id: "fire", name: "火焰光环", emoji: "🔥", price: 45},
-      {id: "crown", name: "小皇冠", emoji: "👑", price: 60}
+      {id: "crown", name: "小皇冠", emoji: "👑", price: 60},
+      {id: "star", name: "金星环绕", emoji: "✨", price: 35},
+      {id: "heart", name: "爱心buff", emoji: "💖", price: 30},
+      {id: "ice", name: "冰晶护体", emoji: "❄️", price: 50},
+      {id: "rainbow", name: "彩虹背饰", emoji: "🌈", price: 80}
     ];
 
     const GACHA_PRICE = 30;
@@ -6431,6 +6436,56 @@
     });
     document.getElementById("close-adventure").addEventListener("click", () => adventureDialog.close());
     adventureDialog.addEventListener("click", e => { if (e.target === adventureDialog) adventureDialog.close(); });
+
+    // 每日挑战：随机抽 10 道题，全对奖 50 金币，每天一次
+    document.getElementById("open-daily-challenge").addEventListener("click", () => {
+      const today = localDateKey();
+      const key = "c_stm32_daily_done_" + today;
+      if (localStorage.getItem(key)) {
+        alert("🔥 今日挑战已完成，明天再来！");
+        return;
+      }
+      // 从所有课程抽选择题
+      const all = [];
+      for (const title in practicePool) {
+        practicePool[title].forEach(q => {
+          if (q.t === "s" && Array.isArray(q.o) && q.o.length >= 2 && Number.isInteger(q.a)) {
+            all.push({...q, lesson: title});
+          }
+        });
+      }
+      if (all.length < 10) { alert("题目不够，明天再来！"); return; }
+      // 随机抽 10 道
+      const picked = [];
+      const used = new Set();
+      while (picked.length < 10 && used.size < all.length) {
+        const i = Math.floor(Math.random() * all.length);
+        if (!used.has(i)) { used.add(i); picked.push(all[i]); }
+      }
+      let idx = 0, correct = 0;
+      function ask(){
+        if (idx >= picked.length) {
+          if (correct === 10) {
+            game.coins += 50;
+            localStorage.setItem(key, "1");
+            saveGame(); updateGamePanel();
+            alert(`🔥 每日挑战完成！全对 +50 金币！明天再来！`);
+          } else {
+            localStorage.setItem(key, "1");
+            alert(`🔥 每日挑战完成：答对 ${correct}/10。明天再来冲全对！`);
+          }
+          return;
+        }
+        const q = picked[idx];
+        let opts = q.o.map((o,i) => `${i+1}. ${o}`).join("\n");
+        const input = prompt(`🔥 每日挑战 ${idx+1}/10\n[${q.lesson}]\n\n${q.q}${q.code ? "\n\n"+q.code : ""}\n\n${opts}\n\n输入正确选项编号（1-${q.o.length}）：`);
+        if (input === null) { alert("已退出挑战，今天不能再玩了。"); localStorage.setItem(key, "1"); return; }
+        const ans = parseInt(input);
+        if (ans === q.a + 1) { correct++; idx++; ask(); }
+        else { alert(`❌ 答错了！正确答案：${q.a+1}. ${q.o[q.a]}\n\n${q.e || ""}`); idx++; ask(); }
+      }
+      ask();
+    });
 
     const ADVENTURE_TOTAL = 10;
     let adv = null; // 对局状态
