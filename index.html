@@ -6030,8 +6030,49 @@
           petExp: game.petExp || {},
           dailyQuestSolved: [...game.dailyQuestSolved]
         }));
+        // 保存未完成的闯关进度
+        if (adv && !adv.over) {
+          localStorage.setItem("c_stm32_adventure_save", JSON.stringify({
+            title: adv.title,
+            stage: adv.stage,
+            myHp: adv.myHp,
+            myMax: adv.myMax,
+            enemy: adv.enemy,
+            enemyHp: adv.enemyHp,
+            enemyMax: adv.enemyMax,
+            used: [...adv.used]
+          }));
+        } else {
+          localStorage.removeItem("c_stm32_adventure_save");
+        }
       } catch (error) {
         console.error("Could not save learning rewards", error);
+      }
+    }
+
+    function restoreAdventure() {
+      try {
+        const raw = localStorage.getItem("c_stm32_adventure_save");
+        if (!raw) return false;
+        const s = JSON.parse(raw);
+        if (!s || !s.title || s.stage > ADVENTURE_TOTAL) return false;
+        adv = {
+          title: s.title,
+          stage: s.stage,
+          myHp: s.myHp,
+          myMax: s.myMax,
+          enemy: s.enemy,
+          enemyHp: s.enemyHp,
+          enemyMax: s.enemyMax,
+          q: null,
+          over: false,
+          used: new Set(s.used || [])
+        };
+        // 恢复时直接抽一道新题继续打
+        drawNextQuestion();
+        return true;
+      } catch (_) {
+        return false;
       }
     }
 
@@ -6334,7 +6375,27 @@
 
     // ========== 🎮 闯关冒险（宠物小精灵式打怪） ==========
     const adventureDialog = document.getElementById("adventure-dialog");
-    document.getElementById("open-adventure").addEventListener("click", () => { renderAdventureHome(); adventureDialog.showModal(); });
+    document.getElementById("open-adventure").addEventListener("click", () => {
+      // 有未完成的闯关存档时，询问是否继续
+      try {
+        const raw = localStorage.getItem("c_stm32_adventure_save");
+        if (raw) {
+          const s = JSON.parse(raw);
+          const ok = confirm(`检测到上次未完成的闯关：\n${s.title}\n第 ${s.stage} / ${ADVENTURE_TOTAL} 关\n你的宠物 ${s.myHp}/${s.myMax} 血\n\n点「确定」继续闯关，点「取消」放弃并重新开始`);
+          if (ok) {
+            if (restoreAdventure()) {
+              renderAdvBattle();
+              adventureDialog.showModal();
+              return;
+            }
+          } else {
+            localStorage.removeItem("c_stm32_adventure_save");
+          }
+        }
+      } catch (_) {}
+      renderAdventureHome();
+      adventureDialog.showModal();
+    });
     document.getElementById("close-adventure").addEventListener("click", () => adventureDialog.close());
     adventureDialog.addEventListener("click", e => { if (e.target === adventureDialog) adventureDialog.close(); });
 
