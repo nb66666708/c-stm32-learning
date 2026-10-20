@@ -2619,7 +2619,107 @@
           {type:"程序题", text:"用 C 模拟两个任务按优先级执行：函数 high 输出 H，函数 low 输出 L，模拟“高优先级先运行”，主函数先调用 low 再调用 high，输出执行顺序。", explanation:"用一个函数“调度”：模拟只有 high 优先级高，先处理 high。输出应为 H L（先高后低）。", solution:"#include <stdio.h>\nvoid high(void) { printf(\"H\"); }\nvoid low(void)  { printf(\"L\"); }\nint main(void) {\n    high();   // 模拟：高优先级先执行\n    low();    // 低优先级后执行\n    printf(\"\\n\");\n    return 0;\n}",analysis:{key:"优先级调度的直观模型：紧急的（高优先级）先处理，普通的（低优先级）后处理；程序里体现为先调用 high 再调用 low。",why:"printf(\"H\") 先执行输出 H，再输出 L，得到 HL——模拟“高优先级抢占先执行”的顺序；真实 NVIC 里抢占优先级数字小的先响应，与此同理。",extra:"真实系统中低优先级中断可能被高优先级反复打断（饥饿）；子优先级只在同抢占级别时排队；设置优先级分组后，抢占/子优先级位数分配会影响可用的数值范围。"}}
         ]
       }
-
+    ,
+      {
+        title: "指针深入：地址、解引用与指针运算", level: "C 高阶 · 第 64 课",
+        intro: "指针是 C 语言最强大也最容易出错的部分。这一课讲清指针到底存的是什么、* 和 & 怎么配合、指针加减 1 到底跳了几个字节，以及为什么指针越界是嵌入式开发最常见的死机原因。",
+        goals: ["理解指针变量存的是地址", "熟练使用 *p 解引用", "掌握指针加减与数组下标的对应关系", "明白野指针和越界访问的危害"],
+        content: [
+          ["指针是什么", "指针变量里存的不是数据本身，而是数据在内存中的地址。int a = 10; int *p = &a; 表示 p 存了 a 的地址。通过 *p 可以读写 a 的值。", "int a = 10;\nint *p = &a;\n*p = 20;      // 等价于 a = 20\nprintf(\"%d\", a);  // 20"],
+          ["& 和 * 的关系", "& 是取地址，* 是解引用（按地址取值）。&*p 等价于 p，*&a 等价于 a。两者互为逆操作。", "int a = 10;\nint *p = &a;\nprintf(\"%d\", *&a);  // 10，&a 取地址，* 再解引用"],
+          ["指针加减 1 跳多远", "p + 1 不是地址加 1 字节，而是加 sizeof(*p) 字节。int 指针 +1 跳 4 字节，char 指针 +1 跳 1 字节。这叫指针运算的「类型自适应」。", "int a[3] = {10, 20, 30};\nint *p = a;\nprintf(\"%d\", *(p+1));  // 20，p+1 跳了 4 字节"],
+          ["数组名与指针", "数组名在大多数表达式里会退化为指向首元素的指针。a[i] 等价于 *(a+i)，p[i] 等价于 *(p+i)。但 sizeof(a) 仍是整个数组大小，sizeof(p) 只是指针大小。", "int a[5] = {1,2,3,4,5};\nprintf(\"%d\", a[2]);   // 3\nprintf(\"%d\", *(a+2)); // 3，完全等价"],
+          ["野指针与越界", "未初始化的指针、指向已释放内存的指针、越界访问数组外的位置，都是未定义行为——轻则乱码，重则死机。嵌入式里 GPIO 写错地址直接硬件故障。", "int *p;        // 野指针，没初始化\n*p = 100;      // 危险！不知道写到哪里\nint a[5];\na[10] = 0;     // 越界，踩到别人的内存"],
+          ["const 与指针", "const int *p 表示「指向的内容不可改」，int * const p 表示「指针本身不可改」。const int * const p 两者都不可改。", "int a = 10, b = 20;\nconst int *p1 = &a;\n// *p1 = 20;  // 错，内容不可改\np1 = &b;        // 可以，指针能改指向\nint * const p2 = &a;\n*p2 = 30;       // 可以，内容能改\n// p2 = &b;   // 错，指针不能改指向"]
+        ],
+        questions: [
+          {type:"选择题", text:"int a = 10; int *p = &a; 执行 *p = 20; 后，a 的值是？", options:["10","20","不确定","编译错误"], answer:1, explanation:"*p = 20 表示按 p 存的地址写入 20，也就是 a 变成 20。"},
+          {type:"选择题", text:"& 运算符的作用是？", options:["解引用","取变量地址","声明指针","分配内存"], answer:1, explanation:"&a 表示取变量 a 的内存地址。*p 才是解引用。"},
+          {type:"选择题", text:"int *p; 假设 p 当前地址是 0x1000，p+1 等于？", options:["0x1001","0x1004","0x1008","不确定"], answer:1, explanation:"int 占 4 字节，p+1 跳 sizeof(int)=4 字节，所以是 0x1004。"},
+          {type:"选择题", text:"char *p; p 当前地址 0x2000，p+1 等于？", options:["0x2001","0x2004","0x2008","0x2000"], answer:0, explanation:"char 占 1 字节，p+1 跳 1 字节，所以是 0x2001。"},
+          {type:"选择题", text:"a[i] 等价于？", options:["*(a+i)","&(a+i)","*a+i","a+*i"], answer:0, explanation:"a[i] 就是 *(a+i)，先算地址 a+i，再解引用取值。"},
+          {type:"选择题", text:"下面哪个是野指针？", options:["int a; int *p=&a;","int *p; *p=10;","int a[5]; int *p=a;","int b=0; int *q=&b;"], answer:1, explanation:"int *p; 没初始化就 *p=10，p 指向随机地址，是野指针。"},
+          {type:"选择题", text:"const int *p 表示？", options:["p 不能改指向","*p 不能改","p 和 *p 都不能改","p 是常量指针"], answer:1, explanation:"const 在 * 左边，表示指向的内容只读。p 本身可以改指向。"},
+          {type:"选择题", text:"int * const p = &a; 下面哪个合法？", options:["p = &b;","*p = 30;","p++;","*p = &b;"], answer:1, explanation:"const 在 * 右边，表示 p 本身是常量不能改，但 *p 指向的内容可以改。"},
+          {type:"选择题", text:"sizeof(int) 在 32 位平台通常是？", options:["1","2","4","8"], answer:2, explanation:"32 位平台 int 占 4 字节。"},
+          {type:"选择题", text:"sizeof(指针变量) 在 32 位平台是？", options:["2","4","8","跟类型有关"], answer:1, explanation:"32 位平台所有指针都是 4 字节。64 位平台是 8 字节。"},
+          {type:"判断题", text:"int a[5]; sizeof(a) 等于 20（32 位平台）。", options:["正确","错误"], answer:0, explanation:"a 是数组名，sizeof 不退化，5 个 int × 4 字节 = 20。"},
+          {type:"判断题", text:"int a[5]; int *p=a; sizeof(p) 等于 20。", options:["正确","错误"], answer:1, explanation:"p 是指针变量，sizeof(p) 是 4（32 位）或 8（64 位），不是 20。"},
+          {type:"判断题", text:"指针越界访问数组外的内存是未定义行为。", options:["正确","错误"], answer:0, explanation:"越界访问在 C 里是未定义行为，可能崩溃、乱码或看似正常。"},
+          {type:"判断题", text:"*&a 等价于 a。", options:["正确","错误"], answer:0, explanation:"&a 取地址，* 解引用，两者抵消，就是 a 本身。"},
+          {type:"判断题", text:"所有指针类型都占相同大小（同一平台上）。", options:["正确","错误"], answer:0, explanation:"同一平台上，不管指向什么类型，指针大小都一样（32 位 4 字节，64 位 8 字节）。"}
+        ]
+      },
+      {
+        title: "函数指针与回调：把函数当参数传", level: "C 高阶 · 第 65 课",
+        intro: "函数在内存中也有地址，所以可以用指针指向它、当参数传给别的函数。这就是「回调」——排序、中断处理、事件驱动编程全靠它。STM32 里的 HAL 回调函数也是这个原理。",
+        goals: ["理解函数名就是函数地址", "会声明和使用函数指针", "掌握回调函数的写法", "看懂 HAL 库里的回调注册"],
+        content: [
+          ["函数名是地址", "函数名在表达式里会退化为函数的入口地址。就像数组名退化为首元素地址一样。可以直接把函数名赋给函数指针。", "void hello() { printf(\"hi\"); }\nvoid (*fp)() = hello;  // fp 指向 hello\nfp();                  // 等价于 hello()"],
+          ["函数指针声明", "返回类型 (*指针名)(参数类型列表)。int (*fp)(int, int) 表示 fp 指向一个接收两个 int、返回 int 的函数。括号不能少，否则 int *fp(int,int) 会被解析成函数声明。", "int add(int a, int b) { return a+b; }\nint (*fp)(int,int) = add;\nint r = fp(3, 5);  // r = 8"],
+          ["回调函数", "把函数 A 作为参数传给函数 B，B 在合适时机调用 A，这就是回调。最常见的是 qsort 排序时传比较函数。", "int cmp(const void *a, const void *b) {\n  return *(int*)a - *(int*)b;\n}\nint arr[5] = {3,1,4,1,2};\nqsort(arr, 5, sizeof(int), cmp);  // cmp 就是回调"],
+          ["STM32 里的回调", "HAL 库大量使用回调：HAL_GPIO_EXTI_Callback（外部中断）、HAL_UART_RxCpltCallback（串口接收完成）。你重写这些函数，HAL 在事件发生时自动调用你的代码。", "void HAL_GPIO_EXTI_Callback(uint16_t pin) {\n  if (pin == GPIO_PIN_0) {\n    HAL_GPIO_TogglePin(GPIOA, GPIO_PIN_5);\n  }\n}"],
+          ["函数指针数组", "可以把多个函数放进数组，用下标选择调用——这在菜单系统、命令分发里非常有用。", "void (*menu[])() = {func1, func2, func3};\nmenu[0]();  // 调 func1\nmenu[1]();  // 调 func2"]
+        ],
+        questions: [
+          {type:"选择题", text:"函数名在表达式里表示？", options:["函数体本身","函数入口地址","函数返回值","函数参数"], answer:1, explanation:"函数名退化为函数的入口地址，跟数组名退化为首元素地址同理。"},
+          {type:"选择题", text:"int (*fp)(int, int); fp 是？", options:["返回 int 的函数","接收两个 int 参数的函数指针","返回 int 的指针","int 类型指针"], answer:1, explanation:"括号把 *fp 包起来，fp 是函数指针，指向接收两个 int、返回 int 的函数。"},
+          {type:"选择题", text:"qsort 的第 4 个参数 cmp 是？", options:["待排序数组","数组元素大小","回调比较函数","排序方向"], answer:2, explanation:"qsort 把比较逻辑交给用户写的 cmp 回调，自己只负责交换。"},
+          {type:"选择题", text:"STM32 HAL_UART_RxCpltCallback 是？", options:["串口初始化函数","串口接收完成时自动调用的回调","串口发送函数","串口错误处理"], answer:1, explanation:"HAL 库在串口接收完成时自动调用你重写的这个函数。"},
+          {type:"选择题", text:"void (*fp)() = hello; 调用 hello 的正确方式是？", options:["fp();","*fp();","都可以","hello();"], answer:2, explanation:"fp() 和 (*fp)() 都能调用，C 语言允许简写。"},
+          {type:"选择题", text:"int *fp(int a, int b); 这是？", options:["函数指针","返回 int* 的函数声明","int 变量","语法错误"], answer:1, explanation:"没有括号包 *fp，C 解析为函数声明：返回 int*、接收两个 int。"},
+          {type:"判断题", text:"函数指针可以像普通指针一样加减运算。", options:["正确","错误"], answer:1, explanation:"函数指针不支持加减运算（不像数据指针），因为函数地址之间没有「下一个函数」这种概念。"},
+          {type:"判断题", text:"回调函数让库函数能调用用户写的代码。", options:["正确","错误"], answer:0, explanation:"库把通用流程写好，把差异化的部分（比较、事件处理）通过回调交给用户实现。"},
+          {type:"判断题", text:"函数指针数组常用于菜单分发。", options:["正确","错误"], answer:0, explanation:"menu[i]() 这种写法比 if-else 链简洁得多。"}
+        ]
+      },
+      {
+        title: "结构体、位域与寄存器映射", level: "STM32 高阶 · 第 66 课",
+        intro: "嵌入式开发的核心就是操作寄存器。C 语言的结构体和位域让你能把硬件寄存器的物理地址直接映射成 C 变量，读写寄存器就像读写结构体成员一样直观。这是 STM32 HAL 库背后的原理。",
+        goals: ["理解结构体的内存布局", "掌握位域操作寄存器", "会用指针映射硬件地址", "看懂 HAL 库的寄存器定义"],
+        content: [
+          ["结构体布局", "结构体成员按声明顺序在内存中排列，编译器可能插入填充字节满足对齐要求。sizeof 结构体不一定等于成员大小之和。", "struct Point { int x; char y; };  // 4+1=5，但 sizeof 通常是 8（有填充）"],
+          ["位域", "用 :数字 指定成员占几个二进制位，直接操作寄存器的某几位而不影响其他位。嵌入式最常用的语法。", "struct GPIO_BSRR {\n  unsigned int BS0 : 1;   // 第 0 位\n  unsigned int BS1 : 1;   // 第 1 位\n  unsigned int reserved : 30;\n};"],
+          ["寄存器地址映射", "把硬件寄存器的物理地址强制转成结构体指针，通过指针读写硬件。STM32 的 GPIOA_BASE 就是 0x40020000。", "#define GPIOA ((struct GPIO_TypeDef*)0x40020000)\nGPIOA->BSRR = (1<<5);  // 直接写硬件寄存器"],
+          ["volatile 的作用", "编译器优化时会认为变量不会被「外面」（硬件、中断）改变，从而把寄存器读到缓存里。volatile 告诉编译器每次都要重新读。", "volatile int *reg = (int*)0x40020000;\nwhile (*reg & 0x80) {}  // 必须每次都读"],
+          ["HAL 库的本质", "HAL 库把每个外设的寄存器集合定义成一个结构体，把外设基地址强转成结构体指针。你调 HAL_GPIO_WritePin，内部就是改了结构体的某个成员。", "// HAL 内部大致是：\nGPIOA->BSRR = (pinState == GPIO_PIN_SET) ? (1<<pin) : (1<<(pin+16));"]
+        ],
+        questions: [
+          {type:"选择题", text:"struct S { char a; int b; }; 在 32 位平台 sizeof(S) 通常是？", options:["5","8","9","12"], answer:1, explanation:"char 占 1 字节 + 3 字节填充 + int 4 字节 = 8，为了对齐。"},
+          {type:"选择题", text:"位域 unsigned int x : 3; 表示 x 占几位？", options:["1 位","3 位","4 位","32 位"], answer:1, explanation:":3 表示只占 3 个二进制位，范围 0~7。"},
+          {type:"选择题", text:"volatile int *p; 的主要作用是？", options:["p 不能改","每次访问都重新读内存","p 指向只读内存","加快访问速度"], answer:1, explanation:"volatile 告诉编译器不要优化掉对 p 的读写，每次都真的去读/写内存。"},
+          {type:"选择题", text:"STM32 寄存器地址映射用的是？", options:["malloc 分配","物理地址强制转结构体指针","文件读写","中断向量表"], answer:1, explanation:"#define GPIOA ((GPIO_TypeDef*)0x40020000) 把固定物理地址映射成结构体。"},
+          {type:"选择题", text:"GPIOA->BSRR = (1<<5); 作用是？", options:["读 GPIOA 状态","把第 5 引脚拉高","配置引脚为输入","关闭 GPIOA"], answer:1, explanation:"BSRR 寄存器置位，写 1 到 BS5 位把第 5 引脚输出高电平。"},
+          {type:"判断题", text:"结构体成员之间一定没有填充字节。", options:["正确","错误"], answer:1, explanation:"编译器为了对齐会插入填充，sizeof 可能大于成员之和。"},
+          {type:"判断题", text:"操作硬件寄存器时忘记加 volatile 可能导致死循环。", options:["正确","错误"], answer:0, explanation:"编译器可能把 while(*reg) 优化成只读一次，导致永远等不到硬件变化。"},
+          {type:"判断题", text:"位域可以直接操作寄存器的某几位而不影响其他位。", options:["正确","错误"], answer:0, explanation:"这正是位域的设计目的，嵌入式最常用的技巧之一。"},
+          {type:"判断题", text:"HAL_GPIO_WritePin 内部其实就是在写寄存器结构体。", options:["正确","错误"], answer:0, explanation:"HAL 是对寄存器操作的封装，最终还是改 BSRR/ODR 这些寄存器。"}
+        ]
+      },
+      {
+        title: "STM32 DMA 与 ADC：不占 CPU 的数据搬运", level: "STM32 高阶 · 第 67 课",
+        intro: "DMA（直接内存访问）让外设和内存之间直接搬数据，CPU 不用管。ADC（模数转换）把模拟电压变成数字。两者配合是 STM32 做数据采集、示波器、传感器读取的核心技能。",
+        goals: ["理解 DMA 为什么能解放 CPU", "会配置 ADC 采样", "掌握 DMA 搬运 ADC 数据的流程", "理解双缓冲与扫描模式"],
+        content: [
+          ["DMA 是什么", "DMA 是一个独立的数据搬运控制器。配置好源地址、目的地址、长度后，它自动搬数据，CPU 可以去干别的。搬完发中断通知 CPU。", "没有 DMA：CPU 循环读 ADC 寄存器 → 写内存，占用 100% 时间\n有 DMA：ADC 转换完 → DMA 自动搬到数组 → CPU 只在搬完中断时处理"],
+          ["ADC 模数转换", "ADC 把引脚上的模拟电压（0~3.3V）转换成数字量（12 位分辨率即 0~4095）。公式：数字值 = 电压 / 3.3 × 4095。", "电压 1.65V → ADC 值 = 1.65/3.3 × 4095 ≈ 2048\n读到 2048 就知道电压约是 1.65V"],
+          ["ADC + DMA 流程", "1. 配置 ADC 通道和采样时间\n2. 配置 DMA 通道：源=ADC_DR 寄存器，目的=数组，长度=N，循环模式\n3. 启动 ADC，DMA 自动把每个转换结果搬进数组\n4. 数组满或半满时发中断，CPU 处理数据", "uint16_t buf[256];\nHAL_ADC_Start(&hadc1);\nHAL_ADC_Start_DMA(&hadc1, (uint32_t*)buf, 256);\n// 之后 buf 里自动填满采样值"],
+          ["双缓冲（Double Buffer）", "DMA 同时用两个缓冲区，搬 A 区时 CPU 处理 B 区，搬满 B 区时再处理 A 区。适合高频采样不丢数据。", "uint16_t buf[2][256];\n// DMA 自动在 buf[0] 和 buf[1] 之间切换\n// 半满中断处理前一半，全满中断处理后一半"],
+          ["常见应用", "示波器：ADC + DMA 高速采样，数组直接当波形数据。传感器：温度、电压连续采集。电机控制：采集相电流做闭环。", "示波器：1MHz 采样率 × 12 位 = 每秒 12MB 数据，没有 DMA CPU 根本扛不住"]
+        ],
+        questions: [
+          {type:"选择题", text:"DMA 的主要作用是？", options:["加快 CPU 计算","不占 CPU 地搬数据","提高 ADC 分辨率","减少内存占用"], answer:1, explanation:"DMA 独立于 CPU 搬数据，CPU 可以并行处理其他任务。"},
+          {type:"选择题", text:"STM32 ADC 默认分辨率是？", options:["8 位","10 位","12 位","16 位"], answer:2, explanation:"STM32F1/F4 系列 ADC 默认 12 位，范围 0~4095。"},
+          {type:"选择题", text:"ADC 读到 2048，参考电压 3.3V，实际电压约？", options:["1.0V","1.65V","2.5V","3.3V"], answer:1, explanation:"2048/4095 × 3.3 ≈ 1.65V，正好一半。"},
+          {type:"选择题", text:"HAL_ADC_Start_DMA 的第 2 个参数是？", options:["ADC 通道","数据缓冲区地址","采样频率","中断优先级"], answer:1, explanation:"把 DMA 搬运的目的数组地址传进去。"},
+          {type:"选择题", text:"双缓冲模式的好处是？", options:["加快 ADC 转换","CPU 和 DMA 并行不丢数据","减少内存占用","提高分辨率"], answer:1, explanation:"DMA 搬一块时 CPU 处理另一块，交替进行不丢采样。"},
+          {type:"选择题", text:"ADC_DR 寄存器是？", options:["ADC 控制寄存器","ADC 数据寄存器（转换结果）","ADC 状态寄存器","DMA 配置寄存器"], answer:1, explanation:"DR = Data Register，存放最近一次 ADC 转换结果，DMA 从这里读。"},
+          {type:"判断题", text:"没有 DMA 也能采集 ADC，只是 CPU 占用率高。", options:["正确","错误"], answer:0, explanation:"纯 CPU 轮询可以，但高速采样时 CPU 全被占满，没法干别的。"},
+          {type:"判断题", text:"DMA 搬完数据会发中断通知 CPU。", options:["正确","错误"], answer:0, explanation:"传输完成/半完成中断是 DMA 的标准功能，CPU 在中断里处理数据。"},
+          {type:"判断题", text:"ADC 参考电压 3.3V，输入 3.3V 时读到 4095。", options:["正确","错误"], answer:0, explanation:"满量程对应 4095（12 位）。"},
+          {type:"判断题", text:"DMA 可以在 ADC 和内存之间双向搬运。", options:["正确","错误"], answer:0, explanation:"DMA 方向可配置：ADC→内存、内存→DAC、内存→SPI 等，灵活。"}
+        ]
+      }
     ];
     lessons.push(...extraLessons);
     const practicePool = {
@@ -5556,6 +5656,60 @@
   {t:"s", q:"下面这段主循环等待按键的代码，横线处应加什么修饰符才对？", code:"____ int flag = 0;\nvoid EXTI0_IRQHandler(void) { flag = 1; }\nint main(void) { while(!flag); }", o:["volatile","static","const","register"], a:0, e:"flag 被中断异步改写，主循环轮询它；不加 volatile 编译器可能把它缓存进寄存器，永远看不到中断里的 1。"},
   {t:"s", q:"下面这段配置之后，抢占优先级可用范围是？", code:"HAL_NVIC_SetPriorityGrouping(NVIC_PRIORITYGROUP_4);", o:["0~15（4 位全给抢占，子优先级 0 位）","0~3","0~7","只有 0"], a:0, e:"GROUP4 把 4 位优先级全划给抢占，取值 0~15；子优先级占 0 位，所有中断都靠抢占排队。"}
 ]
+    ,
+      "指针深入：地址、解引用与指针运算": [
+        {t:"s", q:"int a=10; int *p=&a; *p=20; 执行后 a 的值是？", o:["10","20","不确定","编译错误"], a:1, e:"*p=20 按 p 存的地址写入 20，即 a 变成 20。"},
+        {t:"s", q:"&a 的作用是？", o:["取变量 a 的地址","解引用","声明指针","释放内存"], a:0, e:"& 是取地址运算符，&a 得到 a 在内存中的位置。"},
+        {t:"s", q:"int *p 当前地址 0x1000，p+1 等于？", o:["0x1001","0x1004","0x1008","0x1000"], a:1, e:"int 占 4 字节，p+1 跳 sizeof(int)=4 字节，得 0x1004。"},
+        {t:"s", q:"char *p 当前地址 0x2000，p+1 等于？", o:["0x2001","0x2004","0x2008","0x2000"], a:0, e:"char 占 1 字节，p+1 跳 1 字节。"},
+        {t:"s", q:"a[i] 等价于？", o:["*(a+i)","&(a+i)","*a+i","a+*i"], a:0, e:"a[i] 就是 *(a+i)，先算地址再解引用。"},
+        {t:"s", q:"下面哪个是野指针？", o:["int a; int *p=&a;","int *p; *p=10;","int a[5]; int *p=a;","int b=0; int *q=&b;"], a:1, e:"int *p; 未初始化就 *p=10，p 指向随机地址。"},
+        {t:"s", q:"const int *p 表示？", o:["p 不能改指向","*p 不能改","p 和 *p 都不能改","p 是常量"], a:1, e:"const 在 * 左边，指向的内容只读；p 本身可以改指向。"},
+        {t:"s", q:"int * const p=&a; 下面哪个合法？", o:["p=&b;","*p=30;","p++;","*p=&b;"], a:1, e:"const 在 * 右边，p 本身是常量不能改，但 *p 可以改。"},
+        {t:"s", q:"sizeof(int) 在 32 位平台通常是？", o:["1","2","4","8"], a:2, e:"32 位平台 int 占 4 字节。"},
+        {t:"s", q:"sizeof(指针) 在 32 位平台是？", o:["2","4","8","跟类型有关"], a:1, e:"32 位平台所有指针都是 4 字节。"},
+        {t:"j", q:"int a[5]; sizeof(a) 在 32 位平台等于 20。", a:0, e:"a 是数组名，sizeof 不退化，5×4=20。"},
+        {t:"j", q:"int a[5]; int *p=a; sizeof(p) 等于 20。", a:1, e:"p 是指针变量，sizeof(p) 是 4（32 位）或 8（64 位）。"},
+        {t:"j", q:"指针越界访问数组外的内存是未定义行为。", a:0, e:"越界访问在 C 里是未定义行为，可能崩溃或看似正常。"},
+        {t:"j", q:"*&a 等价于 a。", a:0, e:"&a 取地址，* 解引用，两者抵消。"},
+        {t:"j", q:"同一平台上所有指针类型大小相同。", a:0, e:"32 位全 4 字节，64 位全 8 字节，与指向类型无关。"}
+      ],
+      "函数指针与回调：把函数当参数传": [
+        {t:"s", q:"函数名在表达式里表示？", o:["函数体","函数入口地址","返回值","参数"], a:1, e:"函数名退化为入口地址，类似数组名退化为首元素地址。"},
+        {t:"s", q:"int (*fp)(int,int); fp 是？", o:["返回 int 的函数","接收两个 int 的函数指针","返回 int* 的函数","int 变量"], a:1, e:"括号把 *fp 包起来，fp 是函数指针，指向接收两个 int、返回 int 的函数。"},
+        {t:"s", q:"qsort 第 4 个参数 cmp 是？", o:["待排序数组","元素大小","回调比较函数","排序方向"], a:2, e:"qsort 把比较逻辑交给用户写的 cmp 回调。"},
+        {t:"s", q:"HAL_UART_RxCpltCallback 是？", o:["串口初始化","串口接收完成时自动调用的回调","串口发送","串口错误"], a:1, e:"HAL 库在串口接收完成时自动调用你重写的这个函数。"},
+        {t:"s", q:"void (*fp)()=hello; 调用 hello 的写法是？", o:["fp();","(*fp)();","都可以","hello();"], a:2, e:"fp() 和 (*fp)() 都能调用，C 允许简写。"},
+        {t:"s", q:"int *fp(int a,int b); 这是？", o:["函数指针","返回 int* 的函数声明","int 变量","语法错误"], a:1, e:"没有括号包 *fp，C 解析为函数声明：返回 int*、接收两个 int。"},
+        {t:"j", q:"函数指针可以像数据指针一样加减运算。", a:1, e:"函数指针不支持加减，函数地址之间没有下一个函数这种概念。"},
+        {t:"j", q:"回调函数让库函数能调用用户写的代码。", a:0, e:"库把通用流程写好，差异化部分通过回调交给用户。"},
+        {t:"j", q:"函数指针数组常用于菜单分发。", a:0, e:"menu[i]() 比 if-else 链简洁。"},
+        {t:"s", q:"函数指针数组 void (*menu[3])()={f1,f2,f3}; 调 f2 用？", o:["menu[0]();","menu[1]();","menu[2]();","f2();"], a:1, e:"下标从 0 开始，f2 是第 2 个，menu[1]()。"}
+      ],
+      "结构体、位域与寄存器映射": [
+        {t:"s", q:"struct S {char a; int b;}; 32 位平台 sizeof(S) 通常是？", o:["5","8","9","12"], a:1, e:"char 1 字节 + 3 字节填充 + int 4 字节 = 8。"},
+        {t:"s", q:"unsigned int x:3; 表示 x 占几位？", o:["1","3","4","32"], a:1, e:":3 表示只占 3 个二进制位，范围 0~7。"},
+        {t:"s", q:"volatile int *p; 主要作用是？", o:["p 不能改","每次访问都重新读内存","p 指向只读内存","加快速度"], a:1, e:"volatile 禁止编译器优化掉对 p 的读写。"},
+        {t:"s", q:"STM32 寄存器地址映射用的是？", o:["malloc","物理地址强转结构体指针","文件读写","中断向量表"], a:1, e:"#define GPIOA ((GPIO_TypeDef*)0x40020000) 把固定物理地址映射成结构体。"},
+        {t:"s", q:"GPIOA->BSRR=(1<<5); 作用是？", o:["读 GPIOA 状态","第 5 引脚拉高","配置输入","关闭 GPIOA"], a:1, e:"BSRR 置位，写 1 到 BS5 把第 5 引脚输出高电平。"},
+        {t:"j", q:"结构体成员之间一定没有填充字节。", a:1, e:"编译器为对齐会插入填充。"},
+        {t:"j", q:"操作硬件寄存器忘加 volatile 可能死循环。", a:0, e:"编译器可能把 while(*reg) 优化成只读一次。"},
+        {t:"j", q:"位域可直接操作寄存器某几位而不影响其他位。", a:0, e:"这正是位域的设计目的。"},
+        {t:"j", q:"HAL_GPIO_WritePin 内部其实就是写寄存器结构体。", a:0, e:"HAL 是对寄存器操作的封装。"},
+        {t:"s", q:"struct {char a; int b; char c;} 在 32 位平台 sizeof 是？", o:["6","8","12","10"], a:2, e:"a(1)+填充3+b(4)+c(1)+填充3=12，让整个结构体对齐到 4 字节边界。"}
+      ],
+      "STM32 DMA 与 ADC：不占 CPU 的数据搬运": [
+        {t:"s", q:"DMA 主要作用是？", o:["加快 CPU 计算","不占 CPU 地搬数据","提高 ADC 分辨率","减少内存"], a:1, e:"DMA 独立于 CPU 搬数据，CPU 可并行处理。"},
+        {t:"s", q:"STM32 ADC 默认分辨率是？", o:["8 位","10 位","12 位","16 位"], a:2, e:"STM32F1/F4 ADC 默认 12 位，范围 0~4095。"},
+        {t:"s", q:"ADC 读到 2048，参考电压 3.3V，实际电压约？", o:["1.0V","1.65V","2.5V","3.3V"], a:1, e:"2048/4095×3.3≈1.65V。"},
+        {t:"s", q:"HAL_ADC_Start_DMA 第 2 个参数是？", o:["ADC 通道","数据缓冲区地址","采样频率","中断优先级"], a:1, e:"把 DMA 搬运的目的数组地址传进去。"},
+        {t:"s", q:"双缓冲模式的好处是？", o:["加快 ADC 转换","CPU 和 DMA 并行不丢数据","减少内存","提高分辨率"], a:1, e:"DMA 搬一块时 CPU 处理另一块。"},
+        {t:"s", q:"ADC_DR 寄存器是？", o:["控制寄存器","数据寄存器（转换结果）","状态寄存器","DMA 配置"], a:1, e:"DR=Data Register，存最近一次转换结果，DMA 从这里读。"},
+        {t:"j", q:"没有 DMA 也能采集 ADC，只是 CPU 占用率高。", a:0, e:"纯轮询可以，但高速采样时 CPU 全被占满。"},
+        {t:"j", q:"DMA 搬完数据会发中断通知 CPU。", a:0, e:"传输完成/半完成中断是 DMA 标准功能。"},
+        {t:"j", q:"ADC 参考电压 3.3V，输入 3.3V 时读到 4095。", a:0, e:"满量程对应 4095（12 位）。"},
+        {t:"j", q:"DMA 只能单向搬运（外设到内存）。", a:1, e:"DMA 方向可配置：外设→内存、内存→DAC、内存→SPI 等。"}
+      ]
     };
     const theorySupplements = {
       "认识 C 语言与第一个程序": [
@@ -6233,7 +6387,8 @@
         title, stage: 1,
         myHp: myMax, myMax,
         enemy: null, enemyHp: 0, enemyMax: 0,
-        q: null, over: false
+        q: null, over: false,
+        used: new Set()
       };
       nextAdvStage();
     }
@@ -6241,10 +6396,21 @@
     function nextAdvStage(){
       const isBoss = adv.stage === ADVENTURE_TOTAL || adv.stage === 5;
       const list = isBoss ? bossPets : wildPets;
-      adv.enemy = list[Math.floor(Math.random() * list.length)];
+      // 避免连续遇到同一个敌人
+      let enemy;
+      do { enemy = list[Math.floor(Math.random() * list.length)]; }
+      while (adv.enemy && enemy.emoji === adv.enemy.emoji && list.length > 1);
+      adv.enemy = enemy;
       adv.enemyMax = isBoss ? 40 + adv.stage * 10 : 18 + adv.stage * 6;
       adv.enemyHp = adv.enemyMax;
-      adv.q = advPickQuestion(adv.title);
+      // 抽题：排除本轮已用过的题
+      const pool = practicePool[adv.title].filter(q =>
+        q.t === "s" && Array.isArray(q.o) && q.o.length >= 2 &&
+        Number.isInteger(q.a) && !adv.used.has(q.q));
+      const source = pool.length > 0 ? pool : practicePool[adv.title].filter(q =>
+        q.t === "s" && Array.isArray(q.o) && q.o.length >= 2 && Number.isInteger(q.a));
+      adv.q = source[Math.floor(Math.random() * source.length)];
+      if (adv.q) adv.used.add(adv.q.q);
       renderAdvBattle();
     }
 
