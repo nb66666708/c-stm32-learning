@@ -7008,7 +7008,7 @@
       document.querySelectorAll(".adv-opt").forEach(b => b.disabled = true);
       const logEl = document.getElementById("adv-log");
       if (logEl) logEl.textContent = msg;
-      saveGame();
+      saveGame();  // 立即保存，不等 setTimeout
 
       setTimeout(() => {
         if (adv.enemyHp <= 0) {
@@ -7025,6 +7025,7 @@
             return;
           }
           adv.stage += 1;
+          adv.myHp = adv.myMax;  // 通关一关后血量回满
           nextAdvStage();
           saveGame();
           const log2 = document.getElementById("adv-log");
@@ -7058,8 +7059,8 @@
         adv.q = null;
         return;
       }
-      // 用 题干+代码 作为唯一标识，避免同题干不同代码被误排除
-      const qkey = (q) => q.q + "||" + (q.code || "");
+      // 用题干前30字作为唯一标识，避免同题不同代码被误判为不同题
+      const qkey = (q) => (q.q || "").slice(0, 30).replace(/\s+/g, "");
       // 优先抽没做过的题
       const fresh = all.filter(q => !adv.used.has(qkey(q)));
       let source;
