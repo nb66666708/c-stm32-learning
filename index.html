@@ -6932,11 +6932,12 @@
           </div>
         </div>
         <div class="adv-question">
+          ${!adv.q ? `<div style="padding:20px;text-align:center;color:#e5484d;">⚠️ 这门课没有足够的题目，换一门课吧。</div>` : `
           <div class="adv-q-text">${esc(adv.q.q)}</div>
           ${adv.q.code ? `<pre class="adv-code"><code>${esc(adv.q.code)}</code></pre>` : ""}
           <div class="adv-options">
             ${adv.q.o.map((op, i) => `<button class="small-btn adv-opt" data-i="${i}">${esc(op)}</button>`).join("")}
-          </div>
+          </div>`}
         </div>
         <div class="adv-log" id="adv-log"></div>`;
       body.querySelectorAll(".adv-opt").forEach(btn => {
@@ -6964,7 +6965,7 @@
     }
 
     function advAnswer(i){
-      if (adv.over || !adv.q) return;
+      if (adv.over || !adv.q || !adv.q.o) return;
       const correct = (i === adv.q.a);
       let msg = "";
       // 10% 暴击率，1.5 倍伤害
@@ -7045,8 +7046,17 @@
     }
 
     function drawNextQuestion(){
-      const all = practicePool[adv.title].filter(q =>
-        q.t === "s" && Array.isArray(q.o) && q.o.length >= 2 && Number.isInteger(q.a));
+      const pool = practicePool[adv.title];
+      if (!pool || !Array.isArray(pool)) {
+        adv.q = null;
+        return;
+      }
+      const all = pool.filter(q =>
+        q && q.t === "s" && Array.isArray(q.o) && q.o.length >= 2 && Number.isInteger(q.a));
+      if (all.length === 0) {
+        adv.q = null;
+        return;
+      }
       // 用 题干+代码 作为唯一标识，避免同题干不同代码被误排除
       const qkey = (q) => q.q + "||" + (q.code || "");
       // 优先抽没做过的题
