@@ -2851,7 +2851,7 @@
         goals: ["理解大端/小端区别", "会判断当前芯片是大端还是小端", "理解结构体对齐规则", "会算结构体大小"],
         content: [
           ["什么是大小端", "多字节数据在内存里的存放顺序。小端（Little Endian）：低位字节放低地址。大端（Big Endian）：高位字节放低地址。STM32（ARM Cortex-M）默认小端。", "0x12345678\n小端内存：78 56 34 12（低地址放 78）\n大端内存：12 34 56 78（低地址放 12）"],
-          ["怎么判断大小端", "用 union 或指针：int a = 1; char *p = (char*)&a; 如果 *p == 1 就是小端（低位 0x01 放低地址）。", "int x = 0x01000000;\nchar *p = (char*)&x;\nif (*p == 0) 小端（00 在低地址）\nelse 大端"],
+          ["怎么判断大小端", "用指针：int a = 1; char *p = (char*)&a; 如果 *p == 1 就是小端（最低字节 0x01 放低地址）。", "int a = 1;\nchar *p = (char*)&a;\nif (*p == 1) 小端（01 在低地址）\nelse 大端"],
           ["结构体对齐", "编译器为了 CPU 访问效率，给结构体成员按自然边界对齐。int 放 4 字节边界，short 放 2 字节边界。中间空隙叫 padding。", "struct { char a; int b; char c; }\n实际大小：1 + 3(pad) + 4 + 1 + 3(pad) = 16\n不是 6！"],
           ["为什么要懂对齐", "串口收发结构体直接当 buffer 时，padding 会导致字节错位。通信协议要按字节数组收，不能直接 memcpy 结构体。", "串口收 4 字节温度：用 uint8_t buf[4] 拼\n不要直接把串口数据塞到结构体里（有 padding）"]
         ],
@@ -2936,13 +2936,13 @@
         goals: ["能手写 strcpy/memcpy", "能手写 strlen", "知道 strcpy 为什么要返回 char*", "理解 memcpy 的 overlapping 问题"],
         content: [
           ["手写 strcpy", "把 src 字符串（含结尾 \\0）拷到 dst。返回 dst 方便链式调用。要注意 assert 非空。", "char* strcpy(char* dst, const char* src) {\n  assert(dst && src);\n  char* r = dst;\n  while ((*dst++ = *src++));\n  return r;\n}"],
-          ["手写 memcpy", "拷 n 字节，不管内容。注意 overlapping：dst < src 从前拷，dst > src 从后拷（否则覆盖）。", "void* memcpy(void* dst, const void* src, size_t n) {\n  char* d = (char*)dst; const char* s = (const char*)src;\n  if (d < s) while(n--) *d++ = *s++;\n  else { d += n; s += n; while(n--) *--d = *--s; }\n  return dst;\n}"],
+          ["手写 memcpy vs memmove", "memcpy 拷 n 字节，不管重叠（快但不安全）。memmove 处理重叠：dst < src 从前拷，dst > src 从后拷（安全但略慢）。标准库 memcpy 不保证处理重叠，重叠用 memmove。", "void* memmove(void* dst, const void* src, size_t n) {\n  char* d = (char*)dst; const char* s = (const char*)src;\n  if (d < s) while(n--) *d++ = *s++;\n  else { d += n; s += n; while(n--) *--d = *--s; }\n  return dst;\n}"],
           ["手写 strlen", "数到 \\0 为止。不能用 sizeof（那是整个数组大小）。", "size_t strlen(const char* s) {\n  const char* p = s;\n  while (*p) p++;\n  return p - s;\n}"],
           ["strcpy 为什么返回 char*", "为了链式调用：printf(\"%s\", strcpy(buf, \"hi\"))。也方便当表达式用。返回 dst 起始地址。", "char buf[20];\nprintf(\"%s\\n\", strcpy(buf, \"hello\"));  // 链式"]
         ],
         questions: [
           {type:"选择题", text:"strcpy 返回值是？", options:["dst 起始地址","src 起始地址","拷的长度","void"], answer:0, explanation:"返回 dst 起始地址，支持链式调用。"},
-          {type:"选择题", text:"memcpy 处理 overlapping 时？", options:["直接从前拷","dst>src 从后拷","不管","报错"], answer:1, explanation:"dst 在 src 后面时从后往前拷，否则会覆盖未读数据。"},
+          {type:"选择题", text:"处理内存重叠（overlapping）用哪个函数？", options:["memcpy","memmove","strcpy","strlen"], answer:1, explanation:"标准 memcpy 不保证处理重叠，重叠要用 memmove。"},
           {type:"选择题", text:"strlen 数到什么为止？", options:["数组结尾","\\0 字符","空格","换行"], answer:1, explanation:"字符串以 \\0 结尾，strlen 数到 \\0 为止（不含 \\0）。"},
           {type:"判断题", text:"strcpy 可以不检查 dst/src 非空。", options:["正确","错误"], answer:1, explanation:"野指针传入直接 segfault，生产代码要 assert。"}
         ]
@@ -2972,13 +2972,30 @@
           ["寄存器映像", "STM32 把外设寄存器映射到固定内存地址。GPIOA 基地址 0x40010800，ODR 偏移 0x14。读这个地址 = 读 GPIO 输出状态。", "#define GPIOA_ODR (*(volatile uint32_t*)0x40010814)\nGPIOA_ODR |= (1<<5);   // PA5 输出高\nGPIOA_ODR &= ~(1<<5);  // PA5 输出低"],
           ["位操作四件套", "置 1：REG |= (1<<n)。清 0：REG &= ~(1<<n)。翻转：REG ^= (1<<n)。读位：(REG >> n) & 1。", "#define BIT_SET(r,n)   ((r) |=  (1<<(n)))\n#define BIT_CLEAR(r,n) ((r) &= ~(1<<(n)))\n#define BIT_TOGGLE(r,n)((r) ^=  (1<<(n)))"],
           ["HAL 库在干嘛", "HAL_GPIO_WritePin(GPIOA, GPIO_PIN_5, SET) 展开就是 GPIOA->ODR |= GPIO_PIN_5。HAL 库只是帮你算地址、配时钟。", "HAL_GPIO_WritePin 本质：\nGPIOA->BSRR = GPIO_PIN_5;  // 置位寄存器（原子操作）"],
-          ["位带（bit-band）", "Cortex-M3 有位带区：把某个地址的某一位映射到一个独立地址。读写这个地址 = 原子操作那一位，不用读改写，中断安全。", "位带区地址 = 位带基 + 字偏移 * 32 + 位偏移 * 4\n直接写位带地址 = 原子置/清那一位"],
+          ["位带（bit-band）", "Cortex-M3/M4 有位带区：把某个地址的某一位映射到一个独立地址。读写这个地址 = 原子操作那一位，不用读改写，中断安全。注意 Cortex-M0/M0+ 没有位带。", "位带区地址 = 位带基 + 字偏移 * 32 + 位偏移 * 4\n直接写位带地址 = 原子置/清那一位\nSTM32F1/F4 有位带；F0/F3（M0/M3）部分没有"],
         ],
         questions: [
           {type:"选择题", text:"GPIOA 基地址是？", options:["0x40010800","0x40020000","0x20000000","0x08000000"], answer:0, explanation:"APB2 上 GPIOA 基地址 0x40010800。"},
           {type:"选择题", text:"把 PA5 置高的位操作是？", options:["GPIOA_ODR |= (1<<5)","GPIOA_ODR &= (1<<5)","GPIOA_ODR ^= (1<<5)","GPIOA_ODR = (1<<5)"], answer:0, explanation:"|= 置位（其他位不变），~ 取反是清位。"},
           {type:"选择题", text:"HAL_GPIO_WritePin 本质是？", options:["查寄存器表","写 BSRR 寄存器","调操作系统","加密"], answer:1, explanation:"HAL 库展开就是写 BSRR/ODR 寄存器。"},
-          {type:"判断题", text:"位带区可以原子操作某一位，不用读改写。", options:["正确","错误"], answer:0, explanation:"位带把每一位映射到独立地址，写它 = 原子置/清，中断安全。"}
+          {type:"判断题", text:"位带区可以原子操作某一位，不用读改写。", options:["正确","错误"], answer:0, explanation:"位带把每一位映射到独立地址，写它 = 原子置/清，中断安全。注意 M0/M0+ 没有位带。"}
+        ]
+      },
+      {
+        title: "栈溢出与内存泄漏：嵌入式最怕的两种 Bug", level: "求职必备 · 第 83 课",
+        intro: "面试必问“栈溢出怎么排查”“内存泄漏怎么发现”。这两种 Bug 在产品上线后才暴露，最难调。",
+        goals: ["理解栈是干什么的、为什么会溢出", "会算栈大小、设置栈水位线", "知道内存泄漏的后果", "会用工具/方法排查泄漏"],
+        content: [
+          ["栈是什么", "函数调用时的局部变量、返回地址、保存的寄存器都存在栈上。栈从高地址往低地址长。栈大小在启动文件里设（如 Stack_Size = 0x400 = 1KB）。", "进函数：压局部变量 + 返回地址\n函数退出：弹出\n递归太深 / 局部数组太大 → 栈用完了"],
+          ["栈溢出后果", "栈溢出会踩掉相邻的内存（全局变量、堆、其他栈帧），表现为随机跑飞、HardFault、变量莫名变值。最难调的 Bug 第一名。", "局部数组 char buf[1024] 但栈只有 512 → 溢出\n踩掉相邻变量 → 随机崩溃"],
+          ["栈水位线检查", "启动时把栈填成 0xAA 模式（魔数）。运行一段时间后看最低地址的 0xAA 还剩多少 = 栈用了多少。FreeRTOS 有 uxTaskGetStackHighWaterMark。", "启动：memset(&stack_bottom, 0xAA, stack_size)\n运行后：从栈底往上扫，数多少个 0xAA 没被覆盖\n= 剩余栈空间"],
+          ["内存泄漏", "malloc 了不 free，堆越来越小。产品跑几天/几周后 malloc 失败，死机。单片机没有虚拟内存，泄漏 = 慢慢死。", "每 malloc 一次记日志\n产品跑一天后看堆剩余\n不 free 的路径就是泄漏点"]
+        ],
+        questions: [
+          {type:"选择题", text:"栈是干什么的？", options:["存局部变量和返回地址","存全局变量","存代码","存 Flash"], answer:0, explanation:"函数调用时局部变量、返回地址、寄存器压在栈上。"},
+          {type:"选择题", text:"栈溢出最常见的原因？", options:["递归太深 / 局部数组太大","Flash 满","内存泄漏","时钟太快"], answer:0, explanation:"递归没出口、局部 char buf[1024] 但栈只有 512，都会溢出。"},
+          {type:"选择题", text:"FreeRTOS 查栈用什么函数？", options:["uxTaskGetStackHighWaterMark","vTaskDelete","xQueueSend","HAL_Delay"], answer:0, explanation:"返回任务剩余栈空间（字为单位），小于 100 就要加栈。"},
+          {type:"判断题", text:"单片机内存泄漏无所谓，重启就行。", options:["正确","错误"], answer:1, explanation:"单片机没有虚拟内存，泄漏 = 堆越来越小，跑几天 malloc 失败死机，不能重启（没人在旁边）。"}
         ]
       }
     ];
