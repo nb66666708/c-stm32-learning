@@ -7630,7 +7630,7 @@
       renderNav();
       root.innerHTML = `<header class="lesson-head"><div class="eyebrow">${esc(lesson.level)}</div><h1>${esc(lesson.title)}</h1><p class="intro">${esc(lesson.intro)}</p></header>
         <div class="body-content">
-          <div class="challenge-card"><div><strong>🤖 AI 冒险挑战</strong><p>使用智谱 GLM-5.3 生成新题（额度和限流以智谱账号后台为准）。</p></div><div class="challenge-controls"><label for="challenge-count" class="exercise-count">题量</label><select id="challenge-count" aria-label="挑战题量"><option value="5" selected>5 题（推荐）</option><option value="10">10 题</option><option value="20">20 题</option><option value="30">30 题</option></select><button class="small-btn" id="ai-challenge">AI 生成挑战</button><button class="secondary-btn" id="configure-ai">🔐 配置 AI 后端</button><button class="secondary-btn" id="random-challenge">抽一道旧题</button><button class="secondary-btn" id="reset-game">重置游戏数据</button></div></div>
+          <div class="challenge-card"><div><strong>🤖 AI 冒险挑战</strong><p>使用智谱 GLM-5.3 生成新题（额度和限流以智谱账号后台为准）。</p></div><div class="challenge-controls"><label for="challenge-count" class="exercise-count">题量</label><select id="challenge-count" aria-label="挑战题量"><option value="5" selected>5 题（推荐）</option><option value="10">10 题</option><option value="20">20 题</option><option value="30">30 题</option></select><button class="small-btn" id="ai-challenge">AI 生成挑战</button><button class="secondary-btn" id="configure-ai">🔐 配置 AI 后端</button><button class="secondary-btn" id="random-challenge">抽一道旧题</button><button class="secondary-btn" id="export-progress">📤 导出进度</button><button class="secondary-btn" id="import-progress">📥 导入进度</button><button class="secondary-btn" id="reset-game">重置游戏数据</button></div></div>
           <p class="challenge-note">公网 AI 出题由你的后端服务安全调用智谱。首次使用需配置后端服务地址和访问口令；智谱 API Key 只保存在服务端，绝不要写进公开网页。AI 题目会发送课程资料给智谱，生成结果请结合课程核对。</p>
           <p class="challenge-status" id="challenge-status" role="status" aria-live="polite">每套挑战包含 20 或 30 道新题。首次使用请先配置 AI 后端；免费模型仍可能有账号额度或速率限制。</p>
           ${current >= starterLessons.length + 20 ? `<div class="tip" style="margin-bottom:22px"><strong>🧭 STM32 学习建议</strong><br>每课按“读原理图/芯片资料 → CubeMX 配置 → 编译下载 → 单独验证 → 改一个参数再观察”的顺序练习。先确保 C 的函数、数组、指针和位运算基础；接线前断电，GPIO 不直接驱动电机或大电流负载。不同芯片系列的引脚、时钟和 HAL 细节可能不同，请以你的具体型号为准。</div>` : ""}
@@ -7714,6 +7714,27 @@
         saveGame();
         updateGamePanel();
         render();
+      });
+      document.getElementById("export-progress").addEventListener("click", () => {
+        const data = {};
+        for (let i = 0; i < localStorage.length; i++) {
+          const k = localStorage.key(i);
+          if (k.startsWith("c_stm32")) data[k] = localStorage.getItem(k);
+        }
+        const str = btoa(unescape(encodeURIComponent(JSON.stringify(data))));
+        prompt("复制下面这段代码，到另一台设备点「导入进度」粘贴：", str);
+      });
+      document.getElementById("import-progress").addEventListener("click", () => {
+        const str = prompt("粘贴之前导出的进度代码：");
+        if (!str) return;
+        try {
+          const data = JSON.parse(decodeURIComponent(escape(atob(str.trim()))));
+          Object.keys(data).forEach(k => localStorage.setItem(k, data[k]));
+          alert("进度导入成功！刷新页面生效。");
+          location.reload();
+        } catch (e) {
+          alert("导入失败：代码不对，请检查是否复制完整。");
+        }
       });
       document.getElementById("prev").addEventListener("click", () => { challengeSession = null; current--; render(); window.scrollTo({top: 0, behavior: "smooth"}); });
       document.getElementById("next").addEventListener("click", () => { challengeSession = null; current++; render(); window.scrollTo({top: 0, behavior: "smooth"}); });
