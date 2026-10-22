@@ -152,6 +152,11 @@
     .type-chip { padding: 4px 8px; border-radius: 6px; background: var(--pale); color: var(--blue-dark); font-size: 11px; font-weight: 700; }
     .question-title { font-weight: 700; line-height: 1.65; font-size: 14px; }
     .options { display: grid; gap: 8px; }
+    .option-btn { border: 1px solid var(--line); border-radius: 9px; padding: 10px 12px; cursor: pointer; font-size: 13px; line-height: 1.5; text-align: left; background: #fff; transition: all .15s; }
+    .option-btn:hover { border-color: #3568df; background: #f0f4ff; }
+    .option-btn.correct { border-color: #2f9e44; background: #d3f9d8; color: #2b8a3e; font-weight: 600; }
+    .option-btn.wrong { border-color: #e5484d; background: #ffe3e3; color: #c92a2a; }
+    .option-btn:disabled { cursor: default; opacity: 1; }
     .option { border: 1px solid var(--line); border-radius: 9px; padding: 10px 12px; display: flex; align-items: flex-start; gap: 9px; cursor: pointer; font-size: 13px; line-height: 1.5; }
     .option:hover { border-color: #a8bdf2; background: #fafbff; }
     .option input { margin: 3px 0 0; accent-color: var(--blue); }
@@ -6420,8 +6425,8 @@
       dragon:  { forms: [{name:"迷你小龙", emoji:"🐲"}, {name:"火山幼龙", emoji:"🌋🐲"}, {name:"山岭龙", emoji:"⛰️🐉"}, {name:"风云龙", emoji:"🌪️🐉"}, {name:"东方神龙", emoji:"🐉"}] },
       unicorn: { forms: [{name:"彩虹独角兽", emoji:"🦄"}, {name:"星辰独角兽", emoji:"🦄⭐"}, {name:"云海独角兽", emoji:"🦄🌊"}, {name:"花见独角兽", emoji:"🦄🌸"}, {name:"天马", emoji:"🌟🦄"}] }
     };
-    // 进化阈值：exp 达 300 升二阶，1000 三阶，2500 四阶，5000 五阶（满级）
-    const EVO_THRESHOLDS = [0, 300, 1000, 2500, 5000];
+    // 进化阈值：exp 达 600 升二阶，2000 三阶，5000 四阶，10000 五阶（满级）
+    const EVO_THRESHOLDS = [0, 600, 2000, 5000, 10000];
     function petStage(exp){
       exp = exp || 0;
       let stage = 1;
@@ -7309,7 +7314,8 @@
       const badgeHtml = prog ? `<span class="prog-badge ${prog}">${prog === "correct" ? "✓ 已答对" : "✗ 已答错"}</span>` : "";
       let answer = "";
       if (q.options) {
-        answer = `<div class="options">${q.options.map((option, i) => `<label class="option"><input type="radio" name="${inputId}" value="${i}"><span>${esc(option)}</span></label>`).join("")}</div><button class="small-btn" data-check="${index}" style="margin-top:10px">检查答案</button>`;
+        // 选择题：直接点选项，对的标绿、错的标红（学习通风格）
+        answer = `<div class="options" data-qindex="${index}">${q.options.map((option, i) => `<button class="option-btn" data-option="${i}" data-qindex="${index}"><span>${esc(option)}</span></button>`).join("")}</div>`;
       } else if (q.type === "填空题") {
         answer = `<div class="answer-row"><input class="answer-input" id="${inputId}" aria-label="填写答案" placeholder="${esc(q.placeholder || "输入答案")}"><button class="small-btn" data-check="${index}">检查答案</button></div>`;
       } else {
@@ -7343,8 +7349,8 @@
       }
       if (correct) game.dailyQuestSolved.add(key);
       if (firstCorrect) {
-        earned = 10 + (game.streak > 0 && game.streak % 3 === 0 ? 5 : 0);
-        earnedCoins = 3 + (game.streak > 0 && game.streak % 3 === 0 ? 2 : 0);
+        earned = 5 + (game.streak > 0 && game.streak % 5 === 0 ? 3 : 0);
+        earnedCoins = 1 + (game.streak > 0 && game.streak % 5 === 0 ? 2 : 0);
         game.xp += earned;
         game.coins += earnedCoins;
         game.rewarded.add(key);
@@ -7647,6 +7653,25 @@
       if (window.__restoreNotes) window.__restoreNotes();
 
       lesson.questions.forEach((q, index) => {
+        // 选择题直接点选项判分（学习通风格）
+        if (q.options) {
+          const btns = root.querySelectorAll(`.option-btn[data-qindex="${index}"]`);
+          btns.forEach(btn => {
+            btn.addEventListener("click", () => {
+              const chosen = Number(btn.dataset.option);
+              const correct = chosen === q.answer;
+              const responseLabel = q.options[chosen];
+              // 标色
+              btns.forEach((b, i) => {
+                b.disabled = true;
+                if (i === q.answer) b.classList.add("correct");
+                else if (i === chosen) b.classList.add("wrong");
+              });
+              markPractice(lesson.title, q.pk, correct);
+              submitResult(q, index, correct, responseLabel, false);
+            });
+          });
+        }
         const check = root.querySelector(`[data-check="${index}"]`);
         if (check) check.addEventListener("click", () => {
           let correct = false;
