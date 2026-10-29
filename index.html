@@ -6108,6 +6108,82 @@
         return null;
       }).filter(Boolean);
     });
+
+    function cleanGeneratedText(value, limit = 90) {
+      return String(value || "")
+        .replace(/<[^>]+>/g, "")
+        .replace(/```[\s\S]*?```/g, "")
+        .replace(/\s+/g, " ")
+        .trim()
+        .slice(0, limit);
+    }
+
+    function addGeneratedPracticeQuestions(lesson, questions) {
+      const pool = Array.isArray(questions) ? [...questions] : [];
+      const choiceCount = pool.filter(question =>
+        question && question.t === "s" && Array.isArray(question.o)).length;
+      if (choiceCount >= 10) return pool;
+
+      const sections = (lesson.content || [])
+        .map(section => ({
+          heading: cleanGeneratedText(section[0], 36),
+          summary: cleanGeneratedText(section[1], 100)
+        }))
+        .filter(section => section.heading && section.summary);
+      const summaries = sections.map(section => section.summary);
+      const existing = new Set(pool.map(question => questionFingerprint(question)));
+      const candidates = [];
+
+      sections.forEach((section, index) => {
+        const distractors = summaries
+          .filter((_, summaryIndex) => summaryIndex !== index)
+          .slice(0, 3);
+        while (distractors.length < 3) {
+          distractors.push([
+            "只负责把代码排版成固定格式",
+            "与本课知识无关的界面装饰",
+            "只能在程序结束后查看的结果"
+          ][distractors.length]);
+        }
+        candidates.push({
+          t: "s",
+          q: `关于“${section.heading}”，本课强调的重点是什么？`,
+          o: [section.summary, ...distractors],
+          a: 0,
+          e: `本题根据本课“${section.heading}”正文生成，正确理解是：${section.summary}。`
+        });
+      });
+
+      (lesson.goals || []).forEach((goal, index) => {
+        const distractors = (lesson.goals || [])
+          .filter((_, goalIndex) => goalIndex !== index)
+          .slice(0, 3);
+        while (distractors.length < 3) {
+          distractors.push("只需要记住一个固定代码片段");
+        }
+        candidates.push({
+          t: "s",
+          q: `学习“${lesson.title}”时，下面哪项属于本课目标？`,
+          o: [cleanGeneratedText(goal, 80), ...distractors.map(item => cleanGeneratedText(item, 80))],
+          a: 0,
+          e: `这是课程目标中的一项：${goal}。`
+        });
+      });
+
+      for (const question of candidates) {
+        if (pool.filter(item => item.t === "s").length >= 10) break;
+        const fingerprint = questionFingerprint(question);
+        if (existing.has(fingerprint) || new Set(question.o).size !== question.o.length) continue;
+        existing.add(fingerprint);
+        pool.push(question);
+      }
+      return pool;
+    }
+
+    lessons.forEach(lesson => {
+      practicePool[lesson.title] = addGeneratedPracticeQuestions(
+        lesson, practicePool[lesson.title]);
+    });
     practicePool = normalizePracticePool(practicePool);
     const practicePoolProblems = [];
     const practiceFingerprints = new Set();
