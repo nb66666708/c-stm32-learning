@@ -3005,7 +3005,34 @@
       }
     ];
     lessons.push(...extraLessons);
-    const practicePool = {
+    // Keep the built-in question bank fail-safe: a malformed answer should be
+    // caught during development instead of silently teaching the wrong thing.
+    function validateLessonQuestionBank() {
+      const problems = [];
+      lessons.forEach((lesson, lessonIndex) => {
+        (lesson.questions || []).forEach((question, questionIndex) => {
+          if (question.options && (!Number.isInteger(question.answer) ||
+              question.answer < 0 || question.answer >= question.options.length)) {
+            problems.push(`课${lessonIndex + 1}题${questionIndex + 1}：选择项答案索引无效`);
+          }
+          if (question.type === "填空题" &&
+              (!Array.isArray(question.accepted) || question.accepted.length === 0)) {
+            problems.push(`课${lessonIndex + 1}题${questionIndex + 1}：缺少填空答案`);
+          }
+          if (question.type === "程序题" && !question.solution) {
+            problems.push(`课${lessonIndex + 1}题${questionIndex + 1}：缺少参考程序`);
+          }
+        });
+      });
+      if (problems.length) {
+        console.error("题库自检失败：", problems);
+      }
+      window.__questionBankProblems = problems;
+      return problems;
+    }
+    validateLessonQuestionBank();
+
+    let practicePool = {
       "认识 C 语言与第一个程序": [
         {t:"s", q:"一个普通 C 程序是从哪个函数开始执行的？", o:["main","printf","start","include"], a:0, e:"C 程序的执行入口是 main 函数。printf 是输出函数，include 是预处理指令的一部分，都不负责启动程序。"},
         {t:"s", q:"下面哪一行写在程序最前面，用来引入标准输入输出工具？", o:["#include <stdio.h>","#include <math.h>","int main()","return 0;"], a:0, e:"#include <stdio.h> 把标准输入输出（printf/scanf 等）的声明引进来；没有它调用 printf 会报“未声明”错误。"},
@@ -6004,6 +6031,106 @@
         {t:"s", q:"DMA 数据宽度设为 Half Word，对应几位？", o:["8 位","16 位","32 位","64 位"], a:1, e:"Byte=8 位，Half Word=16 位，Word=32 位。"}
       ]
     };
+    function questionFingerprint(question) {
+      return [
+        question.t || "",
+        question.q || "",
+        question.code || "",
+        Array.isArray(question.o) ? question.o.join("\u001f") : "",
+        Array.isArray(question.ans) ? question.ans.join("\u001f") : "",
+        Number.isInteger(question.a) ? question.a : ""
+      ].join("\u001e").replace(/\s+/g, " ").trim();
+    }
+
+    function stableQuestionHash(value) {
+      let result = 2166136261;
+      for (let i = 0; i < value.length; i += 1) {
+        result ^= value.charCodeAt(i);
+        result = Math.imul(result, 16777619);
+      }
+      return result >>> 0;
+    }
+
+    function normalizePracticePool(pool) {
+      const normalized = {};
+      const seen = new Set();
+
+      Object.entries(pool).forEach(([title, questions]) => {
+        const unique = [];
+        (Array.isArray(questions) ? questions : []).forEach(question => {
+          if (!question || !question.q || !question.t) return;
+          const fingerprint = questionFingerprint(question);
+          if (seen.has(fingerprint)) return;
+          seen.add(fingerprint);
+
+          if (question.t === "s" && Array.isArray(question.o) &&
+              Number.isInteger(question.a) && question.o.length >= 2 &&
+              question.a >= 0 && question.a < question.o.length) {
+            const options = [...question.o];
+            const shift = stableQuestionHash(`${title}\u001e${fingerprint}`) % options.length;
+            const rotated = options.slice(shift).concat(options.slice(0, shift));
+            unique.push({...question, o: rotated, a: (question.a - shift + options.length) % options.length});
+          } else {
+            unique.push(question);
+          }
+        });
+        normalized[title] = unique;
+      });
+      return normalized;
+    }
+
+    lessons.forEach(lesson => {
+      (lesson.questions || []).forEach(question => {
+        if (question.type !== "选择题" || !Array.isArray(question.options) ||
+            !Number.isInteger(question.answer) || question.options.length < 2) return;
+        const options = [...question.options];
+        const shift = stableQuestionHash(`${lesson.title}\u001e${question.text}`) % options.length;
+        question.options = options.slice(shift).concat(options.slice(0, shift));
+        question.answer = (question.answer - shift + options.length) % options.length;
+      });
+    });
+
+    // Keep every course available in practice and adventure modes. The legacy
+    // pool contains the larger curated bank, while each lesson also has a
+    // compact set of starter questions.
+    lessons.forEach(lesson => {
+      if (practicePool[lesson.title]) return;
+      practicePool[lesson.title] = (lesson.questions || []).map(question => {
+        if (question.type === "选择题") {
+          return {t: "s", q: question.text, o: question.options, a: question.answer, e: question.explanation};
+        }
+        if (question.type === "判断题") {
+          return {t: "j", q: question.text, a: question.answer, e: question.explanation};
+        }
+        if (question.type === "填空题") {
+          return {t: "f", q: question.text, ans: question.accepted, e: question.explanation};
+        }
+        return null;
+      }).filter(Boolean);
+    });
+    practicePool = normalizePracticePool(practicePool);
+    const practicePoolProblems = [];
+    const practiceFingerprints = new Set();
+    Object.entries(practicePool).forEach(([title, questions]) => {
+      questions.forEach((question, index) => {
+        const label = `${title} 第${index + 1}题`;
+        if (question.t === "s" &&
+            (!Array.isArray(question.o) || !Number.isInteger(question.a) ||
+             question.a < 0 || question.a >= question.o.length)) {
+          practicePoolProblems.push(`${label}：选择题答案索引无效`);
+        }
+        const fingerprint = questionFingerprint(question);
+        if (practiceFingerprints.has(fingerprint)) {
+          practicePoolProblems.push(`${label}：题目重复`);
+        }
+        practiceFingerprints.add(fingerprint);
+      });
+    });
+    if (practicePoolProblems.length) {
+      console.error("练习题库自检失败：", practicePoolProblems);
+    }
+    window.__practicePoolProblems = practicePoolProblems;
+
     const theorySupplements = {
       "认识 C 语言与第一个程序": [
         ["从源码到可执行程序", "在常见桌面环境中，预处理会展开头文件和宏，编译器把 C 翻译成目标文件，链接器再把目标文件和所需库组合起来。某一步失败，后续步骤就无法正确完成。嵌入式工程使用交叉工具链生成面向 MCU 的映像，启动代码配置运行环境后通常才调用 main；所以“从 main 开始”是学习应用逻辑的简化说法，不代表芯片复位后第一条指令就在 main。", null],
@@ -6328,6 +6455,7 @@
           localStorage.setItem("c_stm32_adventure_save", JSON.stringify({
             title: adv.title,
             stage: adv.stage,
+            total: adv.total,
             myHp: adv.myHp,
             myMax: adv.myMax,
             enemy: adv.enemy,
@@ -6352,6 +6480,8 @@
         adv = {
           title: s.title,
           stage: s.stage,
+          total: Math.min(ADVENTURE_TOTAL, Number.isInteger(s.total)
+            ? s.total : adventureQuestions(s.title).length),
           myHp: s.myHp,
           myMax: s.myMax,
           enemy: s.enemy,
@@ -6857,6 +6987,12 @@
         practicePool[title].some(q => q.t === "s" && Array.isArray(q.o) && q.o.length >= 2));
     }
 
+    function adventureQuestions(title){
+      return (practicePool[title] || []).filter(q =>
+        q && q.t === "s" && Array.isArray(q.o) && q.o.length >= 2 &&
+        Number.isInteger(q.a) && q.a >= 0 && q.a < q.o.length);
+    }
+
     function renderAdventureHome(){
       const body = document.getElementById("adventure-body");
       const f = petForm(game.activePet);
@@ -6864,7 +7000,7 @@
       body.innerHTML = `
         <div class="adv-intro">
           <div>出战伙伴：<strong>${f.emoji} ${f.name} Lv.${f.lv}</strong></div>
-          <div style="color:var(--muted);font-size:12px;margin-top:4px;">10 关一局：第 5、10 关是 BOSS。答对题 → 你揍怪；答错 → 怪揍你。通关得金币+宠物经验。</div>
+          <div style="color:var(--muted);font-size:12px;margin-top:4px;">每局最多 10 关（题目不足时自动缩短），第 5 关和最终关是 BOSS。答对题 → 你揍怪；答错 → 怪揍你。通关得金币+宠物经验。</div>
         </div>
         <h3 style="margin:14px 0 8px;font-size:14px;">选择一门课当闯关地图：</h3>
         <div class="adv-lesson-list">
@@ -6876,15 +7012,16 @@
     }
 
     function advPickQuestion(title){
-      const pool = practicePool[title].filter(q => q.t === "s" && Array.isArray(q.o) && q.o.length >= 2 && Number.isInteger(q.a));
+      const pool = adventureQuestions(title);
       return pool[Math.floor(Math.random() * pool.length)];
     }
 
     function startAdventure(title){
       const f = petForm(game.activePet);
       const myMax = 30 + f.lv * 10;
+      const total = Math.min(ADVENTURE_TOTAL, adventureQuestions(title).length);
       adv = {
-        title, stage: 1,
+        title, stage: 1, total,
         myHp: myMax, myMax,
         enemy: null, enemyHp: 0, enemyMax: 0,
         q: null, over: false,
@@ -6894,7 +7031,7 @@
     }
 
     function nextAdvStage(){
-      const isBoss = adv.stage === ADVENTURE_TOTAL || adv.stage === 5;
+      const isBoss = adv.stage === adv.total || (adv.total >= 5 && adv.stage === 5);
       // 按关卡选敌人难度：1-3 弱怪，4-6 中怪，7-9 强怪，BOSS 专属
       let pool;
       if (isBoss) pool = bossPets;
@@ -6908,7 +7045,12 @@
       adv.enemy = enemy;
       adv.enemyMax = isBoss ? 30 + adv.stage * 8 : 12 + adv.stage * 4;
       adv.enemyHp = adv.enemyMax;
-      drawNextQuestion();
+      // 抽题：排除本轮已用过的题
+      const questionPool = adventureQuestions(adv.title);
+      const fresh = questionPool.filter(q => !adv.used.has(questionFingerprint(q)));
+      const source = fresh.length > 0 ? fresh : questionPool;
+      adv.q = source[Math.floor(Math.random() * source.length)];
+      if (adv.q) adv.used.add(questionFingerprint(adv.q));
       renderAdvBattle();
     }
 
@@ -6922,7 +7064,7 @@
       const f = petForm(game.activePet);
       const isMobile = window.matchMedia('(pointer: coarse)').matches || /iPad|iPhone|Android/.test(navigator.userAgent);
       body.innerHTML = `
-        <div class="adv-stage-tag">第 ${adv.stage} / ${ADVENTURE_TOTAL} 关${adv.stage === 5 || adv.stage === ADVENTURE_TOTAL ? " · 👹 BOSS" : ""}</div>
+        <div class="adv-stage-tag">第 ${adv.stage} / ${adv.total} 关${adv.stage === 5 || adv.stage === adv.total ? " · 👹 BOSS" : ""}</div>
         <div class="adv-arena">
           <div class="adv-side">
             <div class="adv-pet-emoji">${f.emoji}</div>
@@ -7017,7 +7159,7 @@
 
       setTimeout(() => {
         if (adv.enemyHp <= 0) {
-          const isFinal = adv.stage === ADVENTURE_TOTAL;
+          const isFinal = adv.stage === adv.total;
           const coinReward = isFinal ? 100 : 8;
           game.coins += coinReward;
           const expGain = isFinal ? 50 : 5;
@@ -7053,27 +7195,19 @@
     }
 
     function drawNextQuestion(){
-      const pool = practicePool[adv.title];
-      if (!pool || !Array.isArray(pool)) {
-        adv.q = null;
-        return;
-      }
-      const all = pool.filter(q =>
-        q && q.t === "s" && Array.isArray(q.o) && q.o.length >= 2 && Number.isInteger(q.a));
+      const all = adventureQuestions(adv.title);
       if (all.length === 0) {
         adv.q = null;
         return;
       }
-      // 用题干前30字作为唯一标识，避免同题不同代码被误判为不同题
-      const qkey = (q) => (q.q || "").slice(0, 30).replace(/\s+/g, "");
       // 优先抽没做过的题
-      const fresh = all.filter(q => !adv.used.has(qkey(q)));
+      const fresh = all.filter(q => !adv.used.has(questionFingerprint(q)));
       let source;
       if (fresh.length > 0) {
         source = fresh;
       } else {
         // 题用完了：从全部题里抽，但避免和上一题相同
-        source = all.filter(q => !adv.q || qkey(q) !== qkey(adv.q));
+        source = all.filter(q => !adv.q || questionFingerprint(q) !== questionFingerprint(adv.q));
         if (source.length === 0) source = all;
       }
       adv.q = source[Math.floor(Math.random() * source.length)];
@@ -7086,7 +7220,7 @@
           [opts[i], opts[j]] = [opts[j], opts[i]];
         }
         adv.q = {...adv.q, o: opts, a: opts.indexOf(correctText)};
-        adv.used.add(qkey(adv.q));
+        adv.used.add(questionFingerprint(adv.q));
       }
     }
 
