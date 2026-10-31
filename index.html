@@ -6185,6 +6185,31 @@
         lesson, practicePool[lesson.title]);
     });
     practicePool = normalizePracticePool(practicePool);
+    lessons.forEach(lesson => {
+      const currentChoices = (lesson.questions || []).filter(question =>
+        question.type === "选择题" && Array.isArray(question.options));
+      const generatedChoices = (practicePool[lesson.title] || [])
+        .filter(question => question.t === "s" && Array.isArray(question.o))
+        .map(question => ({
+          type: "选择题",
+          text: question.q,
+          options: [...question.o],
+          answer: question.a,
+          explanation: question.e || "请结合课程正文理解本题。"
+        }));
+      const existing = new Set(currentChoices.map(question =>
+        questionFingerprint({t: "s", q: question.text, o: question.options, a: question.answer})));
+      for (const question of generatedChoices) {
+        if (currentChoices.length >= 10) break;
+        const fingerprint = questionFingerprint({
+          t: "s", q: question.text, o: question.options, a: question.answer
+        });
+        if (existing.has(fingerprint)) continue;
+        existing.add(fingerprint);
+        lesson.questions.push(question);
+        currentChoices.push(question);
+      }
+    });
     const practicePoolProblems = [];
     const practiceFingerprints = new Set();
     Object.entries(practicePool).forEach(([title, questions]) => {
@@ -6987,7 +7012,7 @@
         const q = picked[idx];
         let opts = q.o.map((o,i) => `${i+1}. ${o}`).join("\n");
         const input = prompt(`🔥 每日挑战 ${idx+1}/10\n[${q.lesson}]\n\n${q.q}${q.code ? "\n\n"+q.code : ""}\n\n${opts}\n\n输入正确选项编号（1-${q.o.length}）：`);
-        if (input === null) { alert("已退出挑战，今天不能再玩了。"); localStorage.setItem(key, "1"); return; }
+        if (input === null) { alert("已退出挑战，今日进度未完成，可以稍后再次挑战。"); return; }
         const ans = parseInt(input);
         if (ans === q.a + 1) { correct++; idx++; ask(); }
         else { alert(`❌ 答错了！正确答案：${q.a+1}. ${q.o[q.a]}\n\n${q.e || ""}`); idx++; ask(); }
@@ -7418,6 +7443,53 @@
         localStorage.setItem(PROGRESS_KEY, JSON.stringify(all));
       } catch(e){}
     }
+    function submitPracticeAnswer(q, index, lesson, lessonIndex, selectedIndex = null){
+      let correct = false;
+      let responseLabel = "";
+      if (q.options) {
+        if (selectedIndex === null) {
+          showFeedback(index, "neutral", "先选择一个答案，再检查哦。");
+          return;
+        }
+        correct = selectedIndex === q.answer;
+        responseLabel = q.options[selectedIndex];
+      } else {
+        const input = document.getElementById(`answer-${index}`);
+        const value = input.value.trim().toLowerCase().replace(/\s+/g, "");
+        if (!value) {
+          showFeedback(index, "neutral", "先填写答案，再检查哦。");
+          return;
+        }
+        correct = q.accepted.some(answer =>
+          answer.toLowerCase().replace(/\s+/g, "") === value);
+        responseLabel = input.value.trim();
+      }
+      const card = root.querySelector(`[data-question="${index}"]`);
+      if (card && card.dataset.answered === "correct") return;
+      const key = `p-${lessonIndex}-${q.pk}-${q.pv}`;
+      if (correct) {
+        if (window.wrongbookRemove) window.wrongbookRemove(key);
+        if (card) card.dataset.answered = "correct";
+      } else if (window.wrongbookAdd) {
+        window.wrongbookAdd(key, q, lesson.title, responseLabel);
+      }
+      markPractice(lesson.title, q.pk, correct);
+      if (correct) {
+        const evolveMsg = addPetExp(game.activePet, 2);
+        if (evolveMsg) {
+          const gm = document.getElementById("game-message");
+          if (gm) gm.textContent = evolveMsg;
+        }
+      }
+      const badge = root.querySelector(`[data-question="${index}"] .prog-badge`);
+      if (badge) {
+        badge.textContent = correct ? "✓ 已答对" : "✗ 已答错";
+        badge.className = "prog-badge " + (correct ? "correct" : "wrong");
+      }
+      showFeedback(index, correct ? "correct" : "wrong",
+        correct ? `<div class="feedback-title">✅ 答对了！</div><div class="feedback-detail">${esc(q.explanation)}</div>`
+                : `<div class="feedback-title">❌ 答错了，已收进错题本</div><div class="feedback-detail">${esc(q.explanation)}</div>`);
+    }
     function renderPractice(lessonIndex) {
       renderNav();
       const lesson = lessons[lessonIndex];
@@ -7448,40 +7520,22 @@
           </div>
         </div>`;
       slice.forEach((q, i) => {
+        if (q.options) {
+          root.querySelectorAll(`[data-question="${i}"] .option-btn`).forEach(button => {
+            button.addEventListener("click", () => {
+              const selected = Number(button.dataset.option);
+              root.querySelectorAll(`[data-question="${i}"] .option-btn`).forEach(option => {
+                option.classList.toggle("selected", option === button);
+                option.disabled = true;
+              });
+              submitPracticeAnswer(q, i, lesson, lessonIndex, selected);
+            });
+          });
+          return;
+        }
         const check = root.querySelector(`[data-check="${i}"]`);
         if (check) check.addEventListener("click", () => {
-          let correct = false;
-          let responseLabel = "";
-          if (q.options) {
-            const selected = root.querySelector(`input[name="answer-${i}"]:checked`);
-            if (!selected) { showFeedback(i, "neutral", "先选择一个答案，再检查哦。"); return; }
-            correct = Number(selected.value) === q.answer;
-            responseLabel = q.options[Number(selected.value)];
-          } else {
-            const value = document.getElementById(`answer-${i}`).value.trim().toLowerCase().replace(/\s+/g, "");
-            if (!value) { showFeedback(i, "neutral", "先填写答案，再检查哦。"); return; }
-            correct = q.accepted.some(a => a.toLowerCase().replace(/\s+/g, "") === value);
-            responseLabel = document.getElementById(`answer-${i}`).value.trim();
-          }
-          const key = `p-${lessonIndex}-${q.pk}-${q.pv}`;
-          if (correct) {
-            if (window.wrongbookRemove) window.wrongbookRemove(key);
-          } else if (window.wrongbookAdd) {
-            window.wrongbookAdd(key, q, lesson.title, responseLabel);
-          }
-          markPractice(lesson.title, q.pk, correct);
-          if (correct) {
-            const evolveMsg = addPetExp(game.activePet, 2);
-            if (evolveMsg) {
-              const gm = document.getElementById("game-message");
-              if (gm) gm.textContent = evolveMsg;
-            }
-          }
-          const badge = root.querySelector(`[data-question="${i}"] .prog-badge`);
-          if (badge) { badge.textContent = correct ? "✓ 已答对" : "✗ 已答错"; badge.className = "prog-badge " + (correct ? "correct" : "wrong"); }
-          showFeedback(i, correct ? "correct" : "wrong",
-            correct ? `<div class="feedback-title">✅ 答对了！</div><div class="feedback-detail">${esc(q.explanation)}</div>`
-                    : `<div class="feedback-title">❌ 答错了，已收进错题本</div><div class="feedback-detail">${esc(q.explanation)}</div>`);
+          submitPracticeAnswer(q, i, lesson, lessonIndex);
         });
       });
       const bindNav = (id, delta) => {

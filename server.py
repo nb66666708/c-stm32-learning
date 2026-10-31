@@ -81,8 +81,8 @@ def validate_request(payload):
         raise RequestError(400, "请求格式无效。")
 
     count = payload.get("count")
-    if count not in (20, 30):
-        raise RequestError(400, "每次挑战只能生成 20 或 30 道题。")
+    if count not in (5, 10, 20, 30):
+        raise RequestError(400, "每次挑战只能生成 5、10、20 或 30 道题。")
 
     courses = payload.get("courses")
     if not isinstance(courses, list) or not 1 <= len(courses) <= MAX_COURSES:

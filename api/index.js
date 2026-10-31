@@ -145,10 +145,10 @@ function validateQuestions(content, count) {
       if (questionType === "选择题" || questionType === "判断题") {
         let opts = Array.isArray(question.options) ? question.options.map((o) => cleanText(o, 220)).filter((o) => o) : [];
         if (questionType === "判断题" && opts.length < 2) opts = ["正确", "错误"];
-        if (new Set(opts).size !== opts.length) opts = [...new Set(opts)];
+        if (new Set(opts).size !== opts.length) continue;
         if (opts.length < 2) continue;
         let answer = Number.isInteger(question.answer) ? question.answer : 0;
-        if (answer < 0 || answer >= opts.length) answer = 0;
+        if (answer < 0 || answer >= opts.length) continue;
         result.options = opts;
         result.answer = answer;
       } else if (questionType === "填空题") {
