@@ -7065,6 +7065,22 @@
 
     const ADVENTURE_TOTAL = 10;
     let adv = null; // 对局状态
+    const adventureCompletedKey = "c_stm32_adventure_completed";
+    let adventureCompleted = new Set();
+    try {
+      const savedCompleted = JSON.parse(localStorage.getItem(adventureCompletedKey) || "[]");
+      if (Array.isArray(savedCompleted)) adventureCompleted = new Set(savedCompleted);
+    } catch (error) {
+      console.warn("Could not restore adventure completion records", error);
+    }
+
+    function saveAdventureCompletion(){
+      try {
+        localStorage.setItem(adventureCompletedKey, JSON.stringify([...adventureCompleted]));
+      } catch (error) {
+        console.error("Could not save adventure completion records", error);
+      }
+    }
 
     const wildPetsEarly = [
       {emoji:"🐀", name:"灰毛鼠"}, {emoji:"🐛", name:"卷卷虫"}, {emoji:"🦟", name:"小蚊子"},
@@ -7105,7 +7121,7 @@
         </div>
         <h3 style="margin:14px 0 8px;font-size:14px;">选择一门课当闯关地图：</h3>
         <div class="adv-lesson-list">
-          ${lessons.map((t, i) => `<button class="small-btn adv-lesson-btn" data-lesson="${i}">🗺️ ${t}</button>`).join("")}
+          ${lessons.map((t, i) => `<button class="small-btn adv-lesson-btn" data-lesson="${i}">🗺️ ${t}${adventureCompleted.has(t) ? "　✅ 已通关" : ""}</button>`).join("")}
         </div>`;
       body.querySelectorAll(".adv-lesson-btn").forEach(btn => {
         btn.addEventListener("click", () => startAdventure(lessons[Number(btn.dataset.lesson)]));
@@ -7268,6 +7284,8 @@
           msg += `\n🎉 击败 ${adv.enemy.name}！+${coinReward} 金币，宠物经验 +${expGain}${evo ? "。" + evo : ""}`;
           if (isFinal) {
             adv.over = true;
+            adventureCompleted.add(adv.title);
+            saveAdventureCompletion();
             saveGame(); updateGamePanel();
             bodyConclusion(true, msg);
             return;
