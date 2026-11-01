@@ -154,6 +154,7 @@
     .options { display: grid; gap: 8px; }
     .option-btn { border: 1px solid var(--line); border-radius: 9px; padding: 10px 12px; cursor: pointer; font-size: 13px; line-height: 1.5; text-align: left; background: #fff; transition: all .15s; }
     .option-btn:hover { border-color: #3568df; background: #f0f4ff; }
+    .option-btn.selected { border-color: #3568df; background: #e8efff; box-shadow: 0 0 0 2px rgba(53,104,223,.12); }
     .option-btn.correct { border-color: #2f9e44; background: #d3f9d8; color: #2b8a3e; font-weight: 600; }
     .option-btn.wrong { border-color: #e5484d; background: #ffe3e3; color: #c92a2a; }
     .option-btn:disabled { cursor: default; opacity: 1; }
@@ -6553,6 +6554,7 @@
         }));
         // 保存未完成的闯关进度
         if (adv && !adv.over) {
+          saveAdventureProgress(adv.title, adv.stage, adv.total, "进行中");
           localStorage.setItem("c_stm32_adventure_save", JSON.stringify({
             title: adv.title,
             stage: adv.stage,
@@ -7066,10 +7068,16 @@
     const ADVENTURE_TOTAL = 10;
     let adv = null; // 对局状态
     const adventureCompletedKey = "c_stm32_adventure_completed";
+    const adventureProgressKey = "c_stm32_adventure_progress";
     let adventureCompleted = new Set();
+    let adventureProgress = {};
     try {
       const savedCompleted = JSON.parse(localStorage.getItem(adventureCompletedKey) || "[]");
       if (Array.isArray(savedCompleted)) adventureCompleted = new Set(savedCompleted);
+      const savedProgress = JSON.parse(localStorage.getItem(adventureProgressKey) || "{}");
+      if (savedProgress && typeof savedProgress === "object" && !Array.isArray(savedProgress)) {
+        adventureProgress = savedProgress;
+      }
     } catch (error) {
       console.warn("Could not restore adventure completion records", error);
     }
@@ -7080,6 +7088,29 @@
       } catch (error) {
         console.error("Could not save adventure completion records", error);
       }
+    }
+
+    function saveAdventureProgress(title, stage, total, status){
+      if (!title || !Number.isInteger(stage) || !Number.isInteger(total)) return;
+      adventureProgress[title] = {
+        stage: Math.min(stage, total),
+        total,
+        status,
+        updatedAt: new Date().toISOString()
+      };
+      try {
+        localStorage.setItem(adventureProgressKey, JSON.stringify(adventureProgress));
+      } catch (error) {
+        console.error("Could not save adventure progress records", error);
+      }
+    }
+
+    function adventureProgressLabel(title, total){
+      const progress = adventureProgress[title];
+      if (!progress) return "";
+      if (progress.status === "已通关") return "　🏆 已通关";
+      if (progress.status === "失败") return `　💀 上次失败于第 ${progress.stage}/${total} 关`;
+      return `　▶️ 进行中：第 ${progress.stage}/${total} 关`;
     }
 
     const wildPetsEarly = [
@@ -7117,11 +7148,12 @@
       body.innerHTML = `
         <div class="adv-intro">
           <div>出战伙伴：<strong>${f.emoji} ${f.name} Lv.${f.lv}</strong></div>
-          <div style="color:var(--muted);font-size:12px;margin-top:4px;">每局最多 10 关（题目不足时自动缩短），第 5 关和最终关是 BOSS。答对题 → 你揍怪；答错 → 怪揍你。通关得金币+宠物经验。</div>
+          <div style="color:var(--muted);font-size:12px;margin-top:4px;">每局最多 10 关（题目不足时自动缩短），第 5 关和最终关是 BOSS。答对题 → 你揍怪；答错 → 怪揍你。通关得金币+宠物经验；已通关课程会永久记录。</div>
+          <div style="color:#2f9e44;font-size:12px;margin-top:6px;">🏆 已通关 ${adventureCompleted.size} / ${lessons.length} 张地图</div>
         </div>
         <h3 style="margin:14px 0 8px;font-size:14px;">选择一门课当闯关地图：</h3>
         <div class="adv-lesson-list">
-          ${lessons.map((t, i) => `<button class="small-btn adv-lesson-btn" data-lesson="${i}">🗺️ ${t}${adventureCompleted.has(t) ? "　✅ 已通关" : ""}</button>`).join("")}
+          ${lessons.map((t, i) => `<button class="small-btn adv-lesson-btn" data-lesson="${i}">🗺️ ${t}${adventureProgressLabel(t, Math.min(ADVENTURE_TOTAL, adventureQuestions(t).length))}</button>`).join("")}
         </div>`;
       body.querySelectorAll(".adv-lesson-btn").forEach(btn => {
         btn.addEventListener("click", () => startAdventure(lessons[Number(btn.dataset.lesson)]));
@@ -7285,6 +7317,7 @@
           if (isFinal) {
             adv.over = true;
             adventureCompleted.add(adv.title);
+            saveAdventureProgress(adv.title, adv.total, adv.total, "已通关");
             saveAdventureCompletion();
             saveGame(); updateGamePanel();
             bodyConclusion(true, msg);
@@ -7300,6 +7333,7 @@
         }
         if (adv.myHp <= 0) {
           adv.over = true;
+          saveAdventureProgress(adv.title, adv.stage, adv.total, "失败");
           saveGame();
           bodyConclusion(false, `💀 你的宠物倒下了……闯关失败。再接再厉，答更多题把宠物练强再来！`);
           return;
@@ -7715,6 +7749,19 @@
             : `完成全部题目后查看成绩。已答 ${count} / ${session.questions.length} 题。`;
           if (isComplete) document.getElementById("finish-challenge").textContent = "返回课程";
         };
+        if (question.options) {
+          root.querySelectorAll(`[data-question="${index}"] .option-btn`).forEach(button => {
+            button.addEventListener("click", () => {
+              if (session.results.has(question.id)) return;
+              const answer = Number(button.dataset.option);
+              root.querySelectorAll(`[data-question="${index}"] .option-btn`).forEach(option => {
+                option.disabled = true;
+                option.classList.toggle("selected", option === button);
+              });
+              recordResult(answer === question.answer, question.options[answer]);
+            });
+          });
+        }
         if (check) check.addEventListener("click", () => {
           if (question.options) {
             const selected = root.querySelector(`input[name="answer-${index}"]:checked`);
