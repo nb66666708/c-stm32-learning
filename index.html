@@ -6043,6 +6043,29 @@
       ].join("\u001e").replace(/\s+/g, " ").trim();
     }
 
+    function questionTextFingerprint(question) {
+      return String(question.q || "")
+        .toLocaleLowerCase()
+        .replace(/[“”‘’"'`]/g, "")
+        .replace(/[，。！？、；：,.!?;:()[\]{}<>《》]/g, "")
+        .replace(/\s+/g, "")
+        .replace(/第[一二三四五六七八九十0-9]+题/g, "");
+    }
+
+    function questionsAreDuplicates(first, second) {
+      if (!first || !second || first.t !== second.t) return false;
+      const a = questionTextFingerprint(first);
+      const b = questionTextFingerprint(second);
+      if (!a || !b) return false;
+      if (a === b || (a.length >= 12 && b.includes(a)) || (b.length >= 12 && a.includes(b))) return true;
+      if (a.length < 18 || b.length < 18) return false;
+      const grams = value => new Set(value.slice(0, -1).split("").map((char, index) => value.slice(index, index + 2)));
+      const left = grams(a);
+      const right = grams(b);
+      const intersection = [...left].filter(gram => right.has(gram)).length;
+      return intersection / Math.max(1, left.size + right.size - intersection) >= 0.9;
+    }
+
     function stableQuestionHash(value) {
       let result = 2166136261;
       for (let i = 0; i < value.length; i += 1) {
@@ -6055,14 +6078,16 @@
     function normalizePracticePool(pool) {
       const normalized = {};
       const seen = new Set();
+      const uniqueQuestions = [];
 
       Object.entries(pool).forEach(([title, questions]) => {
         const unique = [];
         (Array.isArray(questions) ? questions : []).forEach(question => {
           if (!question || !question.q || !question.t) return;
           const fingerprint = questionFingerprint(question);
-          if (seen.has(fingerprint)) return;
+          if (seen.has(fingerprint) || uniqueQuestions.some(item => questionsAreDuplicates(item, question))) return;
           seen.add(fingerprint);
+          uniqueQuestions.push(question);
 
           if (question.t === "s" && Array.isArray(question.o) &&
               Number.isInteger(question.a) && question.o.length >= 2 &&
@@ -6187,6 +6212,20 @@
     });
     practicePool = normalizePracticePool(practicePool);
     lessons.forEach(lesson => {
+      const unique = [];
+      for (const question of lesson.questions || []) {
+        const candidate = {
+          t: question.type === "选择题" ? "s" : question.type === "判断题" ? "j" : question.type === "填空题" ? "f" : "p",
+          q: question.text,
+          o: question.options,
+          a: question.answer
+        };
+        if (!unique.some(item => questionsAreDuplicates(item, candidate))) unique.push(candidate);
+      }
+      const originalByText = new Map((lesson.questions || []).map(question => [question.text, question]));
+      lesson.questions = unique.map(candidate => originalByText.get(candidate.q)).filter(Boolean);
+    });
+    lessons.forEach(lesson => {
       const currentChoices = (lesson.questions || []).filter(question =>
         question.type === "选择题" && Array.isArray(question.options));
       const generatedChoices = (practicePool[lesson.title] || [])
@@ -6214,6 +6253,7 @@
     const practicePoolProblems = [];
     const practiceFingerprints = new Set();
     Object.entries(practicePool).forEach(([title, questions]) => {
+      const localQuestions = [];
       questions.forEach((question, index) => {
         const label = `${title} 第${index + 1}题`;
         if (question.t === "s" &&
@@ -6225,6 +6265,10 @@
         if (practiceFingerprints.has(fingerprint)) {
           practicePoolProblems.push(`${label}：题目重复`);
         }
+        if (localQuestions.some(item => questionsAreDuplicates(item, question))) {
+          practicePoolProblems.push(`${label}：题干重复或高度相似`);
+        }
+        localQuestions.push(question);
         practiceFingerprints.add(fingerprint);
       });
     });
@@ -6232,6 +6276,15 @@
       console.error("练习题库自检失败：", practicePoolProblems);
     }
     window.__practicePoolProblems = practicePoolProblems;
+    window.__questionAudit = Object.fromEntries(Object.entries(practicePool).map(([title, questions]) => [
+      title,
+      {
+        total: questions.length,
+        choices: questions.filter(question => question.t === "s").length,
+        programs: (lessons.find(lesson => lesson.title === title)?.questions || [])
+          .filter(question => question.type === "程序题").length
+      }
+    ]));
 
     const theorySupplements = {
       "认识 C 语言与第一个程序": [
@@ -6317,6 +6370,40 @@
     };
     for (const lesson of lessons) {
       if (theorySupplements[lesson.title]) lesson.content.push(...theorySupplements[lesson.title]);
+    }
+    const programSupplements = {
+      "变量、类型与输入输出": [
+        {
+          type: "程序题",
+          text: "读入一个整数和一个 double 小数，按“整数 小数”格式输出它们。",
+          explanation: "整数使用 %d，double 使用 %lf 读取；输出 double 时可用 %.2f 控制小数位。",
+          solution: "#include <stdio.h>\nint main(void) {\n    int count;\n    double price;\n    if (scanf(\"%d %lf\", &count, &price) != 2) return 1;\n    printf(\"%d %.2f\\n\", count, price);\n    return 0;\n}",
+          tests: [{input:"3 2.5\n", output:"3 2.50\n"}, {input:"-2 0.125\n", output:"-2 0.12\n"}]
+        },
+        {
+          type: "程序题",
+          text: "读入一个字符，输出该字符以及它对应的整数编码。",
+          explanation: "字符用 %c 读取；输出字符用 %c，转换为 int 后用 %d 输出。不要把字符和字符串的格式符混用。",
+          solution: "#include <stdio.h>\nint main(void) {\n    char ch;\n    if (scanf(\" %c\", &ch) != 1) return 1;\n    printf(\"%c %d\\n\", ch, (int)ch);\n    return 0;\n}",
+          tests: [{input:"A\n", output:"A 65\n"}, {input:"z\n", output:"z 122\n"}]
+        },
+        {
+          type: "程序题",
+          text: "读入一个整数 score，输出 score 加 5 后的结果，并保留原分数不变。",
+          explanation: "把计算结果写入新变量，避免误把原变量覆盖；读取失败时应停止使用未初始化的 score。",
+          solution: "#include <stdio.h>\nint main(void) {\n    int score;\n    if (scanf(\"%d\", &score) != 1) return 1;\n    int improved = score + 5;\n    printf(\"%d\\n\", improved);\n    return 0;\n}",
+          tests: [{input:"90\n", output:"95\n"}, {input:"-3\n", output:"2\n"}]
+        }
+      ]
+    };
+    lessons.forEach(lesson => {
+      if (programSupplements[lesson.title]) lesson.questions.push(...programSupplements[lesson.title]);
+    });
+    if (window.__questionAudit) {
+      Object.entries(window.__questionAudit).forEach(([title, audit]) => {
+        const lesson = lessons.find(item => item.title === title);
+        if (lesson) audit.programs = lesson.questions.filter(question => question.type === "程序题").length;
+      });
     }
     const attachJudgeTests = (lessonTitle, questionPrefix, tests) => {
       const lesson = lessons.find(item => item.title === lessonTitle);
@@ -6514,7 +6601,11 @@
       }
       const isHostedStaticPage = location.hostname.endsWith(".github.io");
       const defaultUrl = location.protocol === "http:" || location.protocol === "https:"
-        ? (isHostedStaticPage ? "" : location.origin)
+        ? (isHostedStaticPage
+          ? ""
+          : location.port === "8767"
+            ? "http://127.0.0.1:8000"
+            : location.origin)
         : "";
       return {
         baseUrl: typeof saved.baseUrl === "string" ? saved.baseUrl.replace(/\/+$/, "") : defaultUrl,
@@ -7903,21 +7994,21 @@
         showFeedback(index, "neutral", "先写出完整的 C 程序，再提交在线编译。");
         return;
       }
-      if (location.hostname.endsWith(".github.io")) {
-        resultBox.textContent = "GitHub Pages 不提供运行代码的后端；课程学习、签到与本地奖励仍可使用。此网页不会自动上传你的代码。";
-        return;
-      }
       if (location.protocol === "file:") {
         resultBox.textContent = "在线判题需要先启动本机网站服务并从 http://127.0.0.1:8000/ 打开页面。";
         return;
       }
+      const connection = readApiConnection();
+      const judgeBaseUrl = connection.baseUrl || (location.port === "8767"
+        ? "http://127.0.0.1:8000"
+        : location.origin);
       button.disabled = true;
       button.textContent = "正在编译和运行…";
       resultBox.textContent = "代码将提交给 Wandbox 隔离判题服务，并使用课程提供的测试数据。";
       try {
-        const response = await fetch("/api/run", {
+        const response = await fetch(`${judgeBaseUrl}/api/run`, {
           method: "POST",
-          headers: {"Content-Type": "application/json"},
+          headers: apiRequestHeaders(),
           body: JSON.stringify({source, tests: question.tests}),
           signal: AbortSignal.timeout(90000)
         });
