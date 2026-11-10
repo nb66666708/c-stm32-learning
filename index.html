@@ -7952,7 +7952,7 @@
       }
       game.answers[key] = correct;
       saveGame();
-      if (typeof recordAnswer === "function") recordAnswer(correct);
+      if (typeof window.recordAnswer === "function") window.recordAnswer(correct);
       updateGamePanel();
       const knowledge = q.knowledge || `${lesson.title}：${lesson.goals[index % lesson.goals.length]}`;
       const pitfall = q.pitfall || lessonPitfalls[Math.max(0, lessonIndex - starterLessons.length)];
@@ -8550,6 +8550,8 @@
       keys.forEach(k => trimmed[k] = stats[k]);
       try { localStorage.setItem(STATS_KEY, JSON.stringify(trimmed)); } catch(e) {}
     }
+    // 暴露到全局，供 submitResult 调用
+    window.recordAnswer = recordAnswer;
 
     // ===== 统计弹窗 =====
     const statsDialog = document.getElementById("stats-dialog");
