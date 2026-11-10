@@ -18,10 +18,24 @@
       --paper: #fffefa;
       --green: #438f70;
       --red: #b85f59;
+      --bg: #f8faf5;
       font-family: Inter, "Segoe UI", "Microsoft YaHei", sans-serif;
     }
+    [data-theme="dark"] {
+      color-scheme: dark;
+      --ink: #e0ebe8;
+      --muted: #8aa39e;
+      --blue: #69b8a8;
+      --blue-dark: #8dd4c4;
+      --pale: #1e3a35;
+      --line: #2d4a44;
+      --paper: #1a2e2a;
+      --green: #6cc4a0;
+      --red: #e08a84;
+      --bg: #121f1c;
+    }
     * { box-sizing: border-box; }
-    body { margin: 0; color: var(--ink); background: radial-gradient(ellipse at 8% 8%, #e8f5ef 0, transparent 30%), radial-gradient(ellipse at 94% 18%, #eaf3f8 0, transparent 28%), #f8faf5; }
+    body { margin: 0; color: var(--ink); background: radial-gradient(ellipse at 8% 8%, rgba(105,184,168,.08) 0, transparent 30%), radial-gradient(ellipse at 94% 18%, rgba(105,184,168,.06) 0, transparent 28%), var(--bg); transition: background .3s, color .3s; }
     button, input, textarea { font: inherit; }
     button { cursor: pointer; }
     .topbar {
@@ -78,12 +92,25 @@
     .daily-quest-heading { display: flex; justify-content: space-between; gap: 6px; color: #547366; font-size: 10px; }
     .daily-quest-track { height: 6px; margin-top: 7px; overflow: hidden; border-radius: 8px; background: #e5ece2; }
     .daily-quest-fill { width: 0; height: 100%; border-radius: inherit; background: linear-gradient(90deg, #83c9a7, #82b8c0); transition: width .2s; }
-    .pet-shop-dialog { width: min(520px, calc(100vw - 28px)); max-height: min(680px, calc(100vh - 32px)); overflow: auto; padding: 22px; border: 1px solid #dce9e3; border-radius: 20px; color: var(--ink); background: #fffefa; box-shadow: 0 24px 70px #344b4b33; }
+    .pet-shop-dialog { width: min(520px, calc(100vw - 28px)); max-height: min(680px, calc(100vh - 32px)); overflow: auto; padding: 22px; border: 1px solid var(--line); border-radius: 20px; color: var(--ink); background: var(--paper); box-shadow: 0 24px 70px #344b4b33; }
     .pet-shop-dialog::backdrop { background: #233b3880; backdrop-filter: blur(3px); }
     .pet-shop-head { display: flex; align-items: flex-start; justify-content: space-between; gap: 16px; }
     .pet-shop-head h2 { margin: 0 0 6px; font-size: 20px; }
     .pet-shop-head p, .shop-note { margin: 0; color: var(--muted); font-size: 12px; line-height: 1.65; }
-    .pet-shop-close { border: 0; border-radius: 50%; width: 34px; height: 34px; color: var(--ink); background: #edf4ef; font-size: 18px; }
+    .pet-shop-close { border: 0; border-radius: 50%; width: 34px; height: 34px; color: var(--ink); background: var(--pale); font-size: 18px; }
+    .stats-summary { display: grid; grid-template-columns: repeat(3, 1fr); gap: 12px; margin: 18px 0; }
+    .stat-card { padding: 14px; border-radius: 14px; background: var(--pale); text-align: center; }
+    .stat-card strong { display: block; font-size: 22px; color: var(--blue-dark); margin-bottom: 4px; }
+    .stat-card span { font-size: 12px; color: var(--muted); }
+    .chart-container { margin: 16px 0; }
+    .chart-title { font-size: 14px; font-weight: 700; margin-bottom: 12px; }
+    .chart-bars { display: flex; align-items: flex-end; gap: 8px; height: 140px; padding: 0 4px; }
+    .chart-bar-wrap { flex: 1; display: flex; flex-direction: column; align-items: center; gap: 6px; height: 100%; justify-content: flex-end; }
+    .chart-bar { width: 100%; max-width: 28px; border-radius: 6px 6px 0 0; background: var(--blue); min-height: 4px; transition: height .3s; }
+    .chart-bar.correct { background: var(--green); }
+    .chart-bar-label { font-size: 10px; color: var(--muted); }
+    .chart-legend { display: flex; gap: 16px; margin-top: 10px; font-size: 11px; color: var(--muted); }
+    .legend-dot { display: inline-block; width: 10px; height: 10px; border-radius: 3px; margin-right: 4px; vertical-align: middle; }
     .api-config-dialog { width: min(480px, calc(100vw - 28px)); padding: 22px; border: 1px solid #dce9e3; border-radius: 20px; color: var(--ink); background: #fffefa; box-shadow: 0 24px 70px #344b4b33; }
     .api-config-dialog::backdrop { background: #233b3880; backdrop-filter: blur(3px); }
     .api-config-dialog h2 { margin: 0 0 8px; font-size: 19px; }
@@ -433,7 +460,11 @@
 
   <header class="topbar">
     <div class="brand"><span class="brand-mark">C</span><span>C 起点 · STM32 实战</span></div>
-    <span class="top-note">先学 C，再让单片机动起来</span>
+    <div style="display:flex;gap:10px;align-items:center;">
+      <span class="top-note">先学 C，再让单片机动起来</span>
+      <button class="small-btn" id="theme-toggle" title="切换夜间模式">🌙</button>
+      <button class="small-btn" id="open-stats" title="学习数据统计">📊</button>
+    </div>
   </header>
   <div class="shell">
     <aside aria-label="课程目录">
@@ -494,6 +525,13 @@
       <button class="pet-shop-close" id="close-adventure" aria-label="关闭">×</button>
     </div>
     <div id="adventure-body"></div>
+  </dialog>
+  <dialog class="pet-shop-dialog" id="stats-dialog" aria-labelledby="stats-title">
+    <div class="pet-shop-head">
+      <div><h2 id="stats-title">📊 学习数据统计</h2><p>看看你每天学了多少，坚持就是胜利！</p></div>
+      <button class="pet-shop-close" id="close-stats" aria-label="关闭">×</button>
+    </div>
+    <div id="stats-body"></div>
   </dialog>
   <dialog class="api-config-dialog" id="api-config-dialog" aria-labelledby="api-config-title">
     <form id="api-config-form">
@@ -8469,6 +8507,114 @@
       updateGamePanel();
       renderPetShop();
     });
+
+    // ===== 夜间模式 =====
+    const themeToggle = document.getElementById("theme-toggle");
+    const savedTheme = localStorage.getItem("c_stm32_theme");
+    if (savedTheme === "dark") {
+      document.documentElement.setAttribute("data-theme", "dark");
+      themeToggle.textContent = "☀️";
+    }
+    themeToggle.addEventListener("click", () => {
+      const isDark = document.documentElement.getAttribute("data-theme") === "dark";
+      if (isDark) {
+        document.documentElement.removeAttribute("data-theme");
+        themeToggle.textContent = "🌙";
+        localStorage.setItem("c_stm32_theme", "light");
+      } else {
+        document.documentElement.setAttribute("data-theme", "dark");
+        themeToggle.textContent = "☀️";
+        localStorage.setItem("c_stm32_theme", "dark");
+      }
+    });
+
+    // ===== 学习数据统计 =====
+    const STATS_KEY = "c_stm32_stats";
+    function getTodayKey() {
+      const d = new Date();
+      return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,"0")}-${String(d.getDate()).padStart(2,"0")}`;
+    }
+    function loadStats() {
+      try { return JSON.parse(localStorage.getItem(STATS_KEY)) || {}; } catch(e) { return {}; }
+    }
+    function recordAnswer(correct) {
+      const stats = loadStats();
+      const today = getTodayKey();
+      if (!stats[today]) stats[today] = { total: 0, correct: 0 };
+      stats[today].total += 1;
+      if (correct) stats[today].correct += 1;
+      // 只保留最近 30 天
+      const keys = Object.keys(stats).sort().slice(-30);
+      const trimmed = {};
+      keys.forEach(k => trimmed[k] = stats[k]);
+      try { localStorage.setItem(STATS_KEY, JSON.stringify(trimmed)); } catch(e) {}
+    }
+    // 拦截答题结果，记录统计
+    const origSubmit = submitResult;
+    if (typeof origSubmit === "function") {
+      // 在正确答题时自动记录（由现有判分逻辑触发）
+    }
+    // 手动在判分函数里加记录 - 找 markPractice 函数
+    const origMark = markPractice;
+    if (typeof origMark === "function") {
+      window.markPractice = function(idx, choice) {
+        const wasCorrect = choice === currentQuestion.a;
+        origMark(idx, choice);
+        recordAnswer(wasCorrect);
+      };
+    }
+
+    // ===== 统计弹窗 =====
+    const statsDialog = document.getElementById("stats-dialog");
+    document.getElementById("open-stats").addEventListener("click", () => {
+      renderStats();
+      statsDialog.showModal();
+    });
+    document.getElementById("close-stats").addEventListener("click", () => statsDialog.close());
+    statsDialog.addEventListener("click", e => { if (e.target === statsDialog) statsDialog.close(); });
+
+    function renderStats() {
+      const stats = loadStats();
+      const keys = Object.keys(stats).sort().slice(-14); // 最近14天
+      const today = getTodayKey();
+      const todayData = stats[today] || { total: 0, correct: 0 };
+      const weekTotal = keys.reduce((s, k) => s + stats[k].total, 0);
+      const weekCorrect = keys.reduce((s, k) => s + stats[k].correct, 0);
+      const accuracy = weekTotal > 0 ? Math.round(weekCorrect / weekTotal * 100) : 0;
+      const activeDays = keys.filter(k => stats[k].total > 0).length;
+
+      const body = document.getElementById("stats-body");
+      body.innerHTML = `
+        <div class="stats-summary">
+          <div class="stat-card"><strong>${todayData.total}</strong><span>今日做题</span></div>
+          <div class="stat-card"><strong>${todayData.correct}</strong><span>今日答对</span></div>
+          <div class="stat-card"><strong>${accuracy}%</strong><span>近14天正确率</span></div>
+        </div>
+        <div class="chart-container">
+          <div class="chart-title">📈 最近 ${keys.length} 天做题量</div>
+          <div class="chart-bars">
+            ${keys.map(k => {
+              const d = stats[k];
+              const max = Math.max(...keys.map(kk => stats[kk].total), 10);
+              const h = Math.max(4, Math.round(d.total / max * 100));
+              const label = k.slice(5).replace("-", "/");
+              return `<div class="chart-bar-wrap" title="${k}: ${d.total}题，对${d.correct}">
+                <div class="chart-bar" style="height:${h}%"></div>
+                <div class="chart-bar-label">${label}</div>
+              </div>`;
+            }).join("")}
+          </div>
+          <div class="chart-legend">
+            <span><span class="legend-dot" style="background:var(--blue)"></span>做题总数</span>
+          </div>
+        </div>
+        <div style="margin-top:14px;padding:12px;border-radius:12px;background:var(--pale);font-size:12px;color:var(--muted);line-height:1.6;">
+          近14天累计做题 <strong>${weekTotal}</strong> 道，答对 <strong>${weekCorrect}</strong> 道，
+          活跃学习 <strong>${activeDays}</strong> 天。继续保持！
+        </div>
+      `;
+    }
+
     render();
   </script>
 </body>
