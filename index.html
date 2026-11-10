@@ -7952,6 +7952,7 @@
       }
       game.answers[key] = correct;
       saveGame();
+      if (typeof recordAnswer === "function") recordAnswer(correct);
       updateGamePanel();
       const knowledge = q.knowledge || `${lesson.title}：${lesson.goals[index % lesson.goals.length]}`;
       const pitfall = q.pitfall || lessonPitfalls[Math.max(0, lessonIndex - starterLessons.length)];
@@ -8548,20 +8549,6 @@
       const trimmed = {};
       keys.forEach(k => trimmed[k] = stats[k]);
       try { localStorage.setItem(STATS_KEY, JSON.stringify(trimmed)); } catch(e) {}
-    }
-    // 拦截答题结果，记录统计
-    const origSubmit = submitResult;
-    if (typeof origSubmit === "function") {
-      // 在正确答题时自动记录（由现有判分逻辑触发）
-    }
-    // 手动在判分函数里加记录 - 找 markPractice 函数
-    const origMark = markPractice;
-    if (typeof origMark === "function") {
-      window.markPractice = function(idx, choice) {
-        const wasCorrect = choice === currentQuestion.a;
-        origMark(idx, choice);
-        recordAnswer(wasCorrect);
-      };
     }
 
     // ===== 统计弹窗 =====
