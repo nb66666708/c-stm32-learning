@@ -7640,7 +7640,7 @@
       renderNav();
       root.innerHTML = `<header class="lesson-head"><div class="eyebrow">${esc(lesson.level)}</div><h1>${esc(lesson.title)}</h1><p class="intro">${esc(lesson.intro)}</p></header>
         <div class="body-content">
-          <div class="challenge-card"><div><strong>🤖 AI 冒险挑战</strong><p>使用智谱 GLM-5.3 生成新题（额度和限流以智谱账号后台为准）。</p></div><div class="challenge-controls"><label for="challenge-count" class="exercise-count">题量</label><select id="challenge-count" aria-label="挑战题量"><option value="5" selected>5 题（推荐）</option><option value="10">10 题</option><option value="20">20 题</option><option value="30">30 题</option></select><button class="small-btn" id="ai-challenge">AI 生成挑战</button><button class="secondary-btn" id="configure-ai">🔐 配置 AI 后端</button><button class="secondary-btn" id="random-challenge">抽一道旧题</button><button class="secondary-btn" id="export-progress">📤 导出进度</button><button class="secondary-btn" id="import-progress">📥 导入进度</button><button class="secondary-btn" id="reset-game">重置游戏数据</button></div></div>
+          <div class="challenge-card"><div><strong>🤖 AI 冒险挑战</strong><p>使用智谱 GLM-5.3 生成新题（额度和限流以智谱账号后台为准）。</p></div><div class="challenge-controls"><label for="challenge-count" class="exercise-count">题量</label><select id="challenge-count" aria-label="挑战题量"><option value="5" selected>5 题（推荐）</option><option value="10">10 题</option><option value="20">20 题</option><option value="30">30 题</option></select><button class="small-btn" id="ai-challenge">AI 生成挑战</button><button class="secondary-btn" id="configure-ai">🔐 配置 AI 后端</button><button class="secondary-btn" id="random-challenge">🎯 抽一道错题</button><button class="secondary-btn" id="export-progress">📤 导出进度</button><button class="secondary-btn" id="import-progress">📥 导入进度</button><button class="secondary-btn" id="reset-game">重置游戏数据</button></div></div>
           <p class="challenge-note">公网 AI 出题由你的后端服务安全调用智谱。首次使用需配置后端服务地址和访问口令；智谱 API Key 只保存在服务端，绝不要写进公开网页。AI 题目会发送课程资料给智谱，生成结果请结合课程核对。</p>
           <p class="challenge-status" id="challenge-status" role="status" aria-live="polite">每套挑战包含 20 或 30 道新题。首次使用请先配置 AI 后端；免费模型仍可能有账号额度或速率限制。</p>
           ${current >= starterLessons.length + 20 ? `<div class="tip" style="margin-bottom:22px"><strong>🧭 STM32 学习建议</strong><br>每课按“读原理图/芯片资料 → CubeMX 配置 → 编译下载 → 单独验证 → 改一个参数再观察”的顺序练习。先确保 C 的函数、数组、指针和位运算基础；接线前断电，GPIO 不直接驱动电机或大电流负载。不同芯片系列的引脚、时钟和 HAL 细节可能不同，请以你的具体型号为准。</div>` : ""}
@@ -7724,14 +7724,64 @@
       document.getElementById("ai-challenge").addEventListener("click", generateChallenge);
       document.getElementById("configure-ai").addEventListener("click", openApiConfig);
       document.getElementById("random-challenge").addEventListener("click", () => {
-        const lessonIndex = Math.floor(Math.random() * lessons.length);
-        const questionIndex = Math.floor(Math.random() * lessons[lessonIndex].questions.length);
-        challengeSession = null;
-        current = lessonIndex;
-        render();
-        const card = root.querySelector(`[data-question="${questionIndex}"]`);
-        card.scrollIntoView({behavior: "smooth", block: "center"});
-        card.animate([{transform: "scale(1)", boxShadow: "0 0 0 0 rgba(53,104,223,0)"}, {transform: "scale(1.02)", boxShadow: "0 0 0 5px rgba(53,104,223,.2)"}, {transform: "scale(1)", boxShadow: "0 0 0 0 rgba(53,104,223,0)"}], {duration: 700});
+        // 从错题本随机抽一道题
+        let wb = [];
+        try { wb = JSON.parse(localStorage.getItem('c_stm32_wrongbook')) || []; } catch(e) {}
+        if (wb.length === 0) {
+          alert("📕 错题本是空的！先去做题，答错的题会自动收进来。");
+          return;
+        }
+        const item = wb[Math.floor(Math.random() * wb.length)];
+        // 弹出答题界面
+        const opts = item.options ? item.options.map((o, i) => `<button class="option-btn" data-i="${i}">${esc(o)}</button>`).join("") : "";
+        const dlg = document.createElement("dialog");
+        dlg.style.cssText = "max-width:500px;width:90%;padding:20px;border-radius:14px;border:1px solid var(--line)";
+        dlg.innerHTML = `<h3 style="margin:0 0 10px">📕 错题重练（来自：${esc(item.lesson)}）</h3>
+          <div style="margin-bottom:14px;font-size:14px;line-height:1.6">${esc(item.text)}</div>
+          ${opts ? `<div class="options" style="display:grid;gap:8px">${opts}</div>` : `<div style="margin:10px 0"><input class="answer-input" id="wb-answer" placeholder="输入答案"></div>`}
+          <div id="wb-result" style="margin-top:12px;font-size:13px"></div>
+          <div style="margin-top:14px;text-align:right"><button class="secondary-btn" onclick="this.closest('dialog').close()">关闭</button></div>`;
+        document.body.appendChild(dlg);
+        dlg.showModal();
+        // 选项判分
+        dlg.querySelectorAll(".option-btn").forEach(btn => {
+          btn.addEventListener("click", () => {
+            const chosen = Number(btn.dataset.i);
+            const correct = chosen === item.answer;
+            dlg.querySelectorAll(".option-btn").forEach((b, i) => {
+              b.disabled = true;
+              if (i === item.answer) b.classList.add("correct");
+              else if (i === chosen) b.classList.add("wrong");
+            });
+            const res = document.getElementById("wb-result");
+            if (correct) {
+              res.innerHTML = `✅ 答对了！这道题已从错题本移除。<br><span style="color:var(--muted)">${esc(item.explanation || "")}</span>`;
+              if (window.wrongbookRemove) window.wrongbookRemove(item.key);
+            } else {
+              res.innerHTML = `❌ 答错了，继续留在错题本。<br>正确答案：${esc(item.options[item.answer])}<br><span style="color:var(--muted)">${esc(item.explanation || "")}</span>`;
+            }
+          });
+        });
+        // 填空题判分
+        if (!item.options) {
+          const input = dlg.querySelector("#wb-answer");
+          const checkBtn = document.createElement("button");
+          checkBtn.className = "small-btn";
+          checkBtn.textContent = "检查答案";
+          checkBtn.style.marginLeft = "8px";
+          input.after(checkBtn);
+          checkBtn.addEventListener("click", () => {
+            const val = input.value.trim().toLowerCase().replace(/\s+/g, "");
+            const correct = item.accepted.some(a => a.toLowerCase().replace(/\s+/g, "") === val);
+            const res = document.getElementById("wb-result");
+            if (correct) {
+              res.innerHTML = `✅ 答对了！这道题已从错题本移除。<br><span style="color:var(--muted)">${esc(item.explanation || "")}</span>`;
+              if (window.wrongbookRemove) window.wrongbookRemove(item.key);
+            } else {
+              res.innerHTML = `❌ 答错了，继续留在错题本。<br>正确答案：${esc(item.accepted[0])}<br><span style="color:var(--muted)">${esc(item.explanation || "")}</span>`;
+            }
+          });
+        }
       });
       document.getElementById("reset-game").addEventListener("click", () => {
         if (!window.confirm("确定重置经验、金币、签到记录、已收集贴纸和答题记录吗？课程完成进度不会受影响。")) return;
