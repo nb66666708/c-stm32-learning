@@ -154,7 +154,6 @@
     .options { display: grid; gap: 8px; }
     .option-btn { border: 1px solid var(--line); border-radius: 9px; padding: 10px 12px; cursor: pointer; font-size: 13px; line-height: 1.5; text-align: left; background: #fff; transition: all .15s; }
     .option-btn:hover { border-color: #3568df; background: #f0f4ff; }
-    .option-btn.selected { border-color: #3568df; background: #e8efff; box-shadow: 0 0 0 2px rgba(53,104,223,.12); }
     .option-btn.correct { border-color: #2f9e44; background: #d3f9d8; color: #2b8a3e; font-weight: 600; }
     .option-btn.wrong { border-color: #e5484d; background: #ffe3e3; color: #c92a2a; }
     .option-btn:disabled { cursor: default; opacity: 1; }
@@ -3006,34 +3005,7 @@
       }
     ];
     lessons.push(...extraLessons);
-    // Keep the built-in question bank fail-safe: a malformed answer should be
-    // caught during development instead of silently teaching the wrong thing.
-    function validateLessonQuestionBank() {
-      const problems = [];
-      lessons.forEach((lesson, lessonIndex) => {
-        (lesson.questions || []).forEach((question, questionIndex) => {
-          if (question.options && (!Number.isInteger(question.answer) ||
-              question.answer < 0 || question.answer >= question.options.length)) {
-            problems.push(`课${lessonIndex + 1}题${questionIndex + 1}：选择项答案索引无效`);
-          }
-          if (question.type === "填空题" &&
-              (!Array.isArray(question.accepted) || question.accepted.length === 0)) {
-            problems.push(`课${lessonIndex + 1}题${questionIndex + 1}：缺少填空答案`);
-          }
-          if (question.type === "程序题" && !question.solution) {
-            problems.push(`课${lessonIndex + 1}题${questionIndex + 1}：缺少参考程序`);
-          }
-        });
-      });
-      if (problems.length) {
-        console.error("题库自检失败：", problems);
-      }
-      window.__questionBankProblems = problems;
-      return problems;
-    }
-    validateLessonQuestionBank();
-
-    let practicePool = {
+    const practicePool = {
       "认识 C 语言与第一个程序": [
         {t:"s", q:"一个普通 C 程序是从哪个函数开始执行的？", o:["main","printf","start","include"], a:0, e:"C 程序的执行入口是 main 函数。printf 是输出函数，include 是预处理指令的一部分，都不负责启动程序。"},
         {t:"s", q:"下面哪一行写在程序最前面，用来引入标准输入输出工具？", o:["#include <stdio.h>","#include <math.h>","int main()","return 0;"], a:0, e:"#include <stdio.h> 把标准输入输出（printf/scanf 等）的声明引进来；没有它调用 printf 会报“未声明”错误。"},
@@ -6032,260 +6004,6 @@
         {t:"s", q:"DMA 数据宽度设为 Half Word，对应几位？", o:["8 位","16 位","32 位","64 位"], a:1, e:"Byte=8 位，Half Word=16 位，Word=32 位。"}
       ]
     };
-    function questionFingerprint(question) {
-      return [
-        question.t || "",
-        question.q || "",
-        question.code || "",
-        Array.isArray(question.o) ? question.o.join("\u001f") : "",
-        Array.isArray(question.ans) ? question.ans.join("\u001f") : "",
-        Number.isInteger(question.a) ? question.a : ""
-      ].join("\u001e").replace(/\s+/g, " ").trim();
-    }
-
-    function questionTextFingerprint(question) {
-      return String(question.q || "")
-        .toLocaleLowerCase()
-        .replace(/[“”‘’"'`]/g, "")
-        .replace(/[，。！？、；：,.!?;:()[\]{}<>《》]/g, "")
-        .replace(/\s+/g, "")
-        .replace(/第[一二三四五六七八九十0-9]+题/g, "");
-    }
-
-    function questionsAreDuplicates(first, second) {
-      if (!first || !second || first.t !== second.t) return false;
-      const a = questionTextFingerprint(first);
-      const b = questionTextFingerprint(second);
-      if (!a || !b) return false;
-      if (a === b || (a.length >= 12 && b.includes(a)) || (b.length >= 12 && a.includes(b))) return true;
-      if (a.length < 18 || b.length < 18) return false;
-      const grams = value => new Set(value.slice(0, -1).split("").map((char, index) => value.slice(index, index + 2)));
-      const left = grams(a);
-      const right = grams(b);
-      const intersection = [...left].filter(gram => right.has(gram)).length;
-      return intersection / Math.max(1, left.size + right.size - intersection) >= 0.9;
-    }
-
-    function stableQuestionHash(value) {
-      let result = 2166136261;
-      for (let i = 0; i < value.length; i += 1) {
-        result ^= value.charCodeAt(i);
-        result = Math.imul(result, 16777619);
-      }
-      return result >>> 0;
-    }
-
-    function normalizePracticePool(pool) {
-      const normalized = {};
-      const seen = new Set();
-      const uniqueQuestions = [];
-
-      Object.entries(pool).forEach(([title, questions]) => {
-        const unique = [];
-        (Array.isArray(questions) ? questions : []).forEach(question => {
-          if (!question || !question.q || !question.t) return;
-          const fingerprint = questionFingerprint(question);
-          if (seen.has(fingerprint) || uniqueQuestions.some(item => questionsAreDuplicates(item, question))) return;
-          seen.add(fingerprint);
-          uniqueQuestions.push(question);
-
-          if (question.t === "s" && Array.isArray(question.o) &&
-              Number.isInteger(question.a) && question.o.length >= 2 &&
-              question.a >= 0 && question.a < question.o.length) {
-            const options = [...question.o];
-            const shift = stableQuestionHash(`${title}\u001e${fingerprint}`) % options.length;
-            const rotated = options.slice(shift).concat(options.slice(0, shift));
-            unique.push({...question, o: rotated, a: (question.a - shift + options.length) % options.length});
-          } else {
-            unique.push(question);
-          }
-        });
-        normalized[title] = unique;
-      });
-      return normalized;
-    }
-
-    lessons.forEach(lesson => {
-      (lesson.questions || []).forEach(question => {
-        if (question.type !== "选择题" || !Array.isArray(question.options) ||
-            !Number.isInteger(question.answer) || question.options.length < 2) return;
-        const options = [...question.options];
-        const shift = stableQuestionHash(`${lesson.title}\u001e${question.text}`) % options.length;
-        question.options = options.slice(shift).concat(options.slice(0, shift));
-        question.answer = (question.answer - shift + options.length) % options.length;
-      });
-    });
-
-    // Keep every course available in practice and adventure modes. The legacy
-    // pool contains the larger curated bank, while each lesson also has a
-    // compact set of starter questions.
-    lessons.forEach(lesson => {
-      if (practicePool[lesson.title]) return;
-      practicePool[lesson.title] = (lesson.questions || []).map(question => {
-        if (question.type === "选择题") {
-          return {t: "s", q: question.text, o: question.options, a: question.answer, e: question.explanation};
-        }
-        if (question.type === "判断题") {
-          return {t: "j", q: question.text, a: question.answer, e: question.explanation};
-        }
-        if (question.type === "填空题") {
-          return {t: "f", q: question.text, ans: question.accepted, e: question.explanation};
-        }
-        return null;
-      }).filter(Boolean);
-    });
-
-    function cleanGeneratedText(value, limit = 90) {
-      return String(value || "")
-        .replace(/<[^>]+>/g, "")
-        .replace(/```[\s\S]*?```/g, "")
-        .replace(/\s+/g, " ")
-        .trim()
-        .slice(0, limit);
-    }
-
-    function addGeneratedPracticeQuestions(lesson, questions) {
-      const pool = Array.isArray(questions) ? [...questions] : [];
-      const choiceCount = pool.filter(question =>
-        question && question.t === "s" && Array.isArray(question.o)).length;
-      if (choiceCount >= 10) return pool;
-
-      const sections = (lesson.content || [])
-        .map(section => ({
-          heading: cleanGeneratedText(section[0], 36),
-          summary: cleanGeneratedText(section[1], 100)
-        }))
-        .filter(section => section.heading && section.summary);
-      const summaries = sections.map(section => section.summary);
-      const existing = new Set(pool.map(question => questionFingerprint(question)));
-      const candidates = [];
-
-      sections.forEach((section, index) => {
-        const distractors = summaries
-          .filter((_, summaryIndex) => summaryIndex !== index)
-          .slice(0, 3);
-        while (distractors.length < 3) {
-          distractors.push([
-            "只负责把代码排版成固定格式",
-            "与本课知识无关的界面装饰",
-            "只能在程序结束后查看的结果"
-          ][distractors.length]);
-        }
-        candidates.push({
-          t: "s",
-          q: `关于“${section.heading}”，本课强调的重点是什么？`,
-          o: [section.summary, ...distractors],
-          a: 0,
-          e: `本题根据本课“${section.heading}”正文生成，正确理解是：${section.summary}。`
-        });
-      });
-
-      (lesson.goals || []).forEach((goal, index) => {
-        const distractors = (lesson.goals || [])
-          .filter((_, goalIndex) => goalIndex !== index)
-          .slice(0, 3);
-        while (distractors.length < 3) {
-          distractors.push("只需要记住一个固定代码片段");
-        }
-        candidates.push({
-          t: "s",
-          q: `学习“${lesson.title}”时，下面哪项属于本课目标？`,
-          o: [cleanGeneratedText(goal, 80), ...distractors.map(item => cleanGeneratedText(item, 80))],
-          a: 0,
-          e: `这是课程目标中的一项：${goal}。`
-        });
-      });
-
-      for (const question of candidates) {
-        if (pool.filter(item => item.t === "s").length >= 10) break;
-        const fingerprint = questionFingerprint(question);
-        if (existing.has(fingerprint) || new Set(question.o).size !== question.o.length) continue;
-        existing.add(fingerprint);
-        pool.push(question);
-      }
-      return pool;
-    }
-
-    lessons.forEach(lesson => {
-      practicePool[lesson.title] = addGeneratedPracticeQuestions(
-        lesson, practicePool[lesson.title]);
-    });
-    practicePool = normalizePracticePool(practicePool);
-    lessons.forEach(lesson => {
-      const unique = [];
-      for (const question of lesson.questions || []) {
-        const candidate = {
-          t: question.type === "选择题" ? "s" : question.type === "判断题" ? "j" : question.type === "填空题" ? "f" : "p",
-          q: question.text,
-          o: question.options,
-          a: question.answer
-        };
-        if (!unique.some(item => questionsAreDuplicates(item, candidate))) unique.push(candidate);
-      }
-      const originalByText = new Map((lesson.questions || []).map(question => [question.text, question]));
-      lesson.questions = unique.map(candidate => originalByText.get(candidate.q)).filter(Boolean);
-    });
-    lessons.forEach(lesson => {
-      const currentChoices = (lesson.questions || []).filter(question =>
-        question.type === "选择题" && Array.isArray(question.options));
-      const generatedChoices = (practicePool[lesson.title] || [])
-        .filter(question => question.t === "s" && Array.isArray(question.o))
-        .map(question => ({
-          type: "选择题",
-          text: question.q,
-          options: [...question.o],
-          answer: question.a,
-          explanation: question.e || "请结合课程正文理解本题。"
-        }));
-      const existing = new Set(currentChoices.map(question =>
-        questionFingerprint({t: "s", q: question.text, o: question.options, a: question.answer})));
-      for (const question of generatedChoices) {
-        if (currentChoices.length >= 10) break;
-        const fingerprint = questionFingerprint({
-          t: "s", q: question.text, o: question.options, a: question.answer
-        });
-        if (existing.has(fingerprint)) continue;
-        existing.add(fingerprint);
-        lesson.questions.push(question);
-        currentChoices.push(question);
-      }
-    });
-    const practicePoolProblems = [];
-    const practiceFingerprints = new Set();
-    Object.entries(practicePool).forEach(([title, questions]) => {
-      const localQuestions = [];
-      questions.forEach((question, index) => {
-        const label = `${title} 第${index + 1}题`;
-        if (question.t === "s" &&
-            (!Array.isArray(question.o) || !Number.isInteger(question.a) ||
-             question.a < 0 || question.a >= question.o.length)) {
-          practicePoolProblems.push(`${label}：选择题答案索引无效`);
-        }
-        const fingerprint = questionFingerprint(question);
-        if (practiceFingerprints.has(fingerprint)) {
-          practicePoolProblems.push(`${label}：题目重复`);
-        }
-        if (localQuestions.some(item => questionsAreDuplicates(item, question))) {
-          practicePoolProblems.push(`${label}：题干重复或高度相似`);
-        }
-        localQuestions.push(question);
-        practiceFingerprints.add(fingerprint);
-      });
-    });
-    if (practicePoolProblems.length) {
-      console.error("练习题库自检失败：", practicePoolProblems);
-    }
-    window.__practicePoolProblems = practicePoolProblems;
-    window.__questionAudit = Object.fromEntries(Object.entries(practicePool).map(([title, questions]) => [
-      title,
-      {
-        total: questions.length,
-        choices: questions.filter(question => question.t === "s").length,
-        programs: (lessons.find(lesson => lesson.title === title)?.questions || [])
-          .filter(question => question.type === "程序题").length
-      }
-    ]));
-
     const theorySupplements = {
       "认识 C 语言与第一个程序": [
         ["从源码到可执行程序", "在常见桌面环境中，预处理会展开头文件和宏，编译器把 C 翻译成目标文件，链接器再把目标文件和所需库组合起来。某一步失败，后续步骤就无法正确完成。嵌入式工程使用交叉工具链生成面向 MCU 的映像，启动代码配置运行环境后通常才调用 main；所以“从 main 开始”是学习应用逻辑的简化说法，不代表芯片复位后第一条指令就在 main。", null],
@@ -6370,40 +6088,6 @@
     };
     for (const lesson of lessons) {
       if (theorySupplements[lesson.title]) lesson.content.push(...theorySupplements[lesson.title]);
-    }
-    const programSupplements = {
-      "变量、类型与输入输出": [
-        {
-          type: "程序题",
-          text: "读入一个整数和一个 double 小数，按“整数 小数”格式输出它们。",
-          explanation: "整数使用 %d，double 使用 %lf 读取；输出 double 时可用 %.2f 控制小数位。",
-          solution: "#include <stdio.h>\nint main(void) {\n    int count;\n    double price;\n    if (scanf(\"%d %lf\", &count, &price) != 2) return 1;\n    printf(\"%d %.2f\\n\", count, price);\n    return 0;\n}",
-          tests: [{input:"3 2.5\n", output:"3 2.50\n"}, {input:"-2 0.125\n", output:"-2 0.12\n"}]
-        },
-        {
-          type: "程序题",
-          text: "读入一个字符，输出该字符以及它对应的整数编码。",
-          explanation: "字符用 %c 读取；输出字符用 %c，转换为 int 后用 %d 输出。不要把字符和字符串的格式符混用。",
-          solution: "#include <stdio.h>\nint main(void) {\n    char ch;\n    if (scanf(\" %c\", &ch) != 1) return 1;\n    printf(\"%c %d\\n\", ch, (int)ch);\n    return 0;\n}",
-          tests: [{input:"A\n", output:"A 65\n"}, {input:"z\n", output:"z 122\n"}]
-        },
-        {
-          type: "程序题",
-          text: "读入一个整数 score，输出 score 加 5 后的结果，并保留原分数不变。",
-          explanation: "把计算结果写入新变量，避免误把原变量覆盖；读取失败时应停止使用未初始化的 score。",
-          solution: "#include <stdio.h>\nint main(void) {\n    int score;\n    if (scanf(\"%d\", &score) != 1) return 1;\n    int improved = score + 5;\n    printf(\"%d\\n\", improved);\n    return 0;\n}",
-          tests: [{input:"90\n", output:"95\n"}, {input:"-3\n", output:"2\n"}]
-        }
-      ]
-    };
-    lessons.forEach(lesson => {
-      if (programSupplements[lesson.title]) lesson.questions.push(...programSupplements[lesson.title]);
-    });
-    if (window.__questionAudit) {
-      Object.entries(window.__questionAudit).forEach(([title, audit]) => {
-        const lesson = lessons.find(item => item.title === title);
-        if (lesson) audit.programs = lesson.questions.filter(question => question.type === "程序题").length;
-      });
     }
     const attachJudgeTests = (lessonTitle, questionPrefix, tests) => {
       const lesson = lessons.find(item => item.title === lessonTitle);
@@ -6601,11 +6285,7 @@
       }
       const isHostedStaticPage = location.hostname.endsWith(".github.io");
       const defaultUrl = location.protocol === "http:" || location.protocol === "https:"
-        ? (isHostedStaticPage
-          ? ""
-          : location.port === "8767"
-            ? "http://127.0.0.1:8000"
-            : location.origin)
+        ? (isHostedStaticPage ? "" : location.origin)
         : "";
       return {
         baseUrl: typeof saved.baseUrl === "string" ? saved.baseUrl.replace(/\/+$/, "") : defaultUrl,
@@ -6645,11 +6325,9 @@
         }));
         // 保存未完成的闯关进度
         if (adv && !adv.over) {
-          saveAdventureProgress(adv.title, adv.stage, adv.total, "进行中");
           localStorage.setItem("c_stm32_adventure_save", JSON.stringify({
             title: adv.title,
             stage: adv.stage,
-            total: adv.total,
             myHp: adv.myHp,
             myMax: adv.myMax,
             enemy: adv.enemy,
@@ -6674,8 +6352,6 @@
         adv = {
           title: s.title,
           stage: s.stage,
-          total: Math.min(ADVENTURE_TOTAL, Number.isInteger(s.total)
-            ? s.total : adventureQuestions(s.title).length),
           myHp: s.myHp,
           myMax: s.myMax,
           enemy: s.enemy,
@@ -7105,7 +6781,7 @@
         const q = picked[idx];
         let opts = q.o.map((o,i) => `${i+1}. ${o}`).join("\n");
         const input = prompt(`🔥 每日挑战 ${idx+1}/10\n[${q.lesson}]\n\n${q.q}${q.code ? "\n\n"+q.code : ""}\n\n${opts}\n\n输入正确选项编号（1-${q.o.length}）：`);
-        if (input === null) { alert("已退出挑战，今日进度未完成，可以稍后再次挑战。"); return; }
+        if (input === null) { alert("已退出挑战，今天不能再玩了。"); localStorage.setItem(key, "1"); return; }
         const ans = parseInt(input);
         if (ans === q.a + 1) { correct++; idx++; ask(); }
         else { alert(`❌ 答错了！正确答案：${q.a+1}. ${q.o[q.a]}\n\n${q.e || ""}`); idx++; ask(); }
@@ -7158,51 +6834,6 @@
 
     const ADVENTURE_TOTAL = 10;
     let adv = null; // 对局状态
-    const adventureCompletedKey = "c_stm32_adventure_completed";
-    const adventureProgressKey = "c_stm32_adventure_progress";
-    let adventureCompleted = new Set();
-    let adventureProgress = {};
-    try {
-      const savedCompleted = JSON.parse(localStorage.getItem(adventureCompletedKey) || "[]");
-      if (Array.isArray(savedCompleted)) adventureCompleted = new Set(savedCompleted);
-      const savedProgress = JSON.parse(localStorage.getItem(adventureProgressKey) || "{}");
-      if (savedProgress && typeof savedProgress === "object" && !Array.isArray(savedProgress)) {
-        adventureProgress = savedProgress;
-      }
-    } catch (error) {
-      console.warn("Could not restore adventure completion records", error);
-    }
-
-    function saveAdventureCompletion(){
-      try {
-        localStorage.setItem(adventureCompletedKey, JSON.stringify([...adventureCompleted]));
-      } catch (error) {
-        console.error("Could not save adventure completion records", error);
-      }
-    }
-
-    function saveAdventureProgress(title, stage, total, status){
-      if (!title || !Number.isInteger(stage) || !Number.isInteger(total)) return;
-      adventureProgress[title] = {
-        stage: Math.min(stage, total),
-        total,
-        status,
-        updatedAt: new Date().toISOString()
-      };
-      try {
-        localStorage.setItem(adventureProgressKey, JSON.stringify(adventureProgress));
-      } catch (error) {
-        console.error("Could not save adventure progress records", error);
-      }
-    }
-
-    function adventureProgressLabel(title, total){
-      const progress = adventureProgress[title];
-      if (!progress) return "";
-      if (progress.status === "已通关") return "　🏆 已通关";
-      if (progress.status === "失败") return `　💀 上次失败于第 ${progress.stage}/${total} 关`;
-      return `　▶️ 进行中：第 ${progress.stage}/${total} 关`;
-    }
 
     const wildPetsEarly = [
       {emoji:"🐀", name:"灰毛鼠"}, {emoji:"🐛", name:"卷卷虫"}, {emoji:"🦟", name:"小蚊子"},
@@ -7226,12 +6857,6 @@
         practicePool[title].some(q => q.t === "s" && Array.isArray(q.o) && q.o.length >= 2));
     }
 
-    function adventureQuestions(title){
-      return (practicePool[title] || []).filter(q =>
-        q && q.t === "s" && Array.isArray(q.o) && q.o.length >= 2 &&
-        Number.isInteger(q.a) && q.a >= 0 && q.a < q.o.length);
-    }
-
     function renderAdventureHome(){
       const body = document.getElementById("adventure-body");
       const f = petForm(game.activePet);
@@ -7239,12 +6864,11 @@
       body.innerHTML = `
         <div class="adv-intro">
           <div>出战伙伴：<strong>${f.emoji} ${f.name} Lv.${f.lv}</strong></div>
-          <div style="color:var(--muted);font-size:12px;margin-top:4px;">每局最多 10 关（题目不足时自动缩短），第 5 关和最终关是 BOSS。答对题 → 你揍怪；答错 → 怪揍你。通关得金币+宠物经验；已通关课程会永久记录。</div>
-          <div style="color:#2f9e44;font-size:12px;margin-top:6px;">🏆 已通关 ${adventureCompleted.size} / ${lessons.length} 张地图</div>
+          <div style="color:var(--muted);font-size:12px;margin-top:4px;">10 关一局：第 5、10 关是 BOSS。答对题 → 你揍怪；答错 → 怪揍你。通关得金币+宠物经验。</div>
         </div>
         <h3 style="margin:14px 0 8px;font-size:14px;">选择一门课当闯关地图：</h3>
         <div class="adv-lesson-list">
-          ${lessons.map((t, i) => `<button class="small-btn adv-lesson-btn" data-lesson="${i}">🗺️ ${t}${adventureProgressLabel(t, Math.min(ADVENTURE_TOTAL, adventureQuestions(t).length))}</button>`).join("")}
+          ${lessons.map((t, i) => `<button class="small-btn adv-lesson-btn" data-lesson="${i}">🗺️ ${t}</button>`).join("")}
         </div>`;
       body.querySelectorAll(".adv-lesson-btn").forEach(btn => {
         btn.addEventListener("click", () => startAdventure(lessons[Number(btn.dataset.lesson)]));
@@ -7252,16 +6876,15 @@
     }
 
     function advPickQuestion(title){
-      const pool = adventureQuestions(title);
+      const pool = practicePool[title].filter(q => q.t === "s" && Array.isArray(q.o) && q.o.length >= 2 && Number.isInteger(q.a));
       return pool[Math.floor(Math.random() * pool.length)];
     }
 
     function startAdventure(title){
       const f = petForm(game.activePet);
       const myMax = 30 + f.lv * 10;
-      const total = Math.min(ADVENTURE_TOTAL, adventureQuestions(title).length);
       adv = {
-        title, stage: 1, total,
+        title, stage: 1,
         myHp: myMax, myMax,
         enemy: null, enemyHp: 0, enemyMax: 0,
         q: null, over: false,
@@ -7271,7 +6894,7 @@
     }
 
     function nextAdvStage(){
-      const isBoss = adv.stage === adv.total || (adv.total >= 5 && adv.stage === 5);
+      const isBoss = adv.stage === ADVENTURE_TOTAL || adv.stage === 5;
       // 按关卡选敌人难度：1-3 弱怪，4-6 中怪，7-9 强怪，BOSS 专属
       let pool;
       if (isBoss) pool = bossPets;
@@ -7285,12 +6908,7 @@
       adv.enemy = enemy;
       adv.enemyMax = isBoss ? 30 + adv.stage * 8 : 12 + adv.stage * 4;
       adv.enemyHp = adv.enemyMax;
-      // 抽题：排除本轮已用过的题
-      const questionPool = adventureQuestions(adv.title);
-      const fresh = questionPool.filter(q => !adv.used.has(questionFingerprint(q)));
-      const source = fresh.length > 0 ? fresh : questionPool;
-      adv.q = source[Math.floor(Math.random() * source.length)];
-      if (adv.q) adv.used.add(questionFingerprint(adv.q));
+      drawNextQuestion();
       renderAdvBattle();
     }
 
@@ -7304,7 +6922,7 @@
       const f = petForm(game.activePet);
       const isMobile = window.matchMedia('(pointer: coarse)').matches || /iPad|iPhone|Android/.test(navigator.userAgent);
       body.innerHTML = `
-        <div class="adv-stage-tag">第 ${adv.stage} / ${adv.total} 关${adv.stage === 5 || adv.stage === adv.total ? " · 👹 BOSS" : ""}</div>
+        <div class="adv-stage-tag">第 ${adv.stage} / ${ADVENTURE_TOTAL} 关${adv.stage === 5 || adv.stage === ADVENTURE_TOTAL ? " · 👹 BOSS" : ""}</div>
         <div class="adv-arena">
           <div class="adv-side">
             <div class="adv-pet-emoji">${f.emoji}</div>
@@ -7399,7 +7017,7 @@
 
       setTimeout(() => {
         if (adv.enemyHp <= 0) {
-          const isFinal = adv.stage === adv.total;
+          const isFinal = adv.stage === ADVENTURE_TOTAL;
           const coinReward = isFinal ? 100 : 8;
           game.coins += coinReward;
           const expGain = isFinal ? 50 : 5;
@@ -7407,9 +7025,6 @@
           msg += `\n🎉 击败 ${adv.enemy.name}！+${coinReward} 金币，宠物经验 +${expGain}${evo ? "。" + evo : ""}`;
           if (isFinal) {
             adv.over = true;
-            adventureCompleted.add(adv.title);
-            saveAdventureProgress(adv.title, adv.total, adv.total, "已通关");
-            saveAdventureCompletion();
             saveGame(); updateGamePanel();
             bodyConclusion(true, msg);
             return;
@@ -7424,7 +7039,6 @@
         }
         if (adv.myHp <= 0) {
           adv.over = true;
-          saveAdventureProgress(adv.title, adv.stage, adv.total, "失败");
           saveGame();
           bodyConclusion(false, `💀 你的宠物倒下了……闯关失败。再接再厉，答更多题把宠物练强再来！`);
           return;
@@ -7439,19 +7053,27 @@
     }
 
     function drawNextQuestion(){
-      const all = adventureQuestions(adv.title);
+      const pool = practicePool[adv.title];
+      if (!pool || !Array.isArray(pool)) {
+        adv.q = null;
+        return;
+      }
+      const all = pool.filter(q =>
+        q && q.t === "s" && Array.isArray(q.o) && q.o.length >= 2 && Number.isInteger(q.a));
       if (all.length === 0) {
         adv.q = null;
         return;
       }
+      // 用题干前30字作为唯一标识，避免同题不同代码被误判为不同题
+      const qkey = (q) => (q.q || "").slice(0, 30).replace(/\s+/g, "");
       // 优先抽没做过的题
-      const fresh = all.filter(q => !adv.used.has(questionFingerprint(q)));
+      const fresh = all.filter(q => !adv.used.has(qkey(q)));
       let source;
       if (fresh.length > 0) {
         source = fresh;
       } else {
         // 题用完了：从全部题里抽，但避免和上一题相同
-        source = all.filter(q => !adv.q || questionFingerprint(q) !== questionFingerprint(adv.q));
+        source = all.filter(q => !adv.q || qkey(q) !== qkey(adv.q));
         if (source.length === 0) source = all;
       }
       adv.q = source[Math.floor(Math.random() * source.length)];
@@ -7464,7 +7086,7 @@
           [opts[i], opts[j]] = [opts[j], opts[i]];
         }
         adv.q = {...adv.q, o: opts, a: opts.indexOf(correctText)};
-        adv.used.add(questionFingerprint(adv.q));
+        adv.used.add(qkey(adv.q));
       }
     }
 
@@ -7555,7 +7177,10 @@
     function buildPracticeQuestions(lesson, lessonIndex) {
       const out = [];
       const pool = practicePool[lesson.title] || [];
+      // 排除课程内"练习一下"已经出现过的题（用题干前30字去重）
+      const lessonQKeys = new Set((lesson.questions || []).map(q => (q.text || "").slice(0, 30).replace(/\s+/g, "")));
       pool.forEach((pt, pi) => {
+        if (lessonQKeys.has((pt.q || "").slice(0, 30).replace(/\s+/g, ""))) return; // 跳过和课程内重复的题
         if (pt.t === "s") {
           out.push({ type: "选择题", text: pt.q + (pt.code ? "\n```c\n" + pt.code + "\n```" : ""), options: pt.o, answer: pt.a, explanation: pt.e, pk: pi, pv: 0 });
         } else if (pt.t === "j") {
@@ -7585,53 +7210,6 @@
         all[title][String(pk)] = correct ? 'correct' : 'wrong';
         localStorage.setItem(PROGRESS_KEY, JSON.stringify(all));
       } catch(e){}
-    }
-    function submitPracticeAnswer(q, index, lesson, lessonIndex, selectedIndex = null){
-      let correct = false;
-      let responseLabel = "";
-      if (q.options) {
-        if (selectedIndex === null) {
-          showFeedback(index, "neutral", "先选择一个答案，再检查哦。");
-          return;
-        }
-        correct = selectedIndex === q.answer;
-        responseLabel = q.options[selectedIndex];
-      } else {
-        const input = document.getElementById(`answer-${index}`);
-        const value = input.value.trim().toLowerCase().replace(/\s+/g, "");
-        if (!value) {
-          showFeedback(index, "neutral", "先填写答案，再检查哦。");
-          return;
-        }
-        correct = q.accepted.some(answer =>
-          answer.toLowerCase().replace(/\s+/g, "") === value);
-        responseLabel = input.value.trim();
-      }
-      const card = root.querySelector(`[data-question="${index}"]`);
-      if (card && card.dataset.answered === "correct") return;
-      const key = `p-${lessonIndex}-${q.pk}-${q.pv}`;
-      if (correct) {
-        if (window.wrongbookRemove) window.wrongbookRemove(key);
-        if (card) card.dataset.answered = "correct";
-      } else if (window.wrongbookAdd) {
-        window.wrongbookAdd(key, q, lesson.title, responseLabel);
-      }
-      markPractice(lesson.title, q.pk, correct);
-      if (correct) {
-        const evolveMsg = addPetExp(game.activePet, 2);
-        if (evolveMsg) {
-          const gm = document.getElementById("game-message");
-          if (gm) gm.textContent = evolveMsg;
-        }
-      }
-      const badge = root.querySelector(`[data-question="${index}"] .prog-badge`);
-      if (badge) {
-        badge.textContent = correct ? "✓ 已答对" : "✗ 已答错";
-        badge.className = "prog-badge " + (correct ? "correct" : "wrong");
-      }
-      showFeedback(index, correct ? "correct" : "wrong",
-        correct ? `<div class="feedback-title">✅ 答对了！</div><div class="feedback-detail">${esc(q.explanation)}</div>`
-                : `<div class="feedback-title">❌ 答错了，已收进错题本</div><div class="feedback-detail">${esc(q.explanation)}</div>`);
     }
     function renderPractice(lessonIndex) {
       renderNav();
@@ -7663,22 +7241,40 @@
           </div>
         </div>`;
       slice.forEach((q, i) => {
-        if (q.options) {
-          root.querySelectorAll(`[data-question="${i}"] .option-btn`).forEach(button => {
-            button.addEventListener("click", () => {
-              const selected = Number(button.dataset.option);
-              root.querySelectorAll(`[data-question="${i}"] .option-btn`).forEach(option => {
-                option.classList.toggle("selected", option === button);
-                option.disabled = true;
-              });
-              submitPracticeAnswer(q, i, lesson, lessonIndex, selected);
-            });
-          });
-          return;
-        }
         const check = root.querySelector(`[data-check="${i}"]`);
         if (check) check.addEventListener("click", () => {
-          submitPracticeAnswer(q, i, lesson, lessonIndex);
+          let correct = false;
+          let responseLabel = "";
+          if (q.options) {
+            const selected = root.querySelector(`input[name="answer-${i}"]:checked`);
+            if (!selected) { showFeedback(i, "neutral", "先选择一个答案，再检查哦。"); return; }
+            correct = Number(selected.value) === q.answer;
+            responseLabel = q.options[Number(selected.value)];
+          } else {
+            const value = document.getElementById(`answer-${i}`).value.trim().toLowerCase().replace(/\s+/g, "");
+            if (!value) { showFeedback(i, "neutral", "先填写答案，再检查哦。"); return; }
+            correct = q.accepted.some(a => a.toLowerCase().replace(/\s+/g, "") === value);
+            responseLabel = document.getElementById(`answer-${i}`).value.trim();
+          }
+          const key = `p-${lessonIndex}-${q.pk}-${q.pv}`;
+          if (correct) {
+            if (window.wrongbookRemove) window.wrongbookRemove(key);
+          } else if (window.wrongbookAdd) {
+            window.wrongbookAdd(key, q, lesson.title, responseLabel);
+          }
+          markPractice(lesson.title, q.pk, correct);
+          if (correct) {
+            const evolveMsg = addPetExp(game.activePet, 2);
+            if (evolveMsg) {
+              const gm = document.getElementById("game-message");
+              if (gm) gm.textContent = evolveMsg;
+            }
+          }
+          const badge = root.querySelector(`[data-question="${i}"] .prog-badge`);
+          if (badge) { badge.textContent = correct ? "✓ 已答对" : "✗ 已答错"; badge.className = "prog-badge " + (correct ? "correct" : "wrong"); }
+          showFeedback(i, correct ? "correct" : "wrong",
+            correct ? `<div class="feedback-title">✅ 答对了！</div><div class="feedback-detail">${esc(q.explanation)}</div>`
+                    : `<div class="feedback-title">❌ 答错了，已收进错题本</div><div class="feedback-detail">${esc(q.explanation)}</div>`);
         });
       });
       const bindNav = (id, delta) => {
@@ -7840,19 +7436,6 @@
             : `完成全部题目后查看成绩。已答 ${count} / ${session.questions.length} 题。`;
           if (isComplete) document.getElementById("finish-challenge").textContent = "返回课程";
         };
-        if (question.options) {
-          root.querySelectorAll(`[data-question="${index}"] .option-btn`).forEach(button => {
-            button.addEventListener("click", () => {
-              if (session.results.has(question.id)) return;
-              const answer = Number(button.dataset.option);
-              root.querySelectorAll(`[data-question="${index}"] .option-btn`).forEach(option => {
-                option.disabled = true;
-                option.classList.toggle("selected", option === button);
-              });
-              recordResult(answer === question.answer, question.options[answer]);
-            });
-          });
-        }
         if (check) check.addEventListener("click", () => {
           if (question.options) {
             const selected = root.querySelector(`input[name="answer-${index}"]:checked`);
@@ -7994,21 +7577,21 @@
         showFeedback(index, "neutral", "先写出完整的 C 程序，再提交在线编译。");
         return;
       }
+      if (location.hostname.endsWith(".github.io")) {
+        resultBox.textContent = "GitHub Pages 不提供运行代码的后端；课程学习、签到与本地奖励仍可使用。此网页不会自动上传你的代码。";
+        return;
+      }
       if (location.protocol === "file:") {
         resultBox.textContent = "在线判题需要先启动本机网站服务并从 http://127.0.0.1:8000/ 打开页面。";
         return;
       }
-      const connection = readApiConnection();
-      const judgeBaseUrl = connection.baseUrl || (location.port === "8767"
-        ? "http://127.0.0.1:8000"
-        : location.origin);
       button.disabled = true;
       button.textContent = "正在编译和运行…";
       resultBox.textContent = "代码将提交给 Wandbox 隔离判题服务，并使用课程提供的测试数据。";
       try {
-        const response = await fetch(`${judgeBaseUrl}/api/run`, {
+        const response = await fetch("/api/run", {
           method: "POST",
-          headers: apiRequestHeaders(),
+          headers: {"Content-Type": "application/json"},
           body: JSON.stringify({source, tests: question.tests}),
           signal: AbortSignal.timeout(90000)
         });
