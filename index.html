@@ -7952,7 +7952,21 @@
       }
       game.answers[key] = correct;
       saveGame();
-      if (typeof window.recordAnswer === "function") window.recordAnswer(correct);
+      // 学习数据统计
+      try {
+        const STATS_KEY = "c_stm32_stats";
+        const d = new Date();
+        const today = d.getFullYear() + "-" + String(d.getMonth()+1).padStart(2,"0") + "-" + String(d.getDate()).padStart(2,"0");
+        let stats = {};
+        try { stats = JSON.parse(localStorage.getItem(STATS_KEY)) || {}; } catch(e) {}
+        if (!stats[today]) stats[today] = { total: 0, correct: 0 };
+        stats[today].total += 1;
+        if (correct) stats[today].correct += 1;
+        const keys = Object.keys(stats).sort().slice(-30);
+        const trimmed = {};
+        keys.forEach(k => trimmed[k] = stats[k]);
+        localStorage.setItem(STATS_KEY, JSON.stringify(trimmed));
+      } catch(e) {}
       updateGamePanel();
       const knowledge = q.knowledge || `${lesson.title}：${lesson.goals[index % lesson.goals.length]}`;
       const pitfall = q.pitfall || lessonPitfalls[Math.max(0, lessonIndex - starterLessons.length)];
