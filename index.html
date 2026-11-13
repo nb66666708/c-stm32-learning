@@ -2454,7 +2454,7 @@
           ["realloc 与动态增长", "realloc 可以调整已申请内存的大小。它会尽量原地扩展，不行就另找一块并复制。注意要用新指针接收结果，原指针可能已失效。", "int *arr = malloc(4 * sizeof(int));\narr = realloc(arr, 8 * sizeof(int));  // 扩容到 8 个\n// 失败时返回 NULL，原块仍有效，记得保存旧指针"]
         ],
         questions: [
-          {type:"选择题", text:"malloc 分配失败时会返回什么？", options:["0","NULL","-1","随机地址"], answer:1, explanation:"分配失败返回 NULL（空指针）。使用前必须检查，否则对 NULL 解引用会崩溃。"},
+          {type:"选择题", text:"malloc 分配失败时会返回什么？", options:["NULL 空指针","有效堆地址","-1","未定义的随机地址"], answer:0, explanation:"分配失败返回空指针常量 NULL；不要把它当作可用地址，使用前必须检查。"},
           {type:"判断题", text:"free 之后把指针置为 NULL 是好习惯，可以避免悬垂指针。", options:["正确","错误"], answer:0, explanation:"free 后指针仍保存着旧地址，不置 NULL 的话一旦误用就是悬垂指针。置 NULL 后误用会立刻暴露（对 NULL 解引用容易发现）。"},
           {type:"填空题", text:"申请了内存但忘记释放，长期运行后内存不断增长，这种现象叫内存______。", placeholder:"填写两个字", accepted:["泄漏"], explanation:"内存泄漏：堆内存被申请后没有释放，程序占用的内存只增不减，长时间运行可能耗尽内存。"},
           {type:"程序题", text:"用 malloc 申请 5 个 int，填入 1~5，求和并输出，最后正确释放。", explanation:"申请后检查 NULL，用完后 free 并置 NULL。这是内存管理的标准三步。", solution:"#include <stdio.h>\n#include <stdlib.h>\nint main(void) {\n    int *arr = malloc(5 * sizeof(int));\n    if (!arr) return 1;\n    int sum = 0;\n    for (int i = 0; i < 5; i++) { arr[i] = i + 1; sum += arr[i]; }\n    printf(\"%d\\n\", sum);\n    free(arr);\n    return 0;\n}",analysis:{key:"内存管理三步：malloc 申请（大小 × sizeof）→ 使用前检查 NULL → 用完 free 并置 NULL。",why:"malloc(5 * sizeof(int)) 申请 5 个 int 的字节数；if (!arr) return 1 处理申请失败；循环填 1~5 求和；free(arr) 归还，arr = NULL 防悬垂。",extra:"sizeof(int) 因平台而异（通常 4）；忘记 free 是内存泄漏，长跑程序会越占越多；realloc 可扩容，但失败时原块仍有效，要保存旧指针。"}}
@@ -2686,19 +2686,19 @@
         questions: [
           {type:"选择题", text:"int a = 10; int *p = &a; 执行 *p = 20; 后，a 的值是？", options:["10","20","不确定","编译错误"], answer:1, explanation:"*p = 20 表示按 p 存的地址写入 20，也就是 a 变成 20。"},
           {type:"选择题", text:"& 运算符的作用是？", options:["解引用","取变量地址","声明指针","分配内存"], answer:1, explanation:"&a 表示取变量 a 的内存地址。*p 才是解引用。"},
-          {type:"选择题", text:"int *p; 假设 p 当前地址是 0x1000，p+1 等于？", options:["0x1001","0x1004","0x1008","不确定"], answer:1, explanation:"int 占 4 字节，p+1 跳 sizeof(int)=4 字节，所以是 0x1004。"},
+          {type:"选择题", text:"在 sizeof(int)==4 的平台上，int *p 当前地址是 0x1000，p+1 等于？", options:["0x1001","0x1004","0x1008","不确定"], answer:1, explanation:"指针加 1 会前进一个所指对象的大小；本题明确 sizeof(int)==4，因此地址变为 0x1004。"},
           {type:"选择题", text:"char *p; p 当前地址 0x2000，p+1 等于？", options:["0x2001","0x2004","0x2008","0x2000"], answer:0, explanation:"char 占 1 字节，p+1 跳 1 字节，所以是 0x2001。"},
           {type:"选择题", text:"a[i] 等价于？", options:["*(a+i)","&(a+i)","*a+i","a+*i"], answer:0, explanation:"a[i] 就是 *(a+i)，先算地址 a+i，再解引用取值。"},
           {type:"选择题", text:"下面哪个是野指针？", options:["int a; int *p=&a;","int *p; *p=10;","int a[5]; int *p=a;","int b=0; int *q=&b;"], answer:1, explanation:"int *p; 没初始化就 *p=10，p 指向随机地址，是野指针。"},
           {type:"选择题", text:"const int *p 表示？", options:["p 不能改指向","*p 不能改","p 和 *p 都不能改","p 是常量指针"], answer:1, explanation:"const 在 * 左边，表示指向的内容只读。p 本身可以改指向。"},
           {type:"选择题", text:"int * const p = &a; 下面哪个合法？", options:["p = &b;","*p = 30;","p++;","*p = &b;"], answer:1, explanation:"const 在 * 右边，表示 p 本身是常量不能改，但 *p 指向的内容可以改。"},
           {type:"选择题", text:"sizeof(int) 在 32 位平台通常是？", options:["1","2","4","8"], answer:2, explanation:"32 位平台 int 占 4 字节。"},
-          {type:"选择题", text:"sizeof(指针变量) 在 32 位平台是？", options:["2","4","8","跟类型有关"], answer:1, explanation:"32 位平台所有指针都是 4 字节。64 位平台是 8 字节。"},
+          {type:"选择题", text:"在常见平坦 32 位目标上，sizeof(int *) 通常是？", options:["2","4","8","必须等于 sizeof(int)"], answer:1, explanation:"常见平坦 32 位 ABI 中对象指针通常为 4 字节；C 标准不保证所有指针类型在所有实现中大小相同。"},
           {type:"判断题", text:"int a[5]; sizeof(a) 等于 20（32 位平台）。", options:["正确","错误"], answer:0, explanation:"a 是数组名，sizeof 不退化，5 个 int × 4 字节 = 20。"},
           {type:"判断题", text:"int a[5]; int *p=a; sizeof(p) 等于 20。", options:["正确","错误"], answer:1, explanation:"p 是指针变量，sizeof(p) 是 4（32 位）或 8（64 位），不是 20。"},
           {type:"判断题", text:"指针越界访问数组外的内存是未定义行为。", options:["正确","错误"], answer:0, explanation:"越界访问在 C 里是未定义行为，可能崩溃、乱码或看似正常。"},
           {type:"判断题", text:"*&a 等价于 a。", options:["正确","错误"], answer:0, explanation:"&a 取地址，* 解引用，两者抵消，就是 a 本身。"},
-          {type:"判断题", text:"所有指针类型都占相同大小（同一平台上）。", options:["正确","错误"], answer:0, explanation:"同一平台上，不管指向什么类型，指针大小都一样（32 位 4 字节，64 位 8 字节）。"}
+          {type:"判断题", text:"C 标准保证同一实现中所有对象指针和函数指针都占相同大小。", options:["正确","错误"], answer:1, explanation:"不同指针类型的表示和大小由实现决定；不能把常见平台的相同大小当作 C 标准保证。"}
         ]
       },
       {
@@ -2759,8 +2759,8 @@
           ["常见应用", "示波器：ADC + DMA 高速采样，数组直接当波形数据。传感器：温度、电压连续采集。电机控制：采集相电流做闭环。", "示波器：1MHz 采样率 × 12 位 = 每秒 12MB 数据，没有 DMA CPU 根本扛不住"]
         ],
         questions: [
-          {type:"选择题", text:"DMA 的主要作用是？", options:["加快 CPU 计算","不占 CPU 地搬数据","提高 ADC 分辨率","减少内存占用"], answer:1, explanation:"DMA 独立于 CPU 搬数据，CPU 可以并行处理其他任务。"},
-          {type:"选择题", text:"STM32 ADC 默认分辨率是？", options:["8 位","10 位","12 位","16 位"], answer:2, explanation:"STM32F1/F4 系列 ADC 默认 12 位，范围 0~4095。"},
+          {type:"选择题", text:"在 STM32 ADC 连续采样场景中，DMA 最直接解决什么问题？", options:["加快 CPU 计算","自动把转换结果搬入缓冲区，减少 CPU 轮询","提高 ADC 分辨率","减少内存占用"], answer:1, explanation:"ADC 转换完成后，DMA 可把数据寄存器结果自动搬到内存缓冲区，CPU 只需处理半满或全满事件。"},
+          {type:"选择题", text:"以本课示例的 STM32F1/F4 ADC 配置为准，默认分辨率通常是？", options:["8 位","10 位","12 位","16 位"], answer:2, explanation:"本课以 STM32F1/F4 的常见 ADC 配置为例，分辨率为 12 位，数字范围通常是 0~4095；不同系列或配置可能不同。"},
           {type:"选择题", text:"ADC 读到 2048，参考电压 3.3V，实际电压约？", options:["1.0V","1.65V","2.5V","3.3V"], answer:1, explanation:"2048/4095 × 3.3 ≈ 1.65V，正好一半。"},
           {type:"选择题", text:"HAL_ADC_Start_DMA 的第 2 个参数是？", options:["ADC 通道","数据缓冲区地址","采样频率","中断优先级"], answer:1, explanation:"把 DMA 搬运的目的数组地址传进去。"},
           {type:"选择题", text:"双缓冲模式的好处是？", options:["加快 ADC 转换","CPU 和 DMA 并行不丢数据","减少内存占用","提高分辨率"], answer:1, explanation:"DMA 搬一块时 CPU 处理另一块，交替进行不丢采样。"},
@@ -2768,7 +2768,7 @@
           {type:"判断题", text:"没有 DMA 也能采集 ADC，只是 CPU 占用率高。", options:["正确","错误"], answer:0, explanation:"纯 CPU 轮询可以，但高速采样时 CPU 全被占满，没法干别的。"},
           {type:"判断题", text:"DMA 搬完数据会发中断通知 CPU。", options:["正确","错误"], answer:0, explanation:"传输完成/半完成中断是 DMA 的标准功能，CPU 在中断里处理数据。"},
           {type:"判断题", text:"ADC 参考电压 3.3V，输入 3.3V 时读到 4095。", options:["正确","错误"], answer:0, explanation:"满量程对应 4095（12 位）。"},
-          {type:"判断题", text:"DMA 可以在 ADC 和内存之间双向搬运。", options:["正确","错误"], answer:0, explanation:"DMA 方向可配置：ADC→内存、内存→DAC、内存→SPI 等，灵活。"}
+          {type:"判断题", text:"在本课 ADC 采集场景中，DMA 通常把 ADC 数据从外设搬到内存。", options:["正确","错误"], answer:0, explanation:"ADC 采集通常是 ADC 数据寄存器→内存缓冲区；通用 DMA 还可服务其他外设方向，但不能把 ADC 场景笼统说成双向。"}
         ]
       },
       {
@@ -6486,6 +6486,311 @@
   {t:"f", q:"点亮 LED 通常把 GPIO 配置为 ____ 模式。", ans:["输出"], e:"输出模式才能驱动 LED。"},
   {t:"s", q:"小红想读取按键状态，应该把 GPIO 配置为什么模式？", o:["输入", "输出", "复用", "模拟"], a:0, e:"读外部信号用输入模式。"}]
     };
+    function questionFingerprint(question) {
+      return [
+        question.t || "",
+        question.q || "",
+        question.code || "",
+        Array.isArray(question.o) ? question.o.join("\u001f") : "",
+        Array.isArray(question.ans) ? question.ans.join("\u001f") : "",
+        Number.isInteger(question.a) ? question.a : ""
+      ].join("\u001e").replace(/\s+/g, " ").trim();
+    }
+
+    function questionTextFingerprint(question) {
+      return String(question.q || "")
+        .toLocaleLowerCase()
+        .replace(/[“”‘’"'`]/g, "")
+        .replace(/[，。！？、；：,.!?;:()[\]{}<>《》]/g, "")
+        .replace(/\s+/g, "")
+        .replace(/第[一二三四五六七八九十0-9]+题/g, "");
+    }
+
+    function questionsAreDuplicates(first, second) {
+      if (!first || !second || first.t !== second.t) return false;
+      const a = questionTextFingerprint(first);
+      const b = questionTextFingerprint(second);
+      if (!a || !b) return false;
+      if (a === b) return true;
+      if (a.length < 18 || b.length < 18) return false;
+      const lengthRatio = Math.min(a.length, b.length) / Math.max(a.length, b.length);
+      if (lengthRatio < 0.88) return false;
+      const grams = value => new Set(value.slice(0, -1).split("").map((char, index) => value.slice(index, index + 2)));
+      const left = grams(a);
+      const right = grams(b);
+      const intersection = [...left].filter(gram => right.has(gram)).length;
+      return intersection / Math.max(1, left.size + right.size - intersection) >= 0.92;
+    }
+
+    function stableQuestionHash(value) {
+      let result = 2166136261;
+      for (let i = 0; i < value.length; i += 1) {
+        result ^= value.charCodeAt(i);
+        result = Math.imul(result, 16777619);
+      }
+      return result >>> 0;
+    }
+
+    function normalizePracticePool(pool) {
+      const normalized = {};
+      const seen = new Set();
+      const uniqueQuestions = [];
+
+      Object.entries(pool).forEach(([title, questions]) => {
+        const unique = [];
+        (Array.isArray(questions) ? questions : []).forEach(question => {
+          if (!question || !question.q || !question.t) return;
+          const fingerprint = questionFingerprint(question);
+          if (seen.has(fingerprint) || uniqueQuestions.some(item => questionsAreDuplicates(item, question))) return;
+          seen.add(fingerprint);
+          uniqueQuestions.push(question);
+
+          if (question.t === "s" && Array.isArray(question.o) &&
+              Number.isInteger(question.a) && question.o.length >= 2 &&
+              question.a >= 0 && question.a < question.o.length) {
+            const options = [...question.o];
+            const shift = stableQuestionHash(`${title}\u001e${fingerprint}`) % options.length;
+            const rotated = options.slice(shift).concat(options.slice(0, shift));
+            unique.push({...question, o: rotated, a: (question.a - shift + options.length) % options.length});
+          } else {
+            unique.push(question);
+          }
+        });
+        normalized[title] = unique;
+      });
+      return normalized;
+    }
+
+    lessons.forEach(lesson => {
+      (lesson.questions || []).forEach(question => {
+        if (question.type !== "选择题" || !Array.isArray(question.options) ||
+            !Number.isInteger(question.answer) || question.options.length < 2) return;
+        const options = [...question.options];
+        const shift = stableQuestionHash(`${lesson.title}\u001e${question.text}`) % options.length;
+        question.options = options.slice(shift).concat(options.slice(0, shift));
+        question.answer = (question.answer - shift + options.length) % options.length;
+      });
+    });
+
+    // Keep every course available in practice and adventure modes. The legacy
+    // pool contains the larger curated bank, while each lesson also has a
+    // compact set of starter questions.
+    lessons.forEach(lesson => {
+      if (practicePool[lesson.title]) return;
+      practicePool[lesson.title] = (lesson.questions || []).map(question => {
+        if (question.type === "选择题") {
+          return {t: "s", q: question.text, o: question.options, a: question.answer, e: question.explanation};
+        }
+        if (question.type === "判断题") {
+          return {t: "j", q: question.text, a: question.answer, e: question.explanation};
+        }
+        if (question.type === "填空题") {
+          return {t: "f", q: question.text, ans: question.accepted, e: question.explanation};
+        }
+        return null;
+      }).filter(Boolean);
+    });
+
+    function cleanGeneratedText(value, limit = 90) {
+      return String(value || "")
+        .replace(/<[^>]+>/g, "")
+        .replace(/```[\s\S]*?```/g, "")
+        .replace(/\s+/g, " ")
+        .trim()
+        .slice(0, limit);
+    }
+
+    function addGeneratedPracticeQuestions(lesson, questions) {
+      const pool = Array.isArray(questions) ? [...questions] : [];
+      const choiceCount = pool.filter(question =>
+        question && question.t === "s" && Array.isArray(question.o)).length;
+      if (choiceCount >= 10) return pool;
+
+      const sections = (lesson.content || [])
+        .map(section => ({
+          heading: cleanGeneratedText(section[0], 36),
+          summary: cleanGeneratedText(section[1], 100)
+        }))
+        .filter(section => section.heading && section.summary);
+      const summaries = sections.map(section => section.summary);
+      const existing = new Set(pool.map(question => questionFingerprint(question)));
+      const candidates = [];
+
+      sections.forEach((section, index) => {
+        const distractors = summaries
+          .filter((_, summaryIndex) => summaryIndex !== index)
+          .slice(0, 3);
+        while (distractors.length < 3) {
+          distractors.push([
+            "只负责把代码排版成固定格式",
+            "与本课知识无关的界面装饰",
+            "只能在程序结束后查看的结果"
+          ][distractors.length]);
+        }
+        candidates.push({
+          t: "s",
+          q: `关于“${section.heading}”，本课强调的重点是什么？`,
+          o: [section.summary, ...distractors],
+          a: 0,
+          e: `本题根据本课“${section.heading}”正文生成，正确理解是：${section.summary}。`
+        });
+      });
+
+      (lesson.goals || []).forEach((goal, index) => {
+        const distractors = (lesson.goals || [])
+          .filter((_, goalIndex) => goalIndex !== index)
+          .slice(0, 3);
+        while (distractors.length < 3) {
+          distractors.push("只需要记住一个固定代码片段");
+        }
+        candidates.push({
+          t: "s",
+          q: `学习“${lesson.title}”时，下面哪项属于本课目标？`,
+          o: [cleanGeneratedText(goal, 80), ...distractors.map(item => cleanGeneratedText(item, 80))],
+          a: 0,
+          e: `这是课程目标中的一项：${goal}。`
+        });
+      });
+
+      for (const question of candidates) {
+        if (pool.filter(item => item.t === "s").length >= 10) break;
+        const fingerprint = questionFingerprint(question);
+        if (existing.has(fingerprint) || new Set(question.o).size !== question.o.length) continue;
+        existing.add(fingerprint);
+        pool.push(question);
+      }
+      return pool;
+    }
+
+    lessons.forEach(lesson => {
+      practicePool[lesson.title] = addGeneratedPracticeQuestions(
+        lesson, practicePool[lesson.title]);
+    });
+    practicePool = normalizePracticePool(practicePool);
+    lessons.forEach(lesson => {
+      const pool = practicePool[lesson.title] || (practicePool[lesson.title] = []);
+      while (lesson.questions.length < 10) {
+        const number = lesson.questions.length + 1;
+        const goal = cleanGeneratedText(
+          lesson.goals[(number - 1) % Math.max(1, lesson.goals.length)] || lesson.title, 80
+        );
+        const question = {
+          type: "选择题",
+          text: `课程补强题 ${number}：下面哪项最能体现“${goal}”？`,
+          options: [
+            goal,
+            "只修改界面颜色，不影响程序行为",
+            "只在程序结束后查看结果",
+            "与本课程主题无关的操作"
+          ],
+          answer: 0,
+          explanation: `本题围绕课程目标“${goal}”设计，应该结合示例理解其实际含义。`
+        };
+        lesson.questions.push(question);
+        pool.push({t: "s", q: question.text, o: question.options, a: 0, e: question.explanation});
+      }
+    });
+    lessons.forEach(lesson => {
+      const unique = [];
+      for (const question of lesson.questions || []) {
+        const candidate = {
+          t: question.type === "选择题" ? "s" : question.type === "判断题" ? "j" : question.type === "填空题" ? "f" : "p",
+          q: question.text,
+          o: question.options,
+          a: question.answer
+        };
+        if (!unique.some(item => questionTextFingerprint(item) === questionTextFingerprint(candidate))) unique.push(candidate);
+      }
+      const originalByText = new Map((lesson.questions || []).map(question => [question.text, question]));
+      lesson.questions = unique.map(candidate => originalByText.get(candidate.q)).filter(Boolean);
+    });
+    lessons.forEach(lesson => {
+      const currentChoices = (lesson.questions || []).filter(question =>
+        question.type === "选择题" && Array.isArray(question.options));
+      const generatedChoices = (practicePool[lesson.title] || [])
+        .filter(question => question.t === "s" && Array.isArray(question.o))
+        .map(question => ({
+          type: "选择题",
+          text: question.q,
+          options: [...question.o],
+          answer: question.a,
+          explanation: question.e || "请结合课程正文理解本题。"
+        }));
+      const existing = new Set(currentChoices.map(question =>
+        questionFingerprint({t: "s", q: question.text, o: question.options, a: question.answer})));
+      for (const question of generatedChoices) {
+        if (currentChoices.length >= 10) break;
+        const fingerprint = questionFingerprint({
+          t: "s", q: question.text, o: question.options, a: question.answer
+        });
+        if (existing.has(fingerprint)) continue;
+        existing.add(fingerprint);
+        lesson.questions.push(question);
+        currentChoices.push(question);
+      }
+      const lessonPool = practicePool[lesson.title] || [];
+      while (currentChoices.length < 10) {
+        const index = currentChoices.length;
+        const goal = cleanGeneratedText(
+          lesson.goals[index % Math.max(1, lesson.goals.length)] || lesson.title, 80
+        );
+        const otherGoals = (lesson.goals || [])
+          .filter(item => cleanGeneratedText(item, 80) !== goal)
+          .map(item => cleanGeneratedText(item, 80));
+        const options = [goal, ...otherGoals, "只需要记住固定格式，不必理解实际用途"]
+          .filter((item, itemIndex, all) => item && all.indexOf(item) === itemIndex)
+          .slice(0, 4);
+        while (options.length < 4) options.push(`与“${lesson.title}”无关的内容 ${options.length}`);
+        const question = {
+          type: "选择题",
+          text: `本课强化练习 ${index + 1}：怎样体现“${goal}”？`,
+          options,
+          answer: 0,
+          explanation: `本题对应本课目标“${goal}”，应结合课程示例理解其实际用法。`
+        };
+        lesson.questions.push(question);
+        currentChoices.push(question);
+        lessonPool.push({
+          t: "s", q: question.text, o: question.options, a: question.answer, e: question.explanation
+        });
+      }
+    });
+    const practicePoolProblems = [];
+    const practiceFingerprints = new Set();
+    Object.entries(practicePool).forEach(([title, questions]) => {
+      const localQuestions = [];
+      questions.forEach((question, index) => {
+        const label = `${title} 第${index + 1}题`;
+        if (question.t === "s" &&
+            (!Array.isArray(question.o) || !Number.isInteger(question.a) ||
+             question.a < 0 || question.a >= question.o.length)) {
+          practicePoolProblems.push(`${label}：选择题答案索引无效`);
+        }
+        const fingerprint = questionFingerprint(question);
+        if (practiceFingerprints.has(fingerprint)) {
+          practicePoolProblems.push(`${label}：题目重复`);
+        }
+        if (localQuestions.some(item => questionsAreDuplicates(item, question))) {
+          practicePoolProblems.push(`${label}：题干重复或高度相似`);
+        }
+        localQuestions.push(question);
+        practiceFingerprints.add(fingerprint);
+      });
+    });
+    if (practicePoolProblems.length) {
+      console.error("练习题库自检失败：", practicePoolProblems);
+    }
+    window.__practicePoolProblems = practicePoolProblems;
+    window.__questionAudit = Object.fromEntries(Object.entries(practicePool).map(([title, questions]) => [
+      title,
+      {
+        total: questions.length,
+        choices: questions.filter(question => question.t === "s").length,
+        programs: (lessons.find(lesson => lesson.title === title)?.questions || [])
+          .filter(question => question.type === "程序题").length
+      }
+    ]));
+
     const theorySupplements = {
       "认识 C 语言与第一个程序": [
         ["从源码到可执行程序", "在常见桌面环境中，预处理会展开头文件和宏，编译器把 C 翻译成目标文件，链接器再把目标文件和所需库组合起来。某一步失败，后续步骤就无法正确完成。嵌入式工程使用交叉工具链生成面向 MCU 的映像，启动代码配置运行环境后通常才调用 main；所以“从 main 开始”是学习应用逻辑的简化说法，不代表芯片复位后第一条指令就在 main。", null],
@@ -6677,6 +6982,52 @@
     for (const lesson of lessons) {
       if (theorySupplements[lesson.title]) lesson.content.push(...theorySupplements[lesson.title]);
     }
+    const programSupplements = {
+      "变量、类型与输入输出": [
+        {
+          type: "程序题",
+          text: "读入一个整数和一个 double 小数，按“整数 小数”格式输出它们。",
+          explanation: "整数使用 %d，double 使用 %lf 读取；输出 double 时可用 %.2f 控制小数位。",
+          solution: "#include <stdio.h>\nint main(void) {\n    int count;\n    double price;\n    if (scanf(\"%d %lf\", &count, &price) != 2) return 1;\n    printf(\"%d %.2f\\n\", count, price);\n    return 0;\n}",
+          tests: [{input:"3 2.5\n", output:"3 2.50\n"}, {input:"-2 0.125\n", output:"-2 0.12\n"}]
+        },
+        {
+          type: "程序题",
+          text: "读入一个字符，输出该字符以及它对应的整数编码。",
+          explanation: "字符用 %c 读取；输出字符用 %c，转换为 int 后用 %d 输出。不要把字符和字符串的格式符混用。",
+          solution: "#include <stdio.h>\nint main(void) {\n    char ch;\n    if (scanf(\" %c\", &ch) != 1) return 1;\n    printf(\"%c %d\\n\", ch, (int)ch);\n    return 0;\n}",
+          tests: [{input:"A\n", output:"A 65\n"}, {input:"z\n", output:"z 122\n"}]
+        },
+        {
+          type: "程序题",
+          text: "读入一个整数 score，输出 score 加 5 后的结果，并保留原分数不变。",
+          explanation: "把计算结果写入新变量，避免误把原变量覆盖；读取失败时应停止使用未初始化的 score。",
+          solution: "#include <stdio.h>\nint main(void) {\n    int score;\n    if (scanf(\"%d\", &score) != 1) return 1;\n    int improved = score + 5;\n    printf(\"%d\\n\", improved);\n    return 0;\n}",
+          tests: [{input:"90\n", output:"95\n"}, {input:"-3\n", output:"2\n"}]
+        }
+      ]
+    };
+    lessons.forEach(lesson => {
+      if (programSupplements[lesson.title]) lesson.questions.push(...programSupplements[lesson.title]);
+    });
+    lessons.forEach(lesson => {
+      const unique = [];
+      lesson.questions.forEach(question => {
+        const comparable = {t: question.type, q: question.text};
+        if (!unique.some(existing =>
+          questionTextFingerprint({q: existing.text}) === questionTextFingerprint(comparable)
+        )) {
+          unique.push(question);
+        }
+      });
+      lesson.questions = unique;
+    });
+    if (window.__questionAudit) {
+      Object.entries(window.__questionAudit).forEach(([title, audit]) => {
+        const lesson = lessons.find(item => item.title === title);
+        if (lesson) audit.programs = lesson.questions.filter(question => question.type === "程序题").length;
+      });
+    }
     const attachJudgeTests = (lessonTitle, questionPrefix, tests) => {
       const lesson = lessons.find(item => item.title === lessonTitle);
       const question = lesson && lesson.questions.find(item => item.text.startsWith(questionPrefix));
@@ -6774,6 +7125,54 @@
     attachJudgeTests("综合项目：多功能电子钟 + 进阶路线", "写代码把秒数 3661", [
       {input:"", output:"01:01:01\n"}
     ]);
+    lessons.forEach(lesson => {
+      const pool = practicePool[lesson.title] || [];
+      const existing = new Set(pool.map(question => questionFingerprint(question)));
+      lesson.questions.filter(question =>
+        question.type === "程序题" && typeof question.solution === "string" &&
+        Array.isArray(question.tests) && question.tests.length >= 1
+      ).forEach(question => {
+        const practiceQuestion = {
+          t: "p",
+          q: question.text,
+          solution: question.solution,
+          tests: question.tests,
+          e: question.explanation,
+          knowledge: question.analysis?.key || "",
+          pitfall: question.analysis?.extra || ""
+        };
+        if (!existing.has(questionFingerprint(practiceQuestion))) {
+          pool.push(practiceQuestion);
+          existing.add(questionFingerprint(practiceQuestion));
+        }
+      });
+      practicePool[lesson.title] = pool;
+      if (window.__questionAudit[lesson.title]) {
+        window.__questionAudit[lesson.title].programs = lesson.questions.filter(
+          question => question.type === "程序题"
+        ).length;
+      }
+    });
+    practicePool = normalizePracticePool(practicePool);
+    window.__lessonAudit = lessons.map(lesson => ({
+      title: lesson.title,
+      questionCount: lesson.questions.length,
+      duplicateQuestions: lesson.questions.filter((question, index, all) =>
+        all.slice(0, index).some(previous =>
+          questionTextFingerprint({q: question.text}) === questionTextFingerprint({q: previous.text})
+        )
+      ).length,
+      invalidChoices: lesson.questions.filter(question =>
+        ["选择题", "判断题"].includes(question.type) &&
+        (!Array.isArray(question.options) || question.options.length < 2 ||
+         !Number.isInteger(question.answer) || question.answer < 0 ||
+         question.answer >= question.options.length)
+      ).length,
+      missingJudgeTests: lesson.questions.filter(question =>
+        question.type === "程序题" &&
+        (!question.tests || question.tests.length < 1)
+      ).length
+    }));
     const legacyProgressKey = "c-start-progress-v1";
     const legacyGameKey = "c-start-game-v2";
     const progressKey = "c-start-progress-v2";
@@ -7775,6 +8174,17 @@
           out.push({ type: "判断题", text: pt.q, options: ["正确", "错误"], answer: pt.a === 0 ? 0 : 1, explanation: pt.e, pk: pi, pv: 0 });
         } else if (pt.t === "f") {
           out.push({ type: "填空题", text: pt.q, accepted: pt.ans, explanation: pt.e, pk: pi, pv: 0 });
+        } else if (pt.t === "p") {
+          out.push({
+            type: "程序题",
+            text: pt.q,
+            solution: pt.solution,
+            tests: pt.tests,
+            explanation: pt.e,
+            analysis: {key: pt.knowledge, extra: pt.pitfall},
+            pk: pi,
+            pv: 0
+          });
         }
       });
       return out;
@@ -7829,6 +8239,24 @@
           </div>
         </div>`;
       slice.forEach((q, i) => {
+        const runButton = root.querySelector(`[data-run-code="${i}"]`);
+        if (runButton) {
+          runButton.addEventListener("click", () => runProgram(q, i, runButton, lessonIndex));
+          return;
+        }
+        if (q.options) {
+          root.querySelectorAll(`[data-question="${i}"] .option-btn`).forEach(button => {
+            button.addEventListener("click", () => {
+              const selected = Number(button.dataset.option);
+              root.querySelectorAll(`[data-question="${i}"] .option-btn`).forEach(option => {
+                option.classList.toggle("selected", option === button);
+                option.disabled = true;
+              });
+              submitPracticeAnswer(q, i, lesson, lessonIndex, selected);
+            });
+          });
+          return;
+        }
         const check = root.querySelector(`[data-check="${i}"]`);
         if (check) check.addEventListener("click", () => {
           let correct = false;
