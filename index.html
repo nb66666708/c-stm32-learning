@@ -3043,7 +3043,7 @@
       }
     ];
     lessons.push(...extraLessons);
-    const practicePool = {
+    let practicePool = {
       "认识 C 语言与第一个程序": [
         {t:"s", q:"一个普通 C 程序是从哪个函数开始执行的？", o:["main","printf","start","include"], a:0, e:"C 程序的执行入口是 main 函数。printf 是输出函数，include 是预处理指令的一部分，都不负责启动程序。"},
         {t:"s", q:"下面哪一行写在程序最前面，用来引入标准输入输出工具？", o:["#include <stdio.h>","#include <math.h>","int main()","return 0;"], a:0, e:"#include <stdio.h> 把标准输入输出（printf/scanf 等）的声明引进来；没有它调用 printf 会报“未声明”错误。"},
