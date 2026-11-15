@@ -21497,6 +21497,1119 @@
       pool.push(...questions);
     });
     practicePool = normalizePracticePool(practicePool);
+
+    // KQ-BATCH-9
+    const knowledgeQuestionBatch9 = {
+  "内存管理与动态分配：别让内存“悄悄泄漏”": [
+    {
+      "t": "s",
+      "q": "realloc 返回 NULL 时，原指针指向的内存状态是？",
+      "o": [
+        "已被释放",
+        "仍然有效，需继续持有并决定是否 free",
+        "自动释放",
+        "随机"
+      ],
+      "a": 1,
+      "e": "经典陷阱：tmp=realloc 后原指针不能立刻丢。"
+    },
+    {
+      "t": "j",
+      "q": "正确写法是先把 realloc 结果存入临时指针，非 NULL 再覆盖原指针。",
+      "a": 0,
+      "e": "保住原块。"
+    },
+    {
+      "t": "f",
+      "q": "realloc 失败时原内存____有效。",
+      "ans": [
+        "仍然",
+        "依然",
+        "仍然（依然）"
+      ],
+      "e": "-"
+    },
+    {
+      "t": "s",
+      "q": "calloc 相比 malloc 的额外保证是？",
+      "o": [
+        "更快",
+        "内存清零",
+        "更小",
+        "随机"
+      ],
+      "a": 1,
+      "e": "all zero。"
+    },
+    {
+      "t": "j",
+      "q": "calloc(n, size) 会把分配的 n×size 字节全部清零。",
+      "a": 0,
+      "e": "安全初始化。"
+    },
+    {
+      "t": "f",
+      "q": "calloc 分配的内存自动____。",
+      "ans": [
+        "清零",
+        "置零",
+        "清零（置零）"
+      ],
+      "e": "-"
+    },
+    {
+      "t": "s",
+      "q": "“分配器内部碎片”指什么？",
+      "o": [
+        "磁盘碎片",
+        "已分配块内未被利用的空隙",
+        "栈溢出",
+        "随机"
+      ],
+      "a": 1,
+      "e": "对齐/取整造成。"
+    },
+    {
+      "t": "j",
+      "q": "分配器按最小粒度取整会让小块请求浪费更多比例空间。",
+      "a": 0,
+      "e": "粒度开销。"
+    },
+    {
+      "t": "f",
+      "q": "内部碎片是已分配块内部的____空间。",
+      "ans": [
+        "浪费",
+        "空闲",
+        "浪费（空闲）"
+      ],
+      "e": "-"
+    },
+    {
+      "t": "s",
+      "q": "嵌入式项目禁止运行期 malloc 的常见理由？",
+      "o": [
+        "太慢",
+        "碎片不可控+认证要求",
+        "不流行",
+        "随机"
+      ],
+      "a": 1,
+      "e": "功能安全标准约束。"
+    }
+  ],
+  "结构体进阶：联合体、位域与内存对齐": [
+    {
+      "t": "s",
+      "q": "union 所有成员共享什么？",
+      "o": [
+        "名字",
+        "同一段内存",
+        "类型",
+        "随机"
+      ],
+      "a": 1,
+      "e": "首地址重合。"
+    },
+    {
+      "t": "j",
+      "q": "union 大小由最大成员和对齐要求共同决定。",
+      "a": 0,
+      "e": "不是简单最大值。"
+    },
+    {
+      "t": "f",
+      "q": "union 成员共享同一段____。",
+      "ans": [
+        "内存",
+        "起始地址",
+        "内存（起始地址）"
+      ],
+      "e": "-"
+    },
+    {
+      "t": "s",
+      "q": "union 判断端序的经典写法读哪个成员？",
+      "o": [
+        "第二个",
+        "与 int 重叠的 char 成员",
+        "数组末尾",
+        "随机"
+      ],
+      "a": 1,
+      "e": "读低地址字节。"
+    },
+    {
+      "t": "j",
+      "q": "写 int=1 后读 char 得 1 即小端、0 即大端。",
+      "a": 0,
+      "e": "一行判端序。"
+    },
+    {
+      "t": "f",
+      "q": "union 判端序先写 int 值____再读 char。",
+      "ans": [
+        "1"
+      ],
+      "e": "-"
+    },
+    {
+      "t": "s",
+      "q": "匿名联合（C11）的用途？",
+      "o": [
+        "加密",
+        "省去成员名直接访问内部成员",
+        "加速",
+        "随机"
+      ],
+      "a": 1,
+      "e": "语法糖。"
+    }
+  ],
+  "中断深入与临界区": [
+    {
+      "t": "s",
+      "q": "临界区保护的首要目标是？",
+      "o": [
+        "美观",
+        "操作原子性，防止中途被打断",
+        "加密",
+        "随机"
+      ],
+      "a": 1,
+      "e": "一致性。"
+    },
+    {
+      "t": "j",
+      "q": "共享变量读改写被中断插入是竞态条件的典型来源。",
+      "a": 0,
+      "e": "核心矛盾。"
+    },
+    {
+      "t": "f",
+      "q": "临界区保证操作不被____。",
+      "ans": [
+        "打断",
+        "中断",
+        "打断（中断）"
+      ],
+      "e": "-"
+    },
+    {
+      "t": "s",
+      "q": "关闭中断保护临界区的副作用？",
+      "o": [
+        "没有",
+        "拖累系统实时性，必须极短",
+        "省电",
+        "随机"
+      ],
+      "a": 1,
+      "e": "短小纪律。"
+    },
+    {
+      "t": "j",
+      "q": "临界区内绝不能调用可能阻塞或耗时的函数。",
+      "a": 0,
+      "e": "铁律。"
+    },
+    {
+      "t": "f",
+      "q": "关中断的临界区必须尽量____。",
+      "ans": [
+        "短",
+        "短小"
+      ],
+      "e": "时间最小化。"
+    },
+    {
+      "t": "s",
+      "q": "RTOS 中保护临界区更常用的手段是？",
+      "o": [
+        "关机",
+        "互斥量/信号量",
+        "重启",
+        "随机"
+      ],
+      "a": 1,
+      "e": "信号量家族。"
+    }
+  ],
+  "整数溢出与类型转换陷阱": [
+    {
+      "t": "s",
+      "q": "有符号整数溢出在 C 标准里是？",
+      "o": [
+        "定义良好",
+        "未定义行为",
+        "平台相关",
+        "随机"
+      ],
+      "a": 1,
+      "e": "UB 三巨头之一。"
+    },
+    {
+      "t": "j",
+      "q": "无符号数溢出是模 2^n 回绕，行为有定义。",
+      "a": 0,
+      "e": "unsigned 安全回绕。"
+    },
+    {
+      "t": "f",
+      "q": "无符号溢出按模 2 的____次方回绕。",
+      "ans": [
+        "n"
+      ],
+      "e": "wrap around。"
+    },
+    {
+      "t": "s",
+      "q": "char 默认 signedness？",
+      "o": [
+        "总是有符号",
+        "由实现定义，跨平台别假设",
+        "总是无符号",
+        "随机"
+      ],
+      "a": 1,
+      "e": "char 三类。"
+    },
+    {
+      "t": "j",
+      "q": "普通 char、signed char、unsigned char 是三种不同类型。",
+      "a": 0,
+      "e": "标准细节。"
+    },
+    {
+      "t": "f",
+      "q": "char 的符号性由____定义。",
+      "ans": [
+        "实现",
+        "编译器",
+        "实现（编译器）"
+      ],
+      "e": "-"
+    },
+    {
+      "t": "s",
+      "q": "size_t 本质是什么类型？",
+      "o": [
+        "int",
+        "sizeof 结果的无符号类型",
+        "long",
+        "随机"
+      ],
+      "a": 1,
+      "e": "无符号。"
+    },
+    {
+      "t": "j",
+      "q": "size_t 参与有符号比较会被提升转换，-1 < sizeof(x) 反而为假的经典陷阱。",
+      "a": 0,
+      "e": "比较前转换。"
+    },
+    {
+      "t": "f",
+      "q": "size_t 是____类型，与负数比较要小心。",
+      "ans": [
+        "无符号",
+        "unsigned",
+        "无符号（unsigned）"
+      ],
+      "e": "-"
+    },
+    {
+      "t": "s",
+      "q": "表达式 -1 < (size_t)0 的结果是？",
+      "o": [
+        "真",
+        "假（-1 被转换成巨大无符号数）",
+        "随机",
+        "编译错"
+      ],
+      "a": 1,
+      "e": "转换规则。"
+    }
+  ],
+  "状态机编程与按键消抖": [
+    {
+      "t": "s",
+      "q": "状态机三要素不包括？",
+      "o": [
+        "状态",
+        "事件",
+        "迁移",
+        "变量名"
+      ],
+      "a": 3,
+      "e": "三要素=状态/事件/迁移。"
+    },
+    {
+      "t": "j",
+      "q": "状态机的下一个状态只由当前状态和事件决定，与历史路径无关。",
+      "a": 0,
+      "e": "马尔可夫性。"
+    },
+    {
+      "t": "f",
+      "q": "状态机三要素：状态、事件和____。",
+      "ans": [
+        "迁移",
+        "转换",
+        "迁移（转换）"
+      ],
+      "e": "-"
+    },
+    {
+      "t": "s",
+      "q": "switch-case 实现状态机时 default 分支的价值？",
+      "o": [
+        "装饰",
+        "防御非法状态，输出诊断或复位",
+        "加速",
+        "随机"
+      ],
+      "a": 1,
+      "e": "防御式。"
+    },
+    {
+      "t": "j",
+      "q": "default 里打日志记录“不该到达的状态”是最实用的调试手段。",
+      "a": 0,
+      "e": "现场保全。"
+    },
+    {
+      "t": "f",
+      "q": "default 分支处理____状态。",
+      "ans": [
+        "非法",
+        "未知",
+        "非法（未知）"
+      ],
+      "e": "-"
+    },
+    {
+      "t": "s",
+      "q": "按键消抖的时间量级通常取？",
+      "o": [
+        "1µs",
+        "10-20ms",
+        "1s",
+        "随机"
+      ],
+      "a": 1,
+      "e": "机械弹抖周期。"
+    },
+    {
+      "t": "j",
+      "q": "消抖既可用定时器重置法，也可用连续 N 次采样一致法。",
+      "a": 0,
+      "e": "两种流派。"
+    },
+    {
+      "t": "f",
+      "q": "按键机械抖动持续约 10-20____。",
+      "ans": [
+        "毫秒",
+        "ms",
+        "毫秒（ms）"
+      ],
+      "e": "-"
+    },
+    {
+      "t": "s",
+      "q": "“仅状态机还不够，还要分层”指的是？",
+      "o": [
+        "加密",
+        "分层状态机：父状态处理公共事件",
+        "随机",
+        "无关"
+      ],
+      "a": 1,
+      "e": "层次化。"
+    }
+  ]
+};
+    Object.entries(knowledgeQuestionBatch9).forEach(([title, questions]) => {
+      const pool = practicePool[title] || (practicePool[title] = []);
+      pool.push(...questions);
+    });
+    practicePool = normalizePracticePool(practicePool);
+
+    // KQ-BATCH-10
+    const knowledgeQuestionBatch10 = {
+  "C 语言手撕题：面试手写高频题": [
+    {
+      "t": "p",
+      "q": "手写 my_memcpy：把源字符串复制到目标缓冲，并输出复制结果和源长度。读入一个不含空格的字符串。",
+      "solution": "#include <stdio.h>\nvoid *my_memcpy(void *dst, const void *src, unsigned n){unsigned char *d=dst; const unsigned char *s=src; while(n--) *d++ = *s++; return dst;}\nint main(void){char src[64], dst[64]; if(scanf(\"%63s\", src)!=1) return 1; my_memcpy(dst, src, 64); printf(\"%s\\n\", dst); int len=0; while(src[len]) len++; printf(\"%d\\n\", len); return 0;}",
+      "tests": [
+        {
+          "input": "wandbox\n",
+          "output": "wandbox\n7\n"
+        },
+        {
+          "input": "C\n",
+          "output": "C\n1\n"
+        }
+      ],
+      "e": "逐字节复制：目标是 void*，内部转 unsigned char* 逐字节搬。注意这与库函数不同，未处理重叠区域；面试要主动说明重叠时需 memmove。",
+      "knowledge": "my_memcpy 实现要点",
+      "pitfall": "不处理重叠区域（src 与 dst 重叠时行为未定义），面试必须主动指出"
+    },
+    {
+      "t": "p",
+      "q": "用异或交换两个整数（不借助第三个变量）。读入 a 和 b，输出交换后的结果。",
+      "solution": "#include <stdio.h>\nint main(void){int a,b; if(scanf(\"%d %d\",&a,&b)!=2) return 1; a^=b; b^=a; a^=b; printf(\"%d %d\\n\",a,b); return 0;}",
+      "tests": [
+        {
+          "input": "3 9\n",
+          "output": "9 3\n"
+        },
+        {
+          "input": "100 -5\n",
+          "output": "-5 100\n"
+        }
+      ],
+      "e": "三次异或完成交换：a^=b 后 a 是两值的混合，b^=a 还原出旧 a，a^=b 还原出旧 b。",
+      "knowledge": "异或交换原理",
+      "pitfall": "同一地址（a 和 b 是同一变量）会被清零，工程中应加 if(a!=b) 判断"
+    },
+    {
+      "t": "p",
+      "q": "手写 Modbus CRC16 校验：读入 4 个十六进制字节（如 01 03 00 01），输出低字节在前的 CRC（如 30 18）。",
+      "solution": "#include <stdio.h>\nint main(void){unsigned b[4]; unsigned v[4]; for(int i=0;i<4;i++){if(scanf(\"%x\",&v[i])!=1) return 1; b[i]=(unsigned char)v[i];} unsigned crc=0xFFFF; for(int i=0;i<4;i++){crc^=b[i]; for(int j=0;j<8;j++) crc=(crc&1)?(crc>>1)^0xA001:(crc>>1);} printf(\"%02X %02X\\n\", crc&0xFF, crc>>8); return 0;}",
+      "tests": [
+        {
+          "input": "01 03 00 01\n",
+          "output": "30 18\n"
+        },
+        {
+          "input": "01 03 00 02\n",
+          "output": "70 19\n"
+        }
+      ],
+      "e": "初值 0xFFFF，逐字节异或后查最低位决定右移是否异或反转多项式 0xA001；发送时低字节在前。",
+      "knowledge": "Modbus CRC16 算法",
+      "pitfall": "多项式 0xA001 是 0x8005 的位反转；低字节先发（小端序惯例）"
+    }
+  ],
+  "环形缓冲区：串口收发的核心": [
+    {
+      "t": "p",
+      "q": "环形缓冲区写入 7 个数（容量 4）：超出容量时覆盖最旧数据。第一行输入 n，随后 n 个整数，输出缓冲区当前内容。",
+      "solution": "#include <stdio.h>\nint main(void){int n; if(scanf(\"%d\",&n)!=1) return 1; int buf[4], head=0, cnt=0; for(int i=0;i<n;i++){int x; if(scanf(\"%d\",&x)!=1) return 1; if(cnt==4){cnt--; head=(head+1)%4;} int tail=(head+cnt)%4; buf[tail]=x; cnt++;} for(int k=0;k<cnt;k++){printf(\"%d\", buf[(head+k)%4]); if(k+1<cnt) printf(\" \");} printf(\"\\n\"); return 0;}",
+      "tests": [
+        {
+          "input": "7 1 4 9 16 25 36 49\n",
+          "output": "16 25 36 49\n"
+        },
+        {
+          "input": "3 10 20 30\n",
+          "output": "10 20 30\n"
+        }
+      ],
+      "e": "写满时 head 前移一格并丢弃最旧元素，写位置 = (head+cnt) % SIZE；这是日志类缓冲的覆盖策略。",
+      "knowledge": "环形缓冲覆盖策略",
+      "pitfall": "% 取模在无符号下才安全；丢弃旧数据适合日志，不适合协议帧"
+    },
+    {
+      "t": "p",
+      "q": "把环形缓冲区改造为 2 的幂容量 + 位运算取模（容量 4，掩码 3）。第一行输入 n，随后 n 个整数，输出当前缓冲内容。",
+      "solution": "#include <stdio.h>\n#define SIZE 4\n#define MASK (SIZE-1)\nint main(void){int n; if(scanf(\"%d\",&n)!=1) return 1; int buf[SIZE], head=0, cnt=0; for(int i=0;i<n;i++){int x; if(scanf(\"%d\",&x)!=1) return 1; if(cnt==SIZE){cnt--; head=(head+1)&MASK;} int tail=(head+cnt)&MASK; buf[tail]=x; cnt++;} for(int k=0;k<cnt;k++){printf(\"%d\", buf[(head+k)&MASK]); if(k+1<cnt) printf(\" \");} printf(\"\\n\"); return 0;}",
+      "tests": [
+        {
+          "input": "7 1 4 9 16 25 36 49\n",
+          "output": "16 25 36 49\n"
+        },
+        {
+          "input": "3 10 20 30\n",
+          "output": "10 20 30\n"
+        }
+      ],
+      "e": "容量为 2 的幂时 idx & (SIZE-1) 等价于 idx % SIZE，在无除法器的小 MCU 上更快。",
+      "knowledge": "位与代替取模",
+      "pitfall": "容量不是 2 的幂时 & 运算会错，MASK 必须是 SIZE-1"
+    },
+    {
+      "t": "p",
+      "q": "计算环形缓冲区剩余空间：读入 head、tail、size（容量 8），输出还能写入的字节数。公式为 (tail-head-1+size) % size。",
+      "solution": "#include <stdio.h>\nint main(void){int head,tail,size; if(scanf(\"%d %d %d\",&head,&tail,&size)!=3) return 1; int free_bytes=((tail-head-1)%size+size)%size; printf(\"%d\\n\", free_bytes); return 0;}",
+      "tests": [
+        {
+          "input": "0 0 8\n",
+          "output": "7\n"
+        },
+        {
+          "input": "3 1 8\n",
+          "output": "5\n"
+        },
+        {
+          "input": "0 7 8\n",
+          "output": "6\n"
+        }
+      ],
+      "e": "tail 在 head 之前（回绕）时 tail-head 为负，先 % size 再 +size 再 % size 保证非负——这是判满留一格设计下求剩余空间的公式。",
+      "knowledge": "环形剩余空间计算",
+      "pitfall": "负数取模在 C 里向零取整会得到负值，必须 +size 修正"
+    }
+  ],
+  "大小端与内存对齐：面试高频考点": [
+    {
+      "t": "p",
+      "q": "用联合体判断当前机器端序：写 1 进 unsigned int 成员，读 unsigned char 成员，输出 Little 或 Big。",
+      "solution": "#include <stdio.h>\nunion U { unsigned int i; unsigned char c; };\nint main(void){union U u; u.i = 1u; printf(\"%s\\n\", u.c == 1 ? \"Little\" : \"Big\"); return 0;}",
+      "tests": [
+        {
+          "input": "",
+          "output": "Little\n"
+        }
+      ],
+      "e": "联合体成员共享首地址：小端下低地址存 0x01，char 读到 1；大端读到 0。",
+      "knowledge": "union 判端序",
+      "pitfall": "char 成员必须和 int 首地址重合（联合体保证），不要用指针强转替代"
+    },
+    {
+      "t": "p",
+      "q": "大端序序列化：读入一个无符号整数，按大端（高位在前）输出 4 个字节的十六进制。",
+      "solution": "#include <stdio.h>\nint main(void){unsigned v; if(scanf(\"%u\",&v)!=1) return 1; printf(\"%02X %02X %02X %02X\\n\", (v>>24)&0xFF, (v>>16)&0xFF, (v>>8)&0xFF, v&0xFF); return 0;}",
+      "tests": [
+        {
+          "input": "305419896\n",
+          "output": "12 34 56 78\n"
+        },
+        {
+          "input": "1\n",
+          "output": "00 00 00 01\n"
+        }
+      ],
+      "e": "移位取字节与机器端序无关：v>>24 取最高字节。通信协议按字节流定义，显式序列化是唯一可移植做法。",
+      "knowledge": "大端序列化",
+      "pitfall": "直接 memcpy 结构体到字节流会受本机端序影响，必须显式移位"
+    },
+    {
+      "t": "p",
+      "q": "验证结构体对齐填充：输入 1 输出 struct{char c; int i;} 的大小，输入 2 输出 struct{char c; double d;} 的大小。",
+      "solution": "#include <stdio.h>\nstruct A { char c; int i; };\nstruct B { char c; double d; };\nint main(void){int n; if(scanf(\"%d\",&n)!=1) return 1; printf(\"%d\\n\", n==1 ? (int)sizeof(struct A) : (int)sizeof(struct B)); return 0;}",
+      "tests": [
+        {
+          "input": "1\n",
+          "output": "8\n"
+        },
+        {
+          "input": "2\n",
+          "output": "16\n"
+        }
+      ],
+      "e": "char 后填充 3 字节让 int 按 4 字节对齐，总大小 8；double 按 8 对齐时 char 后填充 7，总大小 16。",
+      "knowledge": "结构体对齐",
+      "pitfall": "sizeof 结果 = 最大成员对齐值的整数倍（尾部也要补齐）"
+    }
+  ],
+  "volatile / static / const：面试第一题": [
+    {
+      "t": "p",
+      "q": "static 局部变量计数器：函数 counter 每调用一次自增并返回，读入 n，输出第 n 次调用的返回值。",
+      "solution": "#include <stdio.h>\nint counter(void){ static int c = 0; return ++c; }\nint main(void){int n; if(scanf(\"%d\",&n)!=1) return 1; for(int i=0;i<n;i++) counter(); printf(\"%d\\n\", counter()); return 0;}",
+      "tests": [
+        {
+          "input": "5\n",
+          "output": "6\n"
+        },
+        {
+          "input": "0\n",
+          "output": "1\n"
+        },
+        {
+          "input": "99\n",
+          "output": "100\n"
+        }
+      ],
+      "e": "static 局部变量存静态区、只初始化一次，函数返回后仍保留——这是它与 auto 变量的本质区别。",
+      "knowledge": "static 存储期",
+      "pitfall": "static 变量让函数不可重入，多任务/中断场景调用同一函数会互相干扰"
+    }
+  ],
+  "位运算与二进制": [
+    {
+      "t": "p",
+      "q": "置位与清零：读入 x、置位编号 s、清零编号 c，对 x 执行 x |= (1<<s)、x &= ~(1<<c)，输出结果。",
+      "solution": "#include <stdio.h>\nint main(void){unsigned x; int s,c; if(scanf(\"%u %d %d\",&x,&s,&c)!=3) return 1; x |= (1u<<s); x &= ~(1u<<c); printf(\"%u\\n\", x); return 0;}",
+      "tests": [
+        {
+          "input": "0 1 3\n",
+          "output": "2\n"
+        },
+        {
+          "input": "255 0 7\n",
+          "output": "127\n"
+        }
+      ],
+      "e": "置位用 |=，清零用 &=~，读改写三件套的位级版本；这是操作 GPIO/寄存器的最底层写法。",
+      "knowledge": "位操作置位清零",
+      "pitfall": "1u<<s 的 1u 前缀不能省，1 默认是 int，移 31 位会溢出 UB"
+    },
+    {
+      "t": "p",
+      "q": "统计二进制中 1 的个数（Brian Kernighan 法）：读入无符号数 x，输出其中 1 的个数。",
+      "solution": "#include <stdio.h>\nint main(void){unsigned x; if(scanf(\"%u\",&x)!=1) return 1; int cnt=0; while(x){x&=x-1; cnt++;} printf(\"%d\\n\", cnt); return 0;}",
+      "tests": [
+        {
+          "input": "255\n",
+          "output": "8\n"
+        },
+        {
+          "input": "1023\n",
+          "output": "10\n"
+        },
+        {
+          "input": "0\n",
+          "output": "0\n"
+        }
+      ],
+      "e": "x &= x-1 每次消去最低位的 1，循环次数等于 1 的个数，比逐位判断更快。",
+      "knowledge": "Kernighan 位计数",
+      "pitfall": "x-1 会借位翻转低位的连续 1，面试常要求解释这个技巧的原理"
+    }
+  ],
+  "内存管理与动态分配：别让内存“悄悄泄漏”": [
+    {
+      "t": "p",
+      "q": "malloc 求和：第一行 n，随后 n 个整数，动态分配数组求和并释放，输出和。",
+      "solution": "#include <stdio.h>\n#include <stdlib.h>\nint main(void){int n; if(scanf(\"%d\",&n)!=1||n<=0) return 1; int *a=malloc((size_t)n*sizeof(int)); if(!a) return 1; long sum=0; for(int i=0;i<n;i++){if(scanf(\"%d\",&a[i])!=1) return 1; sum+=a[i];} printf(\"%ld\\n\", sum); free(a); return 0;}",
+      "tests": [
+        {
+          "input": "3 10 20 30\n",
+          "output": "60\n"
+        },
+        {
+          "input": "5 1 2 3 4 5\n",
+          "output": "15\n"
+        }
+      ],
+      "e": "malloc 后必须判空，n 要强转 size_t 防止符号扩展问题，用完 free。这是堆内存的完整生命周期。",
+      "knowledge": "malloc 生命周期",
+      "pitfall": "malloc 参数写字节数不是元素数：n*sizeof(int) 缺一不可"
+    },
+    {
+      "t": "p",
+      "q": "realloc 扩容：已有 3 个元素 {10,20,30} 的堆数组扩到 5 个并补 40、50，输出全部 5 个元素。",
+      "solution": "#include <stdio.h>\n#include <stdlib.h>\nint main(void){int *a=malloc(3*sizeof(int)); if(!a) return 1; a[0]=10;a[1]=20;a[2]=30; int *b=realloc(a,5*sizeof(int)); if(!b){free(a); return 1;} b[3]=40; b[4]=50; for(int i=0;i<5;i++){printf(\"%d\",b[i]); if(i+1<5) printf(\" \");} printf(\"\\n\"); free(b); return 0;}",
+      "tests": [
+        {
+          "input": "",
+          "output": "10 20 30 40 50\n"
+        }
+      ],
+      "e": "realloc 失败返回 NULL 但原块仍有效：必须用临时指针接收，失败时 free 原指针再退出，否则既泄漏又丢数据。",
+      "knowledge": "realloc 陷阱",
+      "pitfall": "p = realloc(p, n) 直接覆盖原指针会在失败时造成内存泄漏"
+    }
+  ],
+  "状态机编程与按键消抖": [
+    {
+      "t": "p",
+      "q": "三状态状态机：状态 0 --1--> 状态 1，状态 1 --1--> 状态 2，状态 2 --0--> 状态 0。读入事件序列（如 1101），输出最终状态。",
+      "solution": "#include <stdio.h>\nint main(void){char ev[128]; if(scanf(\"%127s\",ev)!=1) return 1; int state=0; for(int i=0; ev[i]; i++){int e=ev[i]-'0'; if(state==0&&e==1) state=1; else if(state==1&&e==1) state=2; else if(state==2&&e==0) state=0;} printf(\"%d\\n\", state); return 0;}",
+      "tests": [
+        {
+          "input": "1101\n",
+          "output": "1\n"
+        },
+        {
+          "input": "11\n",
+          "output": "2\n"
+        },
+        {
+          "input": "11111\n",
+          "output": "2\n"
+        },
+        {
+          "input": "00\n",
+          "output": "0\n"
+        }
+      ],
+      "e": "switch/else 链只看「当前状态+事件」决定迁移，与历史无关；事件驱动逐个处理输入流。",
+      "knowledge": "状态机核心结构",
+      "pitfall": "状态 2 收到事件 1 时无迁移（自环），代码里明确不处理即保持"
+    }
+  ],
+  "整数溢出与类型转换陷阱": [
+    {
+      "t": "p",
+      "q": "无符号回绕：读入两个无符号数输出其和（模 2^32 回绕）。",
+      "solution": "#include <stdio.h>\nint main(void){unsigned a,b; if(scanf(\"%u %u\",&a,&b)!=2) return 1; printf(\"%u\\n\", a+b); return 0;}",
+      "tests": [
+        {
+          "input": "4294967295 1\n",
+          "output": "0\n"
+        },
+        {
+          "input": "4294967295 5\n",
+          "output": "4\n"
+        },
+        {
+          "input": "100 200\n",
+          "output": "300\n"
+        }
+      ],
+      "e": "unsigned 加法溢出按模 2^32 回绕，行为完全有定义；这是它与有符号溢出（UB）的本质区别。",
+      "knowledge": "无符号回绕",
+      "pitfall": "4294967295+1=0 不是报错，判断溢出要用和小于加数"
+    },
+    {
+      "t": "p",
+      "q": "字符提升陷阱：unsigned char c=200，输出 c+100 和 (unsigned char)(c+100)。",
+      "solution": "#include <stdio.h>\nint main(void){unsigned char c=200; printf(\"%d %d\\n\", c+100, (int)(unsigned char)(c+100)); return 0;}",
+      "tests": [
+        {
+          "input": "",
+          "output": "300 44\n"
+        }
+      ],
+      "e": "c+100 时 c 被整型提升为 int（值 200），算出 300；再截断回 unsigned char 只保留低 8 位 300-256=44。",
+      "knowledge": "整型提升",
+      "pitfall": "小类型参与运算先提升为 int，结果再存回小类型时会截断"
+    },
+    {
+      "t": "p",
+      "q": "整数除法精度：读入 a 和 b（b 非 0），第一行输出 a/b，第二行输出 (double)a/(double)b 保留两位。",
+      "solution": "#include <stdio.h>\nint main(void){int a,b; if(scanf(\"%d %d\",&a,&b)!=2||b==0) return 1; printf(\"%d\\n\", a/b); printf(\"%.2f\\n\", (double)a/(double)b); return 0;}",
+      "tests": [
+        {
+          "input": "7 2\n",
+          "output": "3\n3.50\n"
+        },
+        {
+          "input": "1 3\n",
+          "output": "0\n0.33\n"
+        }
+      ],
+      "e": "整数相除丢小数：1/3 先按 int 算出 0 再转 double 已晚；必须先把操作数转成 double 再除。",
+      "knowledge": "除法转换时机",
+      "pitfall": "(double)(a/b) 与 (double)a/(double)b 结果不同，转换要发生在除法之前"
+    }
+  ],
+  "中断深入与临界区": [
+    {
+      "t": "p",
+      "q": "Cortex-M 栈帧计算：无 FPU 时硬件自动压 8 个字，有 FPU 时压 26 个字，每字 4 字节。读入 0 或 1，输出压栈字节数。",
+      "solution": "#include <stdio.h>\nint main(void){int fpu; if(scanf(\"%d\",&fpu)!=1) return 1; int words = fpu ? 26 : 8; printf(\"%d\\n\", words*4); return 0;}",
+      "tests": [
+        {
+          "input": "0\n",
+          "output": "32\n"
+        },
+        {
+          "input": "1\n",
+          "output": "104\n"
+        }
+      ],
+      "e": "基础帧 8 字（R0-R3、R12、LR、PC、xPSR），带 FPU 的 M4/M7 惰性压栈最多再加 18 字，共 26 字。",
+      "knowledge": "Cortex-M 压栈",
+      "pitfall": "EXC_RETURN 的 FTYPE 位决定是否恢复扩展帧，26 字含对齐填充"
+    },
+    {
+      "t": "p",
+      "q": "NVIC 数值越小优先级越高：读入 A、B 的优先级值，输出谁先响应（A/B/SAME）。",
+      "solution": "#include <stdio.h>\nint main(void){int pa,pb; if(scanf(\"%d %d\",&pa,&pb)!=2) return 1; if(pa<pb) printf(\"A\\n\"); else if(pb<pa) printf(\"B\\n\"); else printf(\"SAME\\n\"); return 0;}",
+      "tests": [
+        {
+          "input": "1 2\n",
+          "output": "A\n"
+        },
+        {
+          "input": "3 2\n",
+          "output": "B\n"
+        },
+        {
+          "input": "2 2\n",
+          "output": "SAME\n"
+        }
+      ],
+      "e": "NVIC 优先级数值越小优先级越高（0 最高），与直觉的“数字大=更优先”相反。",
+      "knowledge": "NVIC 优先级方向",
+      "pitfall": "数值小=优先级高；effective 位宽之外的低无效位读出为 0"
+    }
+  ],
+  "排序与二分查找": [
+    {
+      "t": "p",
+      "q": "冒泡排序：第一行 n，随后 n 个整数，升序输出（空格分隔）。",
+      "solution": "#include <stdio.h>\nint main(void){int n; if(scanf(\"%d\",&n)!=1||n<=0||n>1000) return 1; int a[1000]; for(int i=0;i<n;i++){if(scanf(\"%d\",&a[i])!=1) return 1;} for(int i=0;i<n-1;i++){for(int j=0;j<n-1-i;j++){if(a[j]>a[j+1]){int t=a[j];a[j]=a[j+1];a[j+1]=t;}}} for(int i=0;i<n;i++){printf(\"%d\",a[i]); if(i+1<n) printf(\" \");} printf(\"\\n\"); return 0;}",
+      "tests": [
+        {
+          "input": "5 5 1 4 2 3\n",
+          "output": "1 2 3 4 5\n"
+        },
+        {
+          "input": "4 9 7 8 6\n",
+          "output": "6 7 8 9\n"
+        }
+      ],
+      "e": "相邻比较交换，每轮把最大值冒到末尾；内层上界 n-1-i 逐轮缩小已排序区。",
+      "knowledge": "冒泡排序",
+      "pitfall": "内层写 n-1 而非 n-1-i 也能对但多比较；写 n 会越界"
+    },
+    {
+      "t": "p",
+      "q": "二分查找：第一行 n 与 n 个升序整数，随后目标 t，输出下标（找不到输出 -1）。",
+      "solution": "#include <stdio.h>\nint main(void){int n; if(scanf(\"%d\",&n)!=1||n<=0||n>1000) return 1; int a[1000]; for(int i=0;i<n;i++){if(scanf(\"%d\",&a[i])!=1) return 1;} int t; if(scanf(\"%d\",&t)!=1) return 1; int lo=0,hi=n-1,idx=-1; while(lo<=hi){int m=lo+(hi-lo)/2; if(a[m]==t){idx=m;break;} else if(a[m]<t) lo=m+1; else hi=m-1;} printf(\"%d\\n\", idx); return 0;}",
+      "tests": [
+        {
+          "input": "6 1 3 5 7 9 11 9\n",
+          "output": "4\n"
+        },
+        {
+          "input": "6 1 3 5 7 9 11 4\n",
+          "output": "-1\n"
+        }
+      ],
+      "e": "lo<=hi 是闭区间写法；m=lo+(hi-lo)/2 防止 lo+hi 溢出（面试加分点）。",
+      "knowledge": "二分查找",
+      "pitfall": "条件写 lo<hi 会漏掉单元素区间；(lo+hi)/2 在极端下标下会溢出"
+    }
+  ],
+  "递归与分治": [
+    {
+      "t": "p",
+      "q": "递归阶乘：读入 n（0-12），输出 n!。",
+      "solution": "#include <stdio.h>\nlong fact(int n){ return n<=1 ? 1 : n*fact(n-1); }\nint main(void){int n; if(scanf(\"%d\",&n)!=1||n<0||n>12) return 1; printf(\"%ld\\n\", fact(n)); return 0;}",
+      "tests": [
+        {
+          "input": "4\n",
+          "output": "24\n"
+        },
+        {
+          "input": "10\n",
+          "output": "3628800\n"
+        },
+        {
+          "input": "0\n",
+          "output": "1\n"
+        }
+      ],
+      "e": "基准情形 n<=1 返回 1，否则 n*fact(n-1)；每层调用压一个栈帧。",
+      "knowledge": "递归阶乘",
+      "pitfall": "0! = 1 是基准情形；没有基准情形或 n 太大都会栈溢出"
+    },
+    {
+      "t": "p",
+      "q": "递归判断回文：读入字符串，用双指针递归判断是否回文，输出 Yes 或 No。",
+      "solution": "#include <stdio.h>\n#include <string.h>\nint is_pal(const char *s, int i, int j){ if(i>=j) return 1; if(s[i]!=s[j]) return 0; return is_pal(s, i+1, j-1); }\nint main(void){char s[128]; if(scanf(\"%127s\",s)!=1) return 1; printf(\"%s\\n\", is_pal(s,0,(int)strlen(s)-1) ? \"Yes\" : \"No\"); return 0;}",
+      "tests": [
+        {
+          "input": "abcba\n",
+          "output": "Yes\n"
+        },
+        {
+          "input": "abcde\n",
+          "output": "No\n"
+        },
+        {
+          "input": "a\n",
+          "output": "Yes\n"
+        }
+      ],
+      "e": "i>=j 是基准（空串/单字符即回文）；分治把问题缩到内部子串。",
+      "knowledge": "递归回文",
+      "pitfall": "先判基准再比较字符，顺序反了会数组越界（空串时 j=-1）"
+    }
+  ],
+  "栈、队列与二叉树基础": [
+    {
+      "t": "p",
+      "q": "括号匹配（栈的经典应用）：读入只含 ( 和 ) 的字符串，输出 Yes 或 No。",
+      "solution": "#include <stdio.h>\nint main(void){char s[256]; if(scanf(\"%255s\",s)!=1) return 1; int depth=0, ok=1; for(int i=0; s[i]; i++){ if(s[i]=='(') depth++; else if(s[i]==')'){ if(depth==0){ok=0;break;} depth--; } } if(depth) ok=0; printf(\"%s\\n\", ok?\"Yes\":\"No\"); return 0;}",
+      "tests": [
+        {
+          "input": "(())\n",
+          "output": "Yes\n"
+        },
+        {
+          "input": "(()\n",
+          "output": "No\n"
+        },
+        {
+          "input": "()()()\n",
+          "output": "Yes\n"
+        },
+        {
+          "input": ")(\n",
+          "output": "No\n"
+        }
+      ],
+      "e": "计数器即栈深：右括号时 depth==0 说明无左括号可配，提前失败；结尾 depth>0 说明左括号未闭合。",
+      "knowledge": "括号匹配",
+      "pitfall": ")( 在 depth=0 时遇到 ) 必须立即判负，不能继续"
+    }
+  ],
+  "链表：动态数据结构": [
+    {
+      "t": "p",
+      "q": "头插法建链表并输出（即逆序）：第一行 n，随后 n 个整数，按头插建立链表后遍历输出。",
+      "solution": "#include <stdio.h>\n#include <stdlib.h>\ntypedef struct Node { int v; struct Node *next; } Node;\nint main(void){int n; if(scanf(\"%d\",&n)!=1||n<=0) return 1; Node *head=NULL; for(int i=0;i<n;i++){int x; if(scanf(\"%d\",&x)!=1) return 1; Node *p=malloc(sizeof(Node)); if(!p) return 1; p->v=x; p->next=head; head=p;} Node *cur=head; int first=1; while(cur){ if(!first) printf(\" \"); printf(\"%d\", cur->v); first=0; cur=cur->next; } printf(\"\\n\"); while(head){Node *t=head; head=head->next; free(t);} return 0;}",
+      "tests": [
+        {
+          "input": "5 1 2 3 4 5\n",
+          "output": "5 4 3 2 1\n"
+        },
+        {
+          "input": "3 9 8 7\n",
+          "output": "7 8 9\n"
+        }
+      ],
+      "e": "每个新节点 next 指向当前头，再更新头指针；头插天然逆序。结尾逐节点释放防泄漏。",
+      "knowledge": "头插法建链表",
+      "pitfall": "忘记更新 head、或释放时丢了 next 指针（应先存后 free）都是高频错误"
+    }
+  ],
+  "字符串处理与安全": [
+    {
+      "t": "p",
+      "q": "手写 my_strlen：读入不含空格的字符串，不用库函数输出长度。",
+      "solution": "#include <stdio.h>\nint main(void){char s[128]; if(scanf(\"%127s\",s)!=1) return 1; int len=0; while(s[len]) len++; printf(\"%d\\n\", len); return 0;}",
+      "tests": [
+        {
+          "input": "hello\n",
+          "output": "5\n"
+        },
+        {
+          "input": "HelloWorld\n",
+          "output": "10\n"
+        }
+      ],
+      "e": "遇 \\0 停止计数；scanf 的 %127s 限宽防止缓冲区溢出——这本身就是字符串安全的实践。",
+      "knowledge": "手写 strlen",
+      "pitfall": "循环条件 s[len] != '\\0'，数组下标越界（没有限宽读入）是安全隐患"
+    },
+    {
+      "t": "p",
+      "q": "手写 my_strcmp：读入两个字符串，输出比较结果（-1/0/1）。",
+      "solution": "#include <stdio.h>\nint main(void){char a[64],b[64]; if(scanf(\"%63s %63s\",a,b)!=2) return 1; int i=0; while(a[i]&&b[i]&&a[i]==b[i]) i++; int r = (unsigned char)a[i]-(unsigned char)b[i]; printf(\"%d\\n\", r==0?0:(r<0?-1:1)); return 0;}",
+      "tests": [
+        {
+          "input": "abc abc\n",
+          "output": "0\n"
+        },
+        {
+          "input": "abc abd\n",
+          "output": "-1\n"
+        },
+        {
+          "input": "bca abc\n",
+          "output": "1\n"
+        }
+      ],
+      "e": "先跳过相同前缀，再按 unsigned char 比较（防负数符号扩展）；返回三态归一为 -1/0/1。",
+      "knowledge": "手写 strcmp",
+      "pitfall": "char 直接相减可能因符号位得负，转 unsigned char 再比才是字典序"
+    }
+  ],
+  "函数与指针入门": [
+    {
+      "t": "p",
+      "q": "指针作参数交换两个变量：读入 a、b，用 swap(&a,&b) 交换后输出。",
+      "solution": "#include <stdio.h>\nvoid swap(int *a, int *b){int t=*a; *a=*b; *b=t;}\nint main(void){int a,b; if(scanf(\"%d %d\",&a,&b)!=2) return 1; swap(&a,&b); printf(\"%d %d\\n\",a,b); return 0;}",
+      "tests": [
+        {
+          "input": "3 9\n",
+          "output": "9 3\n"
+        },
+        {
+          "input": "-1 1\n",
+          "output": "1 -1\n"
+        }
+      ],
+      "e": "传值改不了调用者的变量，传地址才行；函数内通过 *a、*b 解引用修改原内存。",
+      "knowledge": "指针传参",
+      "pitfall": "swap(int a,int b) 只交换副本，是入门最经典错误"
+    }
+  ],
+  "指针进阶与数组传参": [
+    {
+      "t": "p",
+      "q": "指针算术取值：数组 {10,20,30,40,50}，读入下标 i、j，输出 *(a+i) - *(a+j)。",
+      "solution": "#include <stdio.h>\nint main(void){int a[5]={10,20,30,40,50}; int i,j; if(scanf(\"%d %d\",&i,&j)!=2) return 1; if(i<0||i>4||j<0||j>4) return 1; printf(\"%d\\n\", *(a+i)-*(a+j)); return 0;}",
+      "tests": [
+        {
+          "input": "0 4\n",
+          "output": "-40\n"
+        },
+        {
+          "input": "2 2\n",
+          "output": "0\n"
+        }
+      ],
+      "e": "*(a+i) 等价 a[i]：下标本质是指针偏移，偏移单位是元素大小而非字节。",
+      "knowledge": "指针算术",
+      "pitfall": "a+i 移动 i×sizeof(int) 个字节，不是 i 个字节"
+    }
+  ],
+  "结构体、枚举与类型别名": [
+    {
+      "t": "p",
+      "q": "union 与 struct 的大小对比：输入 1 输出 union{char;int;double} 大小，输入 2 输出 struct{char;double} 大小。",
+      "solution": "#include <stdio.h>\nunion U { char c; int i; double d; };\nstruct S { char c; double d; };\nint main(void){int n; if(scanf(\"%d\",&n)!=1) return 1; printf(\"%d\\n\", n==1 ? (int)sizeof(union U) : (int)sizeof(struct S)); return 0;}",
+      "tests": [
+        {
+          "input": "1\n",
+          "output": "8\n"
+        },
+        {
+          "input": "2\n",
+          "output": "16\n"
+        }
+      ],
+      "e": "union 所有成员重叠，大小=最大成员按对齐取整（double 8）；struct 成员依次排布并填充对齐。",
+      "knowledge": "union vs struct 大小",
+      "pitfall": "union 只能同时有效使用一个成员；struct 是所有成员之和加填充"
+    }
+  ],
+  "函数指针与回调：把函数当参数传": [
+    {
+      "t": "p",
+      "q": "函数指针表分发：op=1 调用加法、op=2 调用乘法。读入 op a b，输出结果。",
+      "solution": "#include <stdio.h>\nint add(int a,int b){return a+b;}\nint mul(int a,int b){return a*b;}\nint main(void){int (*ops[2])(int,int)={add,mul}; int op,a,b; if(scanf(\"%d %d %d\",&op,&a,&b)!=3) return 1; if(op!=1&&op!=2) return 1; printf(\"%d\\n\", ops[op-1](a,b)); return 0;}",
+      "tests": [
+        {
+          "input": "1 3 4\n",
+          "output": "7\n"
+        },
+        {
+          "input": "2 3 4\n",
+          "output": "12\n"
+        }
+      ],
+      "e": "数组里存函数地址，用下标选择调用——命令分发表的雏形。",
+      "knowledge": "函数指针数组",
+      "pitfall": "声明 int (*ops[2])(int,int) 的括号不可少，否则含义完全不同"
+    },
+    {
+      "t": "p",
+      "q": "回调函数：apply 对数组每个元素调用回调 twice（翻倍）。第一行 n，随后 n 个整数，输出处理后的数组。",
+      "solution": "#include <stdio.h>\nvoid apply(int *a, int n, int (*f)(int)){for(int i=0;i<n;i++) a[i]=f(a[i]);}\nint twice(int x){return x*2;}\nint main(void){int n; if(scanf(\"%d\",&n)!=1||n<=0||n>100) return 1; int a[100]; for(int i=0;i<n;i++){if(scanf(\"%d\",&a[i])!=1) return 1;} apply(a,n,twice); for(int i=0;i<n;i++){printf(\"%d\",a[i]); if(i+1<n) printf(\" \");} printf(\"\\n\"); return 0;}",
+      "tests": [
+        {
+          "input": "3 1 2 3\n",
+          "output": "2 4 6\n"
+        },
+        {
+          "input": "2 10 -5\n",
+          "output": "20 -10\n"
+        }
+      ],
+      "e": "函数名就是地址，apply 接收函数指针逐元素调用；换一个回调函数即可复用整个流程。",
+      "knowledge": "回调机制",
+      "pitfall": "传 twice 而不是 twice()——前者是地址后者是调用结果"
+    }
+  ]
+};
+    Object.entries(knowledgeQuestionBatch10).forEach(([title, questions]) => {
+      const pool = practicePool[title] || (practicePool[title] = []);
+      pool.push(...questions);
+    });
+    practicePool = normalizePracticePool(practicePool);
     const advancedPracticeSupplements = {
   "Makefile 与构建系统：项目怎么编译出来": [
     {
