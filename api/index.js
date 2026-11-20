@@ -13,8 +13,7 @@
  *   ALLOWED_ORIGINS 允许的网页来源，多个用逗号分隔，
  *                   默认 https://nb66666708.github.io
  *
- * 注意：Cloudflare 免费版 Worker 单次请求墙钟上限约 30 秒，
- * 智谱调用设 28 秒超时；免费模型通常 10~25 秒内返回。
+ * 注意：智谱调用设 90 秒超时；免费轻量模型通常十几秒内返回。
  */
 
 const ZHIPU_URL = "https://open.bigmodel.cn/api/paas/v4/chat/completions";
@@ -371,7 +370,7 @@ async function generateQuestions(env, count, courses, variation) {
   if (!apiKey) {
     throw new RequestError(503, "尚未配置智谱 API Key。请在 Worker 环境变量中设置 ZHIPU_API_KEY。");
   }
-  const model = (env.ZHIPU_MODEL || "glm-5.3-flash").trim();
+  const model = (env.ZHIPU_MODEL || "glm-4.7-flash").trim();
 
   const systemPrompt = [
     "你是严谨的中文 C 语言与 STM32 教学出题老师。",
@@ -379,14 +378,11 @@ async function generateQuestions(env, count, courses, variation) {
     "题目适合循序渐进的初学者，表达清晰、条件充分、答案唯一且可验证。",
     "覆盖不同课程主题与难度，避免重复考查同一事实。",
     "每题必须自查题意和标准答案；错误选项应合理但明确错误。",
-    "混合生成选择、判断、填空和简短 C 程序题，题型比例尽量均衡。",
-    "每种题型至少占总题数的十分之一，且至少 2 道。",
+    "只生成选择题、判断题、填空题，不要程序题。",
+    "三种题型都尽量覆盖，避免重复考查同一事实。",
     "判断题选项必须严格为“正确”“错误”。填空题需在题干标出 ____ 空位并给出 accepted 答案列表。",
-    "程序题必须是可在标准 GCC 环境独立编译运行的完整 C 程序，只使用标准 C 库，不得包含 STM32 HAL、文件读写或外部依赖；",
-    "每个程序题必须有 2 到 5 组 stdin/stdout 测试数据 tests，用来自动编译运行判分。",
-    "程序题 solution 必须是完整 C 程序，tests 每项格式为 {\"input\":\"标准输入\",\"output\":\"期望标准输出\"}。",
-    "选择/判断题使用 options 和从 0 开始的整数 answer；填空题使用 accepted；程序题使用 solution。",
-    "每题必须包含知识点、逐步讲清理由的解析、一个具体易错点。",
+    "选择/判断题使用 options 和从 0 开始的整数 answer；填空题使用 accepted。",
+    "每题包含知识点、一句话解析和一个简短易错点，不要长篇展开。",
     "只输出符合要求的 JSON 对象，不要 Markdown 或额外文字。",
   ].join("");
 
@@ -411,7 +407,7 @@ async function generateQuestions(env, count, courses, variation) {
       body: JSON.stringify({
         model,
         temperature: 0.6,
-        max_tokens: 16384,
+        max_tokens: 4096,
         response_format: { type: "json_object" },
         messages: [
           { role: "system", content: systemPrompt },
@@ -465,7 +461,7 @@ async function generateQuestions(env, count, courses, variation) {
   } catch (error) {
     if (error instanceof RequestError) throw error;
     if (error.name === "AbortError") {
-      throw new RequestError(502, "生成耗时接近 Cloudflare 免费 Worker 的单次执行上限，已中断。请稍后重试；免费模型通常在 10~25 秒内完成。");
+      throw new RequestError(502, "出题超时已中断，请稍后重试；免费轻量模型通常十几秒内完成。");
     }
     throw new RequestError(502, "无法连接智谱服务或请求超时，请检查网络后重试。");
   } finally {
