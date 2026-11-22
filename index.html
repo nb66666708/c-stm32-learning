@@ -535,8 +535,8 @@
   </dialog>
   <dialog class="api-config-dialog" id="api-config-dialog" aria-labelledby="api-config-title">
     <form id="api-config-form">
-      <h2 id="api-config-title">🔐 配置智谱 AI 后端</h2>
-      <p class="api-config-help">填入后端服务 HTTPS 地址和你设置的后端访问口令。智谱 API Key 只保存在后端环境变量中，不要填在这里。访问口令仅保存在此浏览器的本地存储；请勿在公用设备保存。</p>
+      <h2 id="api-config-title">🔐 配置 AI 后端</h2>
+      <p class="api-config-help">填入后端服务 HTTPS 地址和你设置的后端访问口令。DeepSeek API Key 只保存在后端环境变量中，不要填在这里。访问口令仅保存在此浏览器的本地存储；请勿在公用设备保存。</p>
       <label class="api-config-field">后端地址
         <input id="api-base-url" type="url" inputmode="url" placeholder="https://你的后端服务.workers.dev" autocomplete="url" required>
       </label>
@@ -25077,7 +25077,7 @@
       root.innerHTML = `<header class="lesson-head"><div class="eyebrow">🤖 AI 冒险挑战</div><h1>${esc(lessons[session.lessonIndex].title)} · 综合挑战</h1><p class="intro">题目只围绕当前课程的 ${lessons[session.lessonIndex].content.length} 个知识点生成。每题提交后立即显示答案、知识点、解析与易错点。</p></header>
         <div class="body-content">
           <div class="challenge-progress"><div class="challenge-progress-line"><strong>答题进度</strong><span id="challenge-progress-text">${answered} / ${session.questions.length} 已作答 · 当前答对 ${correct} 题</span></div><div class="challenge-progress-track"><div class="challenge-progress-fill" id="challenge-progress-fill" style="width:${answered / session.questions.length * 100}%"></div></div></div>
-          <div class="tip">AI 题目会尽量覆盖不同课程知识点，但生成式模型仍可能给出错误或含糊的内容；遇到疑问请回到对应课程核实。挑战需要网络；免费模型的账号额度与限流以智谱后台为准。</div>
+          <div class="tip">AI 题目会尽量覆盖不同课程知识点，但生成式模型仍可能给出错误或含糊的内容；遇到疑问请回到对应课程核实。挑战需要网络；模型按 token 计费，余额与限流以 DeepSeek 账号后台为准。</div>
           <section class="exercise-section"><div class="exercise-top"><h2 class="section-title" style="margin:0">本次题目</h2><span class="exercise-count">${session.questions.length} 道 AI 新题</span></div>${session.questions.map(questionMarkup).join("")}</section>
           <div class="challenge-finish"><strong id="challenge-summary">${complete ? `挑战完成：答对 ${correct} / ${session.questions.length} 题。` : `完成全部题目后查看成绩。已答 ${answered} / ${session.questions.length} 题。`}</strong><button class="secondary-btn" id="finish-challenge">${complete ? "返回课程" : "结束挑战并返回课程"}</button></div>
         </div>`;
@@ -25241,7 +25241,7 @@
       } catch (error) {
         console.error("AI challenge generation failed", error);
         status.textContent = error.name === "TimeoutError"
-          ? "AI 出题等待超时。免费后端服务唤醒或模型生成可能较慢，请稍后重试；本次不会显示不完整题目。"
+          ? "AI 出题等待超时。后端服务唤醒或模型生成可能较慢，请稍后重试；本次不会显示不完整题目。"
           : `AI 出题失败：${error.message || "无法连接服务。"} 请确认后端已部署、地址与访问口令正确后重试。`;
       } finally {
         if (document.getElementById("ai-challenge")) {
@@ -25350,9 +25350,9 @@
       renderNav();
       root.innerHTML = `<header class="lesson-head"><div class="eyebrow">${esc(lesson.level)}</div><h1>${esc(lesson.title)}</h1><p class="intro">${esc(lesson.intro)}</p></header>
         <div class="body-content">
-          <div class="challenge-card"><div><strong>🤖 AI 冒险挑战</strong><p>使用智谱 GLM-4.7-Flash 生成新题（额度和限流以智谱账号后台为准）。</p></div><div class="challenge-controls"><label for="challenge-count" class="exercise-count">题量</label><select id="challenge-count" aria-label="挑战题量"><option value="5" selected>5 题（推荐）</option><option value="10">10 题</option><option value="20">20 题</option><option value="30">30 题</option></select><button class="small-btn" id="ai-challenge">AI 生成挑战</button><button class="secondary-btn" id="configure-ai">🔐 配置 AI 后端</button><button class="secondary-btn" id="random-challenge">🎯 抽一道错题</button><button class="secondary-btn" id="export-progress">📤 导出进度</button><button class="secondary-btn" id="import-progress">📥 导入进度</button><button class="secondary-btn" id="reset-game">重置游戏数据</button></div></div>
-          <p class="challenge-note">公网 AI 出题由你的后端服务安全调用智谱。首次使用需配置后端服务地址和访问口令；智谱 API Key 只保存在服务端，绝不要写进公开网页。AI 题目会发送课程资料给智谱，生成结果请结合课程核对。</p>
-          <p class="challenge-status" id="challenge-status" role="status" aria-live="polite">每套挑战可选 5 / 10 / 20 / 30 道新题。首次使用请先配置 AI 后端；免费模型仍可能有账号额度或速率限制。</p>
+          <div class="challenge-card"><div><strong>🤖 AI 冒险挑战</strong><p>使用 DeepSeek Flash 生成新题（余额和限流以 DeepSeek 账号后台为准）。</p></div><div class="challenge-controls"><label for="challenge-count" class="exercise-count">题量</label><select id="challenge-count" aria-label="挑战题量"><option value="5" selected>5 题（推荐）</option><option value="10">10 题</option><option value="20">20 题</option><option value="30">30 题</option></select><button class="small-btn" id="ai-challenge">AI 生成挑战</button><button class="secondary-btn" id="configure-ai">🔐 配置 AI 后端</button><button class="secondary-btn" id="random-challenge">🎯 抽一道错题</button><button class="secondary-btn" id="export-progress">📤 导出进度</button><button class="secondary-btn" id="import-progress">📥 导入进度</button><button class="secondary-btn" id="reset-game">重置游戏数据</button></div></div>
+          <p class="challenge-note">公网 AI 出题由你的后端服务安全调用 DeepSeek。首次使用需配置后端服务地址和访问口令；DeepSeek API Key 只保存在服务端，绝不要写进公开网页。AI 题目会发送课程资料给 DeepSeek，生成结果请结合课程核对。</p>
+          <p class="challenge-status" id="challenge-status" role="status" aria-live="polite">每套挑战可选 5 / 10 / 20 / 30 道新题。首次使用请先配置 AI 后端；模型按 token 计费，余额不足或触发速率限制时将无法出题。</p>
           ${current >= starterLessons.length + 20 ? `<div class="tip" style="margin-bottom:22px"><strong>🧭 STM32 学习建议</strong><br>每课按“读原理图/芯片资料 → CubeMX 配置 → 编译下载 → 单独验证 → 改一个参数再观察”的顺序练习。先确保 C 的函数、数组、指针和位运算基础；接线前断电，GPIO 不直接驱动电机或大电流负载。不同芯片系列的引脚、时钟和 HAL 细节可能不同，请以你的具体型号为准。</div>` : ""}
           <section><h2 class="section-title">本课目标</h2><ul class="goals">${lesson.goals.map(goal => `<li>${esc(goal)}</li>`).join("")}</ul></section>
           <section class="must-know"><h2>📌 必背考点速记（面试直接问）</h2><ul>${lesson.content.map(item => { const first = item[1].split(/[。\n]/)[0].slice(0, 80); return `<li><strong>${esc(item[0])}</strong>：${esc(first)}</li>`; }).join("")}</ul></section>
@@ -25563,13 +25563,13 @@
         localStorage.setItem(apiConnectionKey, JSON.stringify(config));
         saveButton.disabled = true;
         saveButton.textContent = "正在测试连接…";
-        status.textContent = "正在检查后端健康状态；免费服务可能需要唤醒。";
+        status.textContent = "正在检查后端健康状态；后端服务可能需要唤醒。";
         const response = await fetch(`${config.baseUrl}/api/health`, {
           signal: AbortSignal.timeout(20000)
         });
         const health = await response.json().catch(() => ({}));
         if (!response.ok) throw new Error(health.error || `连接失败（HTTP ${response.status}）。`);
-        if (!health.ok || !health.configured) throw new Error("后端已响应，但智谱 API Key 尚未在后端环境变量中正确配置。");
+        if (!health.ok || !health.configured) throw new Error("后端已响应，但 DeepSeek API Key 尚未在后端环境变量中正确配置。");
         status.textContent = `连接成功：${health.provider || "AI 后端"} 服务在线，密钥变量已设置；有效性将在首次出题时确认。`;
         window.setTimeout(() => apiConfigDialog.close(), 900);
       } catch (error) {

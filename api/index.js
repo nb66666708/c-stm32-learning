@@ -3,20 +3,20 @@
  *
  * 等价实现 server.py 的 API，供 GitHub Pages 版学习网站调用：
  *   GET  /api/health   健康检查（返回 provider / configured / requiresToken）
- *   POST /api/generate 调用智谱 GLM 生成挑战题
+ *   POST /api/generate 调用 DeepSeek 生成挑战题
  *   POST /api/run      调用 Wandbox 在线判题（C 程序）
  *
  * 环境变量（在 Deno Deploy 项目 Settings → Environment Variables 中设置）：
- *   ZHIPU_API_KEY  智谱开放平台 API Key（Secret，必填）
- *   ZHIPU_MODEL    模型名，默认 glm-4.7-flash
+ *   DEEPSEEK_API_KEY  DeepSeek 开放平台 API Key（必填）
+ *   DEEPSEEK_MODEL    模型名，默认 deepseek-flash（非思考档）
  *   SITE_API_TOKEN 后端访问口令，至少 32 字符（Secret，公网必填）
  *   ALLOWED_ORIGINS 允许的网页来源，多个用逗号分隔，
  *                   默认 https://nb66666708.github.io
  *
- * 注意：智谱调用设 90 秒超时；免费轻量模型通常十几秒内返回。
+ * 注意：DeepSeek 调用设 90 秒超时；非思考档通常十几秒内返回。
  */
 
-const ZHIPU_URL = "https://open.bigmodel.cn/api/paas/v4/chat/completions";
+const DEEPSEEK_URL = "https://api.deepseek.com/chat/completions";
 const WANDBOX_URL = "https://wandbox.org/api/compile.json";
 const WANDBOX_COMPILER = "gcc-13.2.0-c";
 
@@ -364,13 +364,13 @@ async function judgeCProgram(source, tests) {
   };
 }
 
-// ---------- 智谱出题（对应 server.py generate_questions） ----------
+// ---------- DeepSeek 出题（对应 server.py generate_questions） ----------
 async function generateQuestions(env, count, courses, variation) {
-  const apiKey = (env.ZHIPU_API_KEY || "").trim();
+  const apiKey = (env.DEEPSEEK_API_KEY || "").trim();
   if (!apiKey) {
-    throw new RequestError(503, "尚未配置智谱 API Key。请在 Worker 环境变量中设置 ZHIPU_API_KEY。");
+    throw new RequestError(503, "尚未配置 DeepSeek API Key。请在后端环境变量中设置 DEEPSEEK_API_KEY。");
   }
-  const model = (env.ZHIPU_MODEL || "glm-4.7-flash").trim();
+  const model = (env.DEEPSEEK_MODEL || "deepseek-flash").trim();
 
   const systemPrompt = [
     "你是严谨的中文 C 语言与 STM32 教学出题老师。",
@@ -398,7 +398,7 @@ async function generateQuestions(env, count, courses, variation) {
   const controller = new AbortController();
   const timer = setTimeout(() => controller.abort(), 90_000);
   try {
-    const response = await fetch(ZHIPU_URL, {
+    const response = await fetch(DEEPSEEK_URL, {
       method: "POST",
       headers: {
         Authorization: `Bearer ${apiKey}`,
@@ -408,6 +408,7 @@ async function generateQuestions(env, count, courses, variation) {
         model,
         temperature: 0.6,
         max_tokens: 4096,
+        thinking: { type: "disabled" },
         response_format: { type: "json_object" },
         messages: [
           { role: "system", content: systemPrompt },
@@ -426,16 +427,16 @@ async function generateQuestions(env, count, courses, variation) {
         providerMessage = "";
       }
       if (response.status === 401 || response.status === 403) {
-        throw new RequestError(502, "智谱 API Key 无效或没有访问权限，请检查服务端密钥配置。");
+        throw new RequestError(502, "DeepSeek API Key 无效或没有访问权限，请检查服务端密钥配置。");
       }
       if (response.status === 402) {
-        throw new RequestError(502, "智谱 API 账户额度不足或模型不可用。请检查账号额度及模型权限。");
+        throw new RequestError(502, "DeepSeek 账户余额不足或模型不可用，请检查账号余额及模型权限。");
       }
       if (response.status === 429) {
-        throw new RequestError(502, "智谱 API 请求频率达到限制或服务暂时繁忙，请稍后重试。");
+        throw new RequestError(502, "DeepSeek API 请求频率达到限制或服务暂时繁忙，请稍后重试。");
       }
       const detail = cleanText(providerMessage, 240);
-      throw new RequestError(502, `智谱 API 请求失败（HTTP ${response.status}）。${detail}`);
+      throw new RequestError(502, `DeepSeek API 请求失败（HTTP ${response.status}）。${detail}`);
     }
 
     const providerResponse = await response.json();
@@ -461,9 +462,9 @@ async function generateQuestions(env, count, courses, variation) {
   } catch (error) {
     if (error instanceof RequestError) throw error;
     if (error.name === "AbortError") {
-      throw new RequestError(502, "出题超时已中断，请稍后重试；免费轻量模型通常十几秒内完成。");
+      throw new RequestError(502, "出题超时已中断，请稍后重试；非思考档通常十几秒内完成。");
     }
-    throw new RequestError(502, "无法连接智谱服务或请求超时，请检查网络后重试。");
+    throw new RequestError(502, "无法连接 DeepSeek 服务或请求超时，请检查网络后重试。");
   } finally {
     clearTimeout(timer);
   }
@@ -568,8 +569,8 @@ async function handleRequest(request, env) {
     }
     return jsonResponse(200, {
       ok: true,
-      provider: "智谱 GLM",
-      configured: Boolean((env.ZHIPU_API_KEY || "").trim()),
+      provider: "DeepSeek",
+      configured: Boolean((env.DEEPSEEK_API_KEY || "").trim()),
       requiresToken: Boolean((env.SITE_API_TOKEN || "").trim()),
     }, allowedOrigin);
   }
@@ -635,8 +636,8 @@ async function handleRequest(request, env) {
 
 // ---------- Deno Deploy 入口 ----------
 const env = {
-  ZHIPU_API_KEY: Deno.env.get("ZHIPU_API_KEY") || "",
-  ZHIPU_MODEL: Deno.env.get("ZHIPU_MODEL") || "",
+  DEEPSEEK_API_KEY: Deno.env.get("DEEPSEEK_API_KEY") || "",
+  DEEPSEEK_MODEL: Deno.env.get("DEEPSEEK_MODEL") || "",
   SITE_API_TOKEN: Deno.env.get("SITE_API_TOKEN") || "",
   ALLOWED_ORIGINS: Deno.env.get("ALLOWED_ORIGINS") || "",
 };
