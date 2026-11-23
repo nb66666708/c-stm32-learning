@@ -6546,16 +6546,49 @@
     function normalizePracticePool(pool) {
       const normalized = {};
       const seen = new Set();
-      const uniqueQuestions = [];
+      const seenText = new Set();
+      const gramIndex = new Map();
+
+      const bigramsOf = value => {
+        const set = new Set();
+        if (value.length < 2) { set.add(value); return set; }
+        for (let i = 0; i < value.length - 1; i += 1) set.add(value.slice(i, i + 2));
+        return set;
+      };
 
       Object.entries(pool).forEach(([title, questions]) => {
         const unique = [];
         (Array.isArray(questions) ? questions : []).forEach(question => {
           if (!question || !question.q || !question.t) return;
           const fingerprint = questionFingerprint(question);
-          if (seen.has(fingerprint) || uniqueQuestions.some(item => questionsAreDuplicates(item, question))) return;
+          if (seen.has(fingerprint)) return;
+          const text = questionTextFingerprint(question);
+          if (!text || seenText.has(text)) return;
+
+          let duplicate = false;
+          if (text.length >= 18) {
+            const grams = bigramsOf(text);
+            const hits = new Map();
+            grams.forEach(g => {
+              const refs = gramIndex.get(g);
+              if (refs) refs.forEach(r => hits.set(r, (hits.get(r) || 0) + 1));
+            });
+            for (const [item, count] of hits) {
+              if (count < 3) continue;
+              if (questionsAreDuplicates(item, question)) { duplicate = true; break; }
+            }
+            if (!duplicate) {
+              grams.forEach(g => {
+                let refs = gramIndex.get(g);
+                if (!refs) { refs = new Set(); gramIndex.set(g, refs); }
+                refs.add(question);
+              });
+            }
+          }
+          if (duplicate) return;
+
           seen.add(fingerprint);
-          uniqueQuestions.push(question);
+          seenText.add(text);
 
           if (question.t === "s" && Array.isArray(question.o) &&
               Number.isInteger(question.a) && question.o.length >= 2 &&
@@ -7976,7 +8009,7 @@
       const extraQuestions = entries.filter(item => item && !Array.isArray(item) && typeof item === "object" && item.t && item.q);
       if (extraQuestions.length) practicePool[lesson.title].push(...extraQuestions);
     }
-    practicePool = normalizePracticePool(practicePool);
+
     for (const lesson of lessons) {
       if (lesson.content.length < 6) {
         lesson.content.push([
@@ -10624,7 +10657,7 @@
       const pool = practicePool[title] || (practicePool[title] = []);
       pool.push(...questions);
     });
-    practicePool = normalizePracticePool(practicePool);
+
 
     // KQ-BATCH-2
     const knowledgeQuestionBatch2 = {
@@ -12828,7 +12861,7 @@
       const pool = practicePool[title] || (practicePool[title] = []);
       pool.push(...questions);
     });
-    practicePool = normalizePracticePool(practicePool);
+
 
     // KQ-BATCH-3
     const knowledgeQuestionBatch3 = {
@@ -15619,7 +15652,7 @@
       const pool = practicePool[title] || (practicePool[title] = []);
       pool.push(...questions);
     });
-    practicePool = normalizePracticePool(practicePool);
+
 
     // KQ-BATCH-4
     const knowledgeQuestionBatch4 = {
@@ -16409,7 +16442,7 @@
       const pool = practicePool[title] || (practicePool[title] = []);
       pool.push(...questions);
     });
-    practicePool = normalizePracticePool(practicePool);
+
 
     // KQ-BATCH-5
     const knowledgeQuestionBatch5 = {
@@ -17782,7 +17815,7 @@
       const pool = practicePool[title] || (practicePool[title] = []);
       pool.push(...questions);
     });
-    practicePool = normalizePracticePool(practicePool);
+
 
     // KQ-BATCH-6
     const knowledgeQuestionBatch6 = {
@@ -20362,7 +20395,7 @@
       const pool = practicePool[title] || (practicePool[title] = []);
       pool.push(...questions);
     });
-    practicePool = normalizePracticePool(practicePool);
+
 
     // KQ-BATCH-7
     const knowledgeQuestionBatch7 = {
@@ -21007,7 +21040,7 @@
       const pool = practicePool[title] || (practicePool[title] = []);
       pool.push(...questions);
     });
-    practicePool = normalizePracticePool(practicePool);
+
 
     // KQ-BATCH-8
     const knowledgeQuestionBatch8 = {
@@ -21496,7 +21529,7 @@
       const pool = practicePool[title] || (practicePool[title] = []);
       pool.push(...questions);
     });
-    practicePool = normalizePracticePool(practicePool);
+
 
     // KQ-BATCH-9
     const knowledgeQuestionBatch9 = {
@@ -21934,7 +21967,7 @@
       const pool = practicePool[title] || (practicePool[title] = []);
       pool.push(...questions);
     });
-    practicePool = normalizePracticePool(practicePool);
+
 
     // KQ-BATCH-10
     const knowledgeQuestionBatch10 = {
@@ -22609,7 +22642,7 @@
       const pool = practicePool[title] || (practicePool[title] = []);
       pool.push(...questions);
     });
-    practicePool = normalizePracticePool(practicePool);
+
     const advancedPracticeSupplements = {
   "Makefile 与构建系统：项目怎么编译出来": [
     {
@@ -23718,7 +23751,7 @@
         ).length;
       }
     });
-    practicePool = normalizePracticePool(practicePool);
+
     window.__lessonAudit = lessons.map(lesson => ({
       title: lesson.title,
       questionCount: lesson.questions.length,
