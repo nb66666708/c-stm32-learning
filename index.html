@@ -7696,7 +7696,7 @@
         let question = null;
         if (item.t === "s" && Array.isArray(item.o) && item.o.length >= 2 &&
             Number.isInteger(item.a) && item.a >= 0 && item.a < item.o.length) {
-          question = {type: "选择题", text: item.q, options: [...item.o], answer: item.a,
+          question = {type: "选择题", text: item.q, code: item.code, options: [...item.o], answer: item.a,
             explanation: item.e || "结合本课对应知识点分析各选项。"};
         } else if (item.t === "j") {
           question = {type: "判断题", text: item.q, options: ["正确", "错误"],
@@ -7735,6 +7735,7 @@
         .map(question => ({
           type: "选择题",
           text: question.q,
+          code: question.code,
           options: [...question.o],
           answer: question.a,
           explanation: question.e || "请结合课程正文理解本题。"
@@ -7752,11 +7753,16 @@
         currentChoices.push(question);
       }
       const lessonPool = practicePool[lesson.title] || [];
+      const usedDrillGoals = new Set();
+      let drillGoalIndex = 0;
       while (currentChoices.length < 10) {
         const index = currentChoices.length;
-        const goal = cleanGeneratedText(
-          lesson.goals[index % Math.max(1, lesson.goals.length)] || lesson.title, 80
-        );
+        const drillGoals = lesson.goals || [];
+        if (drillGoalIndex >= drillGoals.length) break; // 课程目标已用完，不再重复生成雷同强化题
+        const goal = cleanGeneratedText(drillGoals[drillGoalIndex] || lesson.title, 80);
+        drillGoalIndex += 1;
+        if (!goal || usedDrillGoals.has(goal)) continue;
+        usedDrillGoals.add(goal);
         const otherGoals = (lesson.goals || [])
           .filter(item => cleanGeneratedText(item, 80) !== goal)
           .map(item => cleanGeneratedText(item, 80));
@@ -25008,7 +25014,7 @@
       } else {
         answer = `<textarea class="code-input" id="${inputId}" aria-label="编写你的程序" placeholder="${q.tests ? "请编写完整、可独立运行的 C 程序（包含 main）……" : "先独立写出思路或代码……"}"></textarea>${q.tests ? `<button class="small-btn" data-run-code="${index}" style="margin-top:9px">在线编译并判分</button><div class="feedback-detail" style="font-size:11px">会把代码发送到 Wandbox 隔离判题服务运行；仅支持完整标准 C 程序，不支持 STM32 HAL。</div><div class="feedback-detail" id="judge-status-${index}" role="status" aria-live="polite"></div>` : ""}<button class="secondary-btn" data-reveal="${index}" style="margin-top:9px">提交并对照标准答案</button><div class="self-grade" id="self-grade-${index}" hidden><p>${q.tests ? "也可以对照参考答案后自评：" : "此题为代码片段或硬件相关示例，不适合在线运行；请对照标准答案诚实自评："}</p><button class="small-btn" data-self-grade="${index}" data-correct="true">我做对了 ✓</button> <button class="secondary-btn" data-self-grade="${index}" data-correct="false">我还没做对 ×</button></div>`;
       }
-      return `<article class="question" data-question="${index}"><div class="question-head"><span class="type-chip">${esc(q.type)}${q.difficulty ? ` · ${esc(q.difficulty)}` : ""}</span>${badgeHtml}<span class="question-title">${esc(q.text)}</span></div>${answer}<div class="feedback" id="feedback-${index}" aria-live="polite"></div></article>`;
+      return `<article class="question" data-question="${index}"><div class="question-head"><span class="type-chip">${esc(q.type)}${q.difficulty ? ` · ${esc(q.difficulty)}` : ""}</span>${badgeHtml}<span class="question-title">${esc(q.text)}</span></div>${q.code ? `<pre class="adv-code"><code>${esc(q.code)}</code></pre>` : ""}${answer}<div class="feedback" id="feedback-${index}" aria-live="polite"></div></article>`;
     }
 
     function showFeedback(index, state, message) {
@@ -25235,8 +25241,10 @@
     async function generateDirectDeepseek(count, courses, variation, apiKey) {
       const systemPrompt = [
         "你是严谨的中文 C 语言与 STM32 教学出题老师。",
-        "只根据用户提供的课程资料出题，不能引入超出课程范围的知识。",
-        "题目适合循序渐进的初学者，表达清晰、条件充分、答案唯一且可验证。",
+        "你的任务不是复述课程例题，而是围绕课程知识点做扩展、进阶与强化：同一知识点要换角度、换场景、换数据考查，适当出综合应用、易错辨析、代码结果分析、实际工程情境题，帮助用户把知识学透。",
+        "题目必须落在课程知识点及其直接延伸范围内，不能引入与课程无关的全新主题；可以综合本课多个知识点，或把知识点用到新的代码/场景中。",
+        "严禁照搬课程已有题目，也禁止只改几个数字就当作新题；用户会提供本课已有题干清单，生成的题目不得与其中任何一道重复或仅做措辞改动。",
+        "题目表达清晰、条件充分、答案唯一且可验证；涉及代码的选择/填空题必须在题干中给出完整可判断的代码片段，缺关键条件时先按常见写法补全并注明（此处为假设代码）。",
         "覆盖不同课程主题与难度，避免重复考查同一事实。",
         "每题必须自查题意和标准答案；错误选项应合理但明确错误。",
         "只生成选择题、判断题、填空题，不要程序题。",
@@ -25249,6 +25257,7 @@
       const outputSchema = '{"questions":[{"type":"选择题","text":"题干","options":["A","B","C","D"],"answer":0,"knowledge":"知识点","explanation":"解析","pitfall":"易错点"}]}';
       const userPrompt = [
         `生成 ${count} 道题，选择、判断、填空混合，不要程序题。`,
+        "要求：围绕课程知识点做扩展与进阶，多出综合应用、代码分析、易错辨析题；不要重复本课已有题目（见资料中 existingQuestions），也不要只改数字凑题。",
         `格式：${outputSchema}`,
         `变化标识：${String(variation || "").slice(0, 80)}`,
         `课程资料：${JSON.stringify(courses)}`
@@ -25334,7 +25343,8 @@
           title: lesson.title,
           level: lesson.level,
           topics: [...lesson.goals, ...lesson.content.map(item => item[0])],
-          summary: lesson.content.map(item => `${item[0]}：${item[1].replace(/<[^>]*>/g, " ").replace(/\s+/g, " ")}`).join(" ")
+          summary: lesson.content.map(item => `${item[0]}：${item[1].replace(/<[^>]*>/g, " ").replace(/\s+/g, " ")}`).join(" "),
+          existingQuestions: (lesson.questions || []).map(q => String(q.text || "").replace(/\s+/g, " ").slice(0, 60))
         }];
         const variation = `${Date.now()}-${Math.random().toString(36).slice(2)}`;
         let questions;
